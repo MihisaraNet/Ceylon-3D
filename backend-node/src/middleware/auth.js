@@ -31,14 +31,30 @@ const User = require('../models/User');
  * Always calls next() — does not block unauthenticated requests on its own.
  */
 const verifyToken = async (req, res, next) => {
+  // Extract the Authorization header from the incoming request
   const authHeader = req.headers.authorization;
+  
+  // Check if the header exists and follows the expected 'Bearer <token>' format
   if (authHeader && authHeader.startsWith('Bearer ')) {
     try {
-      // Decode the token and look up the user in the database
-      const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET || 'change-me');
+      // Extract the actual token string (skipping 'Bearer ')
+      const token = authHeader.split(' ')[1];
+      
+      // Verify and decode the JWT using the secret key
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'change-me');
+      
+      // Look up the user in the database by the ID encoded in the token.
+      // Exclude the password field for security using .select('-password').
+      // Attach the resulting user document to the request object (req.user).
       req.user = await User.findById(decoded.id).select('-password');
-    } catch { /* invalid token — req.user remains undefined */ }
+    } catch { 
+      // If the token is invalid, expired, or tampered with, an error is thrown.
+      // We catch it silently here so that req.user remains undefined, 
+      // allowing down-stream middleware (like requireAuth) to handle the rejection.
+    }
   }
+  
+  // Proceed to the next middleware or route handler regardless of token validity
   next();
 };
 
@@ -47,7 +63,12 @@ const verifyToken = async (req, res, next) => {
  * Returns 401 if no valid token was provided.
  */
 const requireAuth = (req, res, next) => {
-  if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+  // If verifyToken did not successfully set req.user, reject the request
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  // User is authenticated, proceed
   next();
 };
 
@@ -56,8 +77,12 @@ const requireAuth = (req, res, next) => {
  * Returns 403 if the user is not an admin.
  */
 const requireAdmin = (req, res, next) => {
-  if (!req.user || !req.user.roles.includes('ROLE_ADMIN'))
+  // Reject the request if the user is not authenticated OR lacks the 'ROLE_ADMIN' string in their roles array
+  if (!req.user || !req.user.roles.includes('ROLE_ADMIN')) {
     return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  // User is an admin, proceed
   next();
 };
 
