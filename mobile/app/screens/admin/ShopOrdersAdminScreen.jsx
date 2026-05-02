@@ -1,22 +1,33 @@
 /**
- * ShopOrdersAdminScreen.jsx — High-End Order Logistics
- * 
- * Attractive, focused design for managing shop orders 
- * with premium card interactions and clean status tracking.
+ * ShopOrdersAdminScreen.jsx — Admin Shop Order Management
+ *
+ * Displays all shop orders for admin review and management.
+ *
+ * Features:
+ *   - Flat list of all orders with customer name, order ID, total, and status badge
+ *   - Expandable cards showing:
+ *       - Order items (product name × quantity — price)
+ *       - Shipping address
+ *       - Tracking number input and "Set" button
+ *       - Status change chips (PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+ *   - Real-time status updates via PUT /orders/admin/:id/status
+ *   - Tracking number assignment via PUT /orders/admin/:id/tracking
+ *   - Color-coded status badges using ORDER_STATUSES from categories.js
+ *
+ * @module screens/admin/ShopOrdersAdminScreen
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
 import api from '../../lib/api';
 import { ORDER_STATUSES } from '../../data/categories';
-import { Ionicons } from '@expo/vector-icons';
 
-const STATUS_OPTS = ['PENDING','PROCESSING','SHIPPED','DELIVERED','CANCELLED'];
+const STATUS_OPTIONS = ['PENDING','PROCESSING','SHIPPED','DELIVERED','CANCELLED'];
 
 export default function ShopOrdersAdminScreen() {
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
-  const [tracking, setTracking] = useState({});
+  const [trackingInputs, setTrackingInputs] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -26,65 +37,79 @@ export default function ShopOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  // This function sends an update to the backend to change the order's fulfillment stage
   const updateStatus = async (id, status) => {
     try { 
       await api.put(`/orders/admin/${id}/status`, { status }); 
-      load(); 
-    } catch { Alert.alert('Error', 'Update failed'); }
+      load(); // Refresh the list to show the new status badge
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Failed'); 
+    }
   };
 
-  const handleTrack = async (id) => {
-    if (!tracking[id]) return;
+  // This function attaches a delivery tracking number to the order
+  const setTracking = async (id) => {
+    const tn = trackingInputs[id];
+    if (!tn) return Alert.alert('Error', 'Enter a tracking number');
+    
     try { 
-      await api.put(`/orders/admin/${id}/tracking`, { trackingNumber: tracking[id] }); 
-      load(); 
-    } catch { Alert.alert('Error', 'Update failed'); }
+      await api.put(`/orders/admin/${id}/tracking`, { trackingNumber: tn }); 
+      load(); // Refresh to display the newly saved tracking number
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Failed'); 
+    }
   };
 
   const renderItem = ({ item }) => {
-    const cfg = ORDER_STATUSES[item.status] || { label:item.status, color:'#64748b' };
+    const cfg = ORDER_STATUSES[item.status] || { label:item.status, color:'#6b7280' };
     const isOpen = expanded === item._id;
+    const customerName = item.userId?.fullName || item.shippingAddress?.split('\n')[0] || 'Customer';
     return (
-      <TouchableOpacity style={s.card} onPress={() => setExpanded(isOpen ? null : item._id)} activeOpacity={0.95}>
-        <View style={s.cardTop}>
+      <TouchableOpacity style={s.card} onPress={() => setExpanded(isOpen ? null : item._id)}>
+        <View style={s.cardHeader}>
           <View>
-            <Text style={s.orderRef}>#{item._id.slice(-6).toUpperCase()}</Text>
-            <Text style={s.customer}>{item.userId?.fullName || 'Guest'}</Text>
+            <Text style={s.orderId}>#{item._id.slice(-6).toUpperCase()}{item.category==='STL' ? ' 🖨️' : ''}</Text>
+            <Text style={s.customerName}>{customerName}</Text>
           </View>
-          <View style={s.topRight}>
-            <Text style={s.price}>LKR {item.totalAmount?.toFixed(0)}</Text>
-            <View style={[s.pill, { backgroundColor: cfg.color + '10', borderColor: cfg.color + '20' }]}>
-              <Text style={[s.pillText, { color: cfg.color }]}>{cfg.label}</Text>
+          <View style={s.right}>
+            <Text style={s.total}>LKR {item.totalAmount?.toFixed(2)}</Text>
+            <View style={[s.badge, { backgroundColor: cfg.color + '20' }]}>
+              <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
             </View>
           </View>
         </View>
 
         {isOpen && (
-          <View style={s.expanded}>
-            <Text style={s.label}>MANIFEST</Text>
+          <View style={s.details}>
+            <Text style={s.detailsTitle}>Items</Text>
             {item.items?.map((i, idx) => (
-              <Text key={idx} style={s.manifestItem}>{i.productName} × {i.quantity}</Text>
+              <Text key={idx} style={s.itemLine}>{i.productName} × {i.quantity} — LKR {i.price?.toFixed(2)}</Text>
             ))}
-            
-            <Text style={s.label}>LOGISTICS</Text>
-            <View style={s.trackInputRow}>
+            <Text style={s.detailsTitle}>Shipping Address</Text>
+            <Text style={s.addrText}>{item.shippingAddress}</Text>
+
+            {/* Tracking */}
+            <Text style={s.detailsTitle}>Tracking Number</Text>
+            {item.trackingNumber && <Text style={s.trackVal}>Current: {item.trackingNumber}</Text>}
+            <View style={s.trackRow}>
               <TextInput
                 style={s.trackInput}
-                value={tracking[item._id] || item.trackingNumber || ''}
-                onChangeText={v => setTracking(p => ({...p,[item._id]:v}))}
-                placeholder="Tracking ID"
-                placeholderTextColor="#94a3b8"
+                value={trackingInputs[item._id] || ''}
+                onChangeText={v => setTrackingInputs(p => ({...p,[item._id]:v}))}
+                placeholder="Enter tracking number"
+                placeholderTextColor="#9ca3af"
               />
-              <TouchableOpacity style={s.trackBtn} onPress={() => handleTrack(item._id)}>
-                <Ionicons name="send" size={16} color="#fff" />
+              <TouchableOpacity style={s.trackBtn} onPress={() => setTracking(item._id)}>
+                <Text style={s.trackBtnText}>Set</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={s.label}>LIFECYCLE STATUS</Text>
-            <View style={s.chips}>
-              {STATUS_OPTS.map(st => (
-                <TouchableOpacity key={st} style={[s.chip, item.status===st && s.chipOn]} onPress={() => updateStatus(item._id, st)}>
-                  <Text style={[s.chipText, item.status===st && { color:'#fff' }]}>{st}</Text>
+            {/* Status */}
+            <Text style={s.detailsTitle}>Status</Text>
+            <View style={s.statusChips}>
+              {STATUS_OPTIONS.map(st => (
+                <TouchableOpacity key={st} style={[s.statusChip, item.status===st && s.statusChipActive]} onPress={() => updateStatus(item._id, st)}>
+                  <Text style={[s.statusChipText, item.status===st && { color:'#fff' }]}>{st}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -94,56 +119,40 @@ export default function ShopOrdersAdminScreen() {
     );
   };
 
-  return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <View style={s.header}>
-        <Text style={s.title}>Logistics</Text>
-        <TouchableOpacity style={s.refreshBtn} onPress={load}>
-          <Ionicons name="sync" size={20} color="#6366f1" />
-        </TouchableOpacity>
-      </View>
+  if (loading) return <ActivityIndicator size="large" color="#6366f1" style={{ marginTop:60 }} />;
 
-      {loading ? (
-        <ActivityIndicator color="#6366f1" size="large" style={{ marginTop: 80 }} />
-      ) : (
-        <FlatList
-          data={orders}
-          keyExtractor={i => i._id}
-          renderItem={renderItem}
-          contentContainerStyle={{ padding: 24, gap: 16 }}
-          ListEmptyComponent={<Text style={s.empty}>Clear sky, no orders.</Text>}
-        />
-      )}
-    </SafeAreaView>
+  return (
+    <FlatList
+      data={orders}
+      keyExtractor={i => i._id}
+      renderItem={renderItem}
+      contentContainerStyle={{ padding:12, gap:10 }}
+      ListEmptyComponent={<Text style={s.empty}>No orders</Text>}
+    />
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 28, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#f1f5f9' },
-  title: { fontSize: 32, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5 },
-  refreshBtn: { backgroundColor: '#f1f5f9', padding: 12, borderRadius: 16 },
-
-  card: { backgroundColor:'#fff', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
-  cardTop: { flexDirection:'row', justifyContent:'space-between', alignItems: 'center' },
-  orderRef: { fontSize:10, fontWeight:'900', color:'#cbd5e1', letterSpacing: 1.5 },
-  customer: { fontSize:18, fontWeight:'800', color:'#0f172a', marginTop:2 },
-  topRight: { alignItems:'flex-end', gap:8 },
-  price: { fontSize:20, fontWeight:'900', color:'#6366f1' },
-  pill: { borderRadius:10, paddingHorizontal:10, paddingVertical:6, borderWidth: 1 },
-  pillText: { fontSize:10, fontWeight:'900' },
-  
-  expanded: { borderTopWidth:1, borderTopColor:'#f1f5f9', marginTop:20, paddingTop:20 },
-  label: { fontSize:10, fontWeight:'900', color:'#cbd5e1', letterSpacing: 1.5, marginTop:16, marginBottom:10 },
-  manifestItem: { fontSize:15, color:'#475569', marginBottom:6, fontWeight: '700' },
-  trackInputRow: { flexDirection:'row', gap:10, marginBottom:16 },
-  trackInput: { flex:1, backgroundColor:'#f8fafc', borderRadius:18, padding:16, fontSize:14, color:'#0f172a', fontWeight: '700', borderWidth: 1, borderColor: '#f1f5f9' },
-  trackBtn: { backgroundColor:'#0f172a', borderRadius:18, width: 56, justifyContent:'center', alignItems: 'center' },
-  
-  chips: { flexDirection:'row', flexWrap:'wrap', gap:8 },
-  chip: { backgroundColor:'#f1f5f9', borderRadius:14, paddingHorizontal:14, paddingVertical:10 },
-  chipOn: { backgroundColor:'#6366f1' },
-  chipText: { fontSize:11, fontWeight:'800', color:'#94a3b8' },
-  empty: { textAlign:'center', color:'#cbd5e1', marginTop:100, fontWeight: '800', letterSpacing: 1 },
+  card:          { backgroundColor:'#fff', borderRadius:14, padding:16, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:6, elevation:2 },
+  cardHeader:    { flexDirection:'row', justifyContent:'space-between' },
+  orderId:       { fontSize:13, fontWeight:'700', color:'#111827' },
+  customerName:  { fontSize:15, fontWeight:'700', color:'#111827', marginTop:2 },
+  right:         { alignItems:'flex-end', gap:6 },
+  total:         { fontSize:16, fontWeight:'800', color:'#6366f1' },
+  badge:         { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
+  badgeText:     { fontSize:12, fontWeight:'700' },
+  details:       { borderTopWidth:1, borderTopColor:'#f3f4f6', marginTop:12, paddingTop:12 },
+  detailsTitle:  { fontSize:13, fontWeight:'700', color:'#374151', marginTop:10, marginBottom:4 },
+  itemLine:      { fontSize:13, color:'#6b7280', marginBottom:2 },
+  addrText:      { fontSize:13, color:'#374151' },
+  trackVal:      { fontSize:13, color:'#6366f1', fontWeight:'600', marginBottom:6 },
+  trackRow:      { flexDirection:'row', gap:8, marginBottom:4 },
+  trackInput:    { flex:1, backgroundColor:'#f9fafb', borderWidth:1, borderColor:'#e5e7eb', borderRadius:10, padding:10, fontSize:14, color:'#111827' },
+  trackBtn:      { backgroundColor:'#6366f1', borderRadius:10, paddingHorizontal:16, justifyContent:'center' },
+  trackBtnText:  { color:'#fff', fontWeight:'700' },
+  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:6 },
+  statusChip:    { backgroundColor:'#f3f4f6', borderRadius:999, paddingHorizontal:10, paddingVertical:6 },
+  statusChipActive:{ backgroundColor:'#6366f1' },
+  statusChipText:  { fontSize:12, fontWeight:'600', color:'#374151' },
+  empty:         { textAlign:'center', color:'#9ca3af', marginTop:60, fontSize:16 },
 });
