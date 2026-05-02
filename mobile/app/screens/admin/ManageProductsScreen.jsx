@@ -52,8 +52,9 @@ export default function ManageProductsScreen() {
   const [saving,  setSaving]   = useState(false);
   // Holds field-specific error messages (e.g. { name: "Required" })
   const [fErr,    setFErr]    = useState(EMPTY_ERRS);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // This function fetches the latest product catalogue from the backend
+  // Loads the latest product list for the admin table.
   const load = useCallback(async () => {
     setLoading(true);
     try { 
@@ -69,7 +70,16 @@ export default function ManageProductsScreen() {
   // Fetch the products automatically when the screen mounts
   useEffect(() => { load(); }, [load]);
 
-  // This function resets the form to empty and opens the modal to Add a new product
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  // Open modal in "create" mode with a clean form.
   const openAdd  = () => { 
     setEditing(null); 
     setForm(EMPTY_FORM); 
@@ -77,7 +87,7 @@ export default function ManageProductsScreen() {
     setModal(true); 
   };
   
-  // This function pre-fills the form with existing data and opens the modal to Edit
+  // Open modal in "edit" mode and prefill from the selected product.
   const openEdit = (p) => {
     setEditing(p);
     setForm({ 
@@ -92,7 +102,7 @@ export default function ManageProductsScreen() {
     setModal(true);
   };
 
-  // This function opens the native device image gallery to select a product picture
+  // Lets admin select a new product image from the device gallery.
   const pickImage = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes:['images'], quality:0.8 });
     
@@ -140,7 +150,7 @@ export default function ManageProductsScreen() {
       // If a new image was selected via expo-image-picker, append it to the payload
       if (form.imageUri) fd.append('image', { uri:form.imageUri, type:form.imageMime, name:form.imageName });
 
-      // Determine whether to send a PUT request (updating existing) or POST request (creating new)
+      // PUT when editing, POST when creating.
       if (editing) await api.put(`/api/products/${editing._id}`, fd, { headers:{ 'Content-Type':'multipart/form-data' } });
       else         await api.post('/api/products', fd, { headers:{ 'Content-Type':'multipart/form-data' } });
 
@@ -201,6 +211,8 @@ export default function ManageProductsScreen() {
           keyExtractor={i => i._id}
           renderItem={renderProduct}
           contentContainerStyle={{ padding:12, gap:8 }}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
           ListEmptyComponent={<Text style={s.empty}>No products yet</Text>}
         />
       )}
