@@ -1,7 +1,7 @@
 /**
  * Product.js — Product Mongoose Model
  *
- * Represents a product in the Ceylon3D online shop catalogue.
+ * Represents a product in the LayerForge 3D online shop catalogue.
  *
  * Fields:
  *   - name        {String} — Product display name (required, trimmed).
