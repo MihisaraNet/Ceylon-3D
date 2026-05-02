@@ -1,7 +1,7 @@
 /**
  * api.js — Axios HTTP Client Instance with JWT Authentication
  *
- * Pre-configured Axios instance for all API requests to the Ceylon3D backend.
+ * Pre-configured Axios instance for all API requests to the LayerForge 3D backend.
  *
  * Features:
  *   - Base URL set from config.js (points to the backend server)
