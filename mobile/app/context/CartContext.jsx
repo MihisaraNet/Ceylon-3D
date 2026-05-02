@@ -1,3 +1,22 @@
+/**
+ * CartContext.jsx — Shopping Cart State Management
+ *
+ * Manages the user's shopping cart via React Context, synced with the backend API.
+ * Automatically loads cart data when the user logs in and clears on logout.
+ *
+ * Provided values:
+ *   - items          {Array}    — Cart items with { cartItemId, id, title, price, image, quantity }
+ *   - addToCart(productId, qty) — Add item to cart (throws on error for UI to catch)
+ *   - removeFromCart(cartItemId)— Remove a single item
+ *   - updateQuantity(id, qty)  — Update item quantity (throws on error for UI to catch)
+ *   - clearCart()               — Clear all items
+ *   - totalItems     {number}  — Total number of units across all items
+ *   - totalPrice     {number}  — Total price of all items in LKR
+ *   - loading        {boolean} — True while cart is being fetched from the server
+ *   - reloadCart()              — Manually refresh cart from backend
+ *
+ * @module context/CartContext
+ */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import { useAuth } from './AuthContext';
