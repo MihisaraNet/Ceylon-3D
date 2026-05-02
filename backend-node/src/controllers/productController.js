@@ -46,13 +46,28 @@ const getProduct = async (req, res) => {
  */
 const createProduct = async (req, res) => {
   try {
+    // Extract product details from the parsed form-data body
     const { name, description, price, stock, category, photoUrl } = req.body;
+    
+    // Validate required fields
     if (!name || price == null) return res.status(400).json({ error: 'name and price required' });
 
-    // Use uploaded file path if present, otherwise use the provided photoUrl
+    // Determine the image path to save in the database:
+    // 1. If a file was uploaded via multer, use its generated path
+    // 2. Otherwise, fallback to the optionally provided photoUrl
     const imagePath = req.file ? `/api/products/images/${req.file.filename}` : (photoUrl || null);
 
-    const p = await Product.create({ name, description: description||'', price: Number(price), stock: Number(stock||0), imagePath, category: category||'custom' });
+    // Create and save the new product document using Mongoose
+    const p = await Product.create({ 
+      name, 
+      description: description || '', 
+      price: Number(price), 
+      stock: Number(stock || 0), 
+      imagePath, 
+      category: category || 'custom' 
+    });
+    
+    // Return the newly created product with a 201 Created status
     res.status(201).json(p);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
