@@ -1,7 +1,8 @@
 /**
- * AdminDashboardScreen.jsx — Admin Management Console
- *
- * Modern, colorful and simple design.
+ * AdminDashboardScreen.jsx — High-End Management Console
+ * 
+ * Attractive, modern design with focused stats 
+ * and premium slate/colorful action cards.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, SafeAreaView, StatusBar } from 'react-native';
@@ -53,15 +54,15 @@ export default function AdminDashboardScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#1e293b" />
+      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
       <View style={s.header}>
-        <View style={s.headerTop}>
+        <View style={s.headerRow}>
           <View>
             <Text style={s.headerTitle}>Console</Text>
-            <Text style={s.headerSub}>LayerForge Management</Text>
+            <Text style={s.headerSub}>Infrastructure Control</Text>
           </View>
           <TouchableOpacity style={s.refreshBtn} onPress={handleRefresh}>
-            <Ionicons name="refresh" size={24} color="#fff" />
+            <Ionicons name="refresh-outline" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -69,36 +70,39 @@ export default function AdminDashboardScreen() {
       <ScrollView
         style={s.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#6366f1" />}
-        contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 28, paddingBottom: 60 }}
       >
         <View style={s.statsGrid}>
-          <StatCard icon="print"         label="STL Orders"    value={stats.stlOrders}     color="#6366f1" onPress={() => nav.navigate('StlOrdersAdmin')} />
-          <StatCard icon="cart"          label="Shop Orders"   value={stats.shopOrders}    color="#10b981" onPress={() => nav.navigate('ShopOrdersAdmin')} />
-          <StatCard icon="cube"          label="Products"      value={stats.products}      color="#f59e0b" onPress={() => nav.navigate('ManageProducts')} />
-          <StatCard icon="hourglass"     label="Pending"       value={stats.pendingQuotes} color="#ef4444" onPress={() => nav.navigate('StlOrdersAdmin')} />
+          <StatCard icon="print-outline" label="3D ORDERS" value={stats.stlOrders} color="#6366f1" onPress={() => nav.navigate('StlOrdersAdmin')} />
+          <StatCard icon="bag-handle-outline" label="SHOP" value={stats.shopOrders} color="#10b981" onPress={() => nav.navigate('ShopOrdersAdmin')} />
+          <StatCard icon="cube-outline" label="CATALOG" value={stats.products} color="#f59e0b" onPress={() => nav.navigate('ManageProducts')} />
+          <StatCard icon="timer-outline" label="PENDING" value={stats.pendingQuotes} color="#f43f5e" onPress={() => nav.navigate('StlOrdersAdmin')} />
         </View>
 
-        <Text style={s.sectionTitle}>Quick Actions</Text>
+        <Text style={s.sectionLabel}>INFRASTRUCTURE ACTIONS</Text>
         <View style={s.actions}>
           {[
-            { icon:'add-circle',  label:'Add Product',       nav:'AddEditProduct',   color:'#10b981' },
-            { icon:'list',        label:'Manage Catalog',    nav:'ManageProducts',   color:'#6366f1' },
-            { icon:'calculator',  label:'Cost Calculator',   nav:'CostCalculator',   color:'#8b5cf6' },
-            { icon:'settings',    label:'Store Settings',    nav:'AdminDashboard',   color:'#64748b' },
+            { icon:'add-circle',  label:'Deploy New Product', nav:'AddEditProduct', color:'#10b981' },
+            { icon:'list-outline',label:'Maintain Inventory', nav:'ManageProducts', color:'#6366f1' },
+            { icon:'calculator',  label:'Algorithm Estimator', nav:'CostCalculator', color:'#8b5cf6' },
           ].map(a => (
-            <TouchableOpacity key={a.label} style={s.actionBtn} onPress={() => nav.navigate(a.nav)} activeOpacity={0.8}>
+            <TouchableOpacity key={a.label} style={s.actionCard} onPress={() => nav.navigate(a.nav)} activeOpacity={0.8}>
               <View style={[s.actionIcon, { backgroundColor: a.color + '10' }]}>
-                <Ionicons name={a.icon} size={24} color={a.color} />
+                <Ionicons name={a.icon} size={22} color={a.color} />
               </View>
-              <Text style={s.actionLabel}>{a.label}</Text>
+              <Text style={s.actionText}>{a.label}</Text>
               <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={s.infoBanner}>
-          <Ionicons name="information-circle" size={24} color="#6366f1" />
-          <Text style={s.infoText}>You have {stats.pendingQuotes} STL orders waiting for quotes.</Text>
+        <View style={s.alertBox}>
+          <View style={s.alertCircle}><Ionicons name="notifications" size={20} color="#6366f1" /></View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.alertTitle}>Security Status</Text>
+            <Text style={s.alertSub}>All systems operational. {stats.pendingQuotes} requests await triage.</Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -106,27 +110,29 @@ export default function AdminDashboardScreen() {
 }
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8fafc' },
-  header:         { backgroundColor: '#1e293b', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-  headerTop:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitle:    { fontSize: 32, fontWeight: '900', color: '#fff', letterSpacing: -1 },
-  headerSub:      { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginTop: 4 },
-  refreshBtn:     { backgroundColor: 'rgba(255,255,255,0.1)', padding: 12, borderRadius: 16 },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  header: { backgroundColor: '#0f172a', paddingHorizontal: 28, paddingTop: 20, paddingBottom: 60, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitle: { fontSize: 36, fontWeight: '900', color: '#fff', letterSpacing: -1.5 },
+  headerSub: { fontSize: 15, color: '#94a3b8', fontWeight: '600', marginTop: 4 },
+  refreshBtn: { backgroundColor: 'rgba(255,255,255,0.1)', padding: 12, borderRadius: 16 },
 
-  scroll:         { flex: 1 },
-  statsGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: -20, marginBottom: 32 },
-  statCard:       { width: '47.5%', backgroundColor: '#fff', borderRadius: 24, padding: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 8, flexDirection: 'row', alignItems: 'center' },
-  statIconWrap:   { padding: 12, borderRadius: 16, marginRight: 12 },
-  statInfo:       { flex: 1 },
-  statVal:        { fontSize: 22, fontWeight: '900', color: '#1e293b' },
-  statLabel:      { fontSize: 11, color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 },
+  scroll: { flex: 1 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: -32, marginBottom: 40 },
+  statCard: { width: '47.5%', backgroundColor: '#fff', borderRadius: 32, padding: 24, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20, elevation: 10, flexDirection: 'row', alignItems: 'center' },
+  statIconWrap: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  statInfo: { flex: 1 },
+  statVal: { fontSize: 24, fontWeight: '900', color: '#1e293b' },
+  statLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '900', letterSpacing: 0.5, marginTop: 4 },
 
-  sectionTitle:   { fontSize: 20, fontWeight: '900', color: '#1e293b', marginBottom: 16, letterSpacing: -0.5 },
-  actions:        { gap: 12, marginBottom: 32 },
-  actionBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 20, padding: 16, gap: 16, borderWidth: 1, borderColor: '#f1f5f9' },
-  actionIcon:     { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  actionLabel:    { flex: 1, fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  sectionLabel: { fontSize: 11, fontWeight: '900', color: '#cbd5e1', letterSpacing: 2, marginBottom: 16, marginLeft: 4 },
+  actions: { gap: 14, marginBottom: 40 },
+  actionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 28, padding: 18, gap: 18, borderWidth: 1, borderColor: '#f1f5f9' },
+  actionIcon: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  actionText: { flex: 1, fontSize: 16, fontWeight: '800', color: '#1e293b' },
 
-  infoBanner:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef2ff', padding: 20, borderRadius: 20, gap: 16, borderWidth: 1, borderColor: '#e0e7ff' },
-  infoText:       { flex: 1, fontSize: 14, color: '#4338ca', fontWeight: '700' },
+  alertBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef2ff', padding: 24, borderRadius: 32, gap: 18, borderWidth: 1, borderColor: '#e0e7ff' },
+  alertCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  alertTitle: { fontSize: 16, fontWeight: '900', color: '#1e293b' },
+  alertSub: { fontSize: 13, color: '#6366f1', fontWeight: '700', marginTop: 2 },
 });
