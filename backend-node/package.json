@@ -1,7 +1,7 @@
 {
-  "name": "ceylon3d-backend",
+  "name": "layerforge3d-backend",
   "version": "1.0.0",
-  "description": "Ceylon 3D Printing Service — Node.js/Express/MongoDB Backend",
+  "description": "LayerForge 3D Printing Service — Node.js/Express/MongoDB Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
