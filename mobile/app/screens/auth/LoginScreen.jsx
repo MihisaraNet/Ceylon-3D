@@ -105,7 +105,7 @@ export default function LoginScreen({ navigation }) {
           <View style={s.logoBox}>
             <Ionicons name="cube" size={36} color="#fff" />
           </View>
-          <Text style={s.logo}>Ceylon 3D</Text>
+          <Text style={s.logo}>LayerForge 3D</Text>
           <Text style={s.tagline}>Sign in to your account</Text>
         </View>
 
