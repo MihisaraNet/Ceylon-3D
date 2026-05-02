@@ -18,7 +18,7 @@
  * @module screens/account/MyAccountScreen
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -46,6 +46,7 @@ export default function MyAccountScreen() {
   const [stlOrders, setStlOrders]    = useState([]);
   const [activeTab, setActiveTab]    = useState('orders');
   const [loading, setLoading]        = useState(false);
+  const [refreshing, setRefreshing]  = useState(false);
   const [expanded, setExpanded]      = useState(null);
   const [confirmingId, setConfirming] = useState(null);
 
@@ -65,6 +66,15 @@ export default function MyAccountScreen() {
 
   useEffect(() => { if (activeTab === 'orders' || activeTab === '3d') loadOrders(); }, [activeTab, loadOrders]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadOrders();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadOrders]);
+
   const confirmOrder = async (id) => {
     setConfirming(id);
     try {
@@ -83,7 +93,17 @@ export default function MyAccountScreen() {
   ];
 
   return (
-    <ScrollView style={s.container}>
+    <ScrollView
+      style={s.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={['#6366f1']}
+          tintColor="#6366f1"
+        />
+      }
+    >
       {/* Header */}
       <View style={s.header}>
         <View style={s.avatar}><Ionicons name="person" size={36} color="#fff" /></View>

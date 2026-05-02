@@ -37,17 +37,27 @@ export default function StlOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  // This function updates the order status (e.g., from 'QUOTED' to 'PRINTING')
   const updateStatus = async (id, status) => {
-    try { await api.put(`/stl-orders/admin/${id}/status`, { status }); load(); }
-    catch (err) { Alert.alert('Error', err.response?.data?.error || 'Failed'); }
+    try { 
+      await api.put(`/stl-orders/admin/${id}/status`, { status }); 
+      load(); // Reload the list to show the new status badge
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Failed'); 
+    }
   };
 
+  // This function permanently deletes an STL order and its associated 3D file from the server
   const deleteOrder = (id) => {
     Alert.alert('Delete', 'Delete this STL order and its file?', [
       { text:'Cancel', style:'cancel' },
       { text:'Delete', style:'destructive', onPress: async () => {
-        try { await api.delete(`/stl-orders/admin/${id}`); load(); }
-        catch (err) { Alert.alert('Error', err.response?.data?.error || 'Delete failed'); }
+        try { 
+          await api.delete(`/stl-orders/admin/${id}`); 
+          load(); // Remove the deleted order from the screen
+        } catch (err) { 
+          Alert.alert('Error', err.response?.data?.error || 'Delete failed'); 
+        }
       }},
     ]);
   };

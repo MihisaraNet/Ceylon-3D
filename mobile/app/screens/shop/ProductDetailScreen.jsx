@@ -24,7 +24,6 @@ import {
   ActivityIndicator, Alert, SafeAreaView, StatusBar, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import api from '../../lib/api';
 import { getImageUri } from '../../lib/config';
 import { useCart } from '../../context/CartContext';
@@ -43,7 +42,7 @@ const catColor = (id) => CAT_COLORS[id] || '#6366f1';
 
 export default function ProductDetailScreen({ route }) {
   const { productId } = route.params;
-  const { addToCart, totalItems, reloadCart } = useCart();
+  const { addToCart, totalItems } = useCart();
   const nav = useNavigation();
 
   const [product, setProduct] = useState(null);
@@ -51,8 +50,6 @@ export default function ProductDetailScreen({ route }) {
   const [qty,     setQty]     = useState(1);
   const [adding,  setAdding]  = useState(false);
   const [addErr,  setAddErr]  = useState(''); // inline error under button
-  // Optional custom design / personalisation reference image
-  const [customFile, setCustomFile] = useState(null);
 
   useEffect(() => {
     setAddErr('');
@@ -76,25 +73,8 @@ export default function ProductDetailScreen({ route }) {
     setAddErr('');
   };
 
-  /* ── Custom design file picker ──────────────────── */
-  // Optional reference image used for custom/personalized print requests.
-  const pickCustomFile = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-    });
-    if (!res.canceled && res.assets?.[0]) {
-      const asset = res.assets[0];
-      setCustomFile({
-        uri:  asset.uri,
-        type: asset.mimeType || 'image/jpeg',
-        name: asset.fileName || 'design.jpg',
-      });
-    }
-  };
-
-  /* ── Add to cart ─────────────────────────────── */
-  // Adds the selected quantity to cart, optionally with a custom file.
+  /* ── Add to cart ─────────────────────────────────────── */
+  // This function adds the selected quantity of this product to the user's cart
   const handleAdd = async () => {
     // Prevent multiple submissions if it is already adding
     if (adding) return;
@@ -104,19 +84,10 @@ export default function ProductDetailScreen({ route }) {
     setAdding(true);
     
     try {
-      if (customFile) {
-        // If a custom design file is attached, send as multipart/form-data
-        const fd = new FormData();
-        fd.append('productId',  product._id);
-        fd.append('quantity',   String(qty));
-        fd.append('customFile', customFile);
-        await api.post('/cart', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-        await reloadCart();
-      } else {
-        // No custom file — use CartContext helper (JSON)
-        await addToCart(product._id, qty);
-      }
-      // Show a success prompt with quick navigation choices.
+      // Send the request to the CartContext to handle the API call
+      await addToCart(product._id, qty);
+      
+      // If successful, show an alert with navigation options
       Alert.alert(
         'Added to Cart ✓',
         `${qty} × ${product.name} added successfully.`,
@@ -249,27 +220,6 @@ export default function ProductDetailScreen({ route }) {
               </View>
             </View>
           </View>
-
-          {/* ── Optional Custom Design File ── */}
-          <TouchableOpacity
-            style={[s.customFileBtn, customFile && s.customFileBtnDone]}
-            onPress={pickCustomFile}
-            activeOpacity={0.85}
-          >
-            <Ionicons
-              name={customFile ? 'image' : 'color-palette-outline'}
-              size={18}
-              color={customFile ? '#22c55e' : '#6366f1'}
-            />
-            <Text style={[s.customFileBtnText, customFile && { color:'#22c55e' }]}>
-              {customFile ? `🎨 ${customFile.name}` : 'Attach Personalisation File (optional)'}
-            </Text>
-            {customFile && (
-              <TouchableOpacity onPress={() => setCustomFile(null)} hitSlop={{ top:8, bottom:8, left:8, right:8 }}>
-                <Ionicons name="close-circle" size={16} color="#9ca3af" />
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -354,11 +304,6 @@ const s = StyleSheet.create({
   qtyNum:         { fontSize: 22, fontWeight: '900', color: '#1e1b4b', minWidth: 32, textAlign: 'center' },
   totalPill:      { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginLeft: 4 },
   totalPillText:  { fontSize: 14, fontWeight: '800' },
-
-  /* Custom file picker */
-  customFileBtn:     { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#6366f1', borderRadius: 12, padding: 12, backgroundColor: '#eef2ff' },
-  customFileBtnDone: { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
-  customFileBtnText: { flex: 1, fontSize: 13, fontWeight: '700', color: '#6366f1' },
 
   /* Bottom bar */
   bottomBar:      { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingBottom: Platform.OS === 'ios' ? 28 : 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 8 },

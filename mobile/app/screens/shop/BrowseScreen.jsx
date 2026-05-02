@@ -41,6 +41,8 @@ const CAT_COLORS = {
 const getCatColor = (id) => CAT_COLORS[id] || CAT_COLORS['custom'];
 
 /* ── Small helpers ─────────────────────────────────────── */
+const CARD_BG_CYCLE = ['#fff7ed','#f0fdf4','#eff6ff','#fdf4ff','#fefce8','#f0f9ff'];
+const cardBg = (index) => CARD_BG_CYCLE[index % CARD_BG_CYCLE.length];
 
 export default function BrowseScreen() {
   const nav = useNavigation();
@@ -84,16 +86,16 @@ export default function BrowseScreen() {
   useEffect(() => { load(); }, [load]);
 
   /* ── Quick add to cart ─────────────────────────────── */
-  // Quick-add one unit directly from the product grid.
+  // This function allows users to instantly add 1 unit of a product from the grid view
   const handleQuickAdd = useCallback(async (item) => {
-    // Guard against repeated taps while a cart mutation is in flight.
+    // If this specific item is already being added, ignore extra taps
     if (addingId) return; 
     
     // Set the addingId to show a loading spinner on this specific card
     setAddingId(item._id);
     
     try {
-      // Add exactly one unit for this product.
+      // Send the request to add 1 unit to the cart
       await addToCart(item._id, 1);
     } catch (err) {
       // If it fails (e.g., out of stock), alert the user
@@ -106,17 +108,17 @@ export default function BrowseScreen() {
   }, [addToCart, addingId]);
 
   /* ── Filter ────────────────────────────────────────── */
-  // Apply search + category filters before rendering the grid.
+  // This part calculates which products should be visible based on the search bar and category tabs
   const filtered = products.filter(p => {
     const q = search.trim().toLowerCase();
-
-    // Product must satisfy both filters when those filters are active.
+    
+    // Only include products that match BOTH the search query (if typed) AND the selected category (if chosen)
     return (!q || p.name.toLowerCase().includes(q)) &&
            (!category || p.category === category);
   });
 
   /* ── Render single card ────────────────────────────── */
-  const renderCard = ({ item }) => {
+  const renderCard = ({ item, index }) => {
     const imgUri   = getImageUri(item.imagePath);
     const catInfo  = CATEGORIES.find(c => c.id === item.category);
     const cat      = getCatColor(item.category || '');
@@ -126,7 +128,7 @@ export default function BrowseScreen() {
     return (
       <TouchableOpacity
         activeOpacity={0.88}
-        style={[s.card, { backgroundColor: '#ffffff' }]}
+        style={[s.card, { backgroundColor: cardBg(index) }]}
         onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
       >
         {/* ── Image ── */}

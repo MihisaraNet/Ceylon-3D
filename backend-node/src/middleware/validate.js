@@ -103,7 +103,17 @@ const validateProduct = (req, res, next) => {
 /* ── Order validation ───────────────────────────────────── */
 
 const validateOrder = (req, res, next) => {
-  const { shippingAddress, items } = req.body;
+  const { shippingAddress } = req.body;
+
+  // When the request is multipart/form-data (e.g. receipt image attached),
+  // Multer puts all non-file fields in req.body as strings.
+  // So `items` may arrive as a JSON string — parse it back to an array.
+  let items = req.body.items;
+  if (typeof items === 'string') {
+    try { items = JSON.parse(items); } catch { items = []; }
+    req.body.items = items; // write the parsed value back so the controller sees an array
+  }
+
   const errors = {};
 
   if (!shippingAddress || String(shippingAddress).trim().length < 10)
