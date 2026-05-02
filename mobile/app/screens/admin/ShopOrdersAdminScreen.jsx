@@ -26,6 +26,7 @@ const STATUS_OPTIONS = ['PENDING','PROCESSING','SHIPPED','DELIVERED','CANCELLED'
 export default function ShopOrdersAdminScreen() {
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [trackingInputs, setTrackingInputs] = useState({});
 
@@ -37,7 +38,16 @@ export default function ShopOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  // This function sends an update to the backend to change the order's fulfillment stage
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  // Update fulfillment status for a single order.
   const updateStatus = async (id, status) => {
     try { 
       await api.put(`/orders/admin/${id}/status`, { status }); 
@@ -47,7 +57,7 @@ export default function ShopOrdersAdminScreen() {
     }
   };
 
-  // This function attaches a delivery tracking number to the order
+  // Save courier tracking number for a specific order.
   const setTracking = async (id) => {
     const tn = trackingInputs[id];
     if (!tn) return Alert.alert('Error', 'Enter a tracking number');
@@ -127,6 +137,8 @@ export default function ShopOrdersAdminScreen() {
       keyExtractor={i => i._id}
       renderItem={renderItem}
       contentContainerStyle={{ padding:12, gap:10 }}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
       ListEmptyComponent={<Text style={s.empty}>No orders</Text>}
     />
   );
