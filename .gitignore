@@ -6,3 +6,5 @@ uploads/product-images/*
 !uploads/product-images/.gitkeep
 *.log
 .DS_Store
+.idea/
+Ceylon-3D_WMT/
