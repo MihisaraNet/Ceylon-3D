@@ -37,33 +37,66 @@ const FieldErr = ({ msg }) => msg ? (
 ) : null;
 
 export default function ManageProductsScreen() {
+  // ── State Management ──
+  // Holds the list of products fetched from the server
   const [products, setProducts] = useState([]);
+  // Controls the main ActivityIndicator during initial load
   const [loading, setLoading]   = useState(true);
+  // Controls the visibility of the Add/Edit full-screen modal overlay
   const [modal, setModal]       = useState(false);
+  // Tracks which product is currently being edited (null if adding a new product)
   const [editing, setEditing]   = useState(null);
+  // Holds the current state of the form fields
   const [form, setForm]         = useState(EMPTY_FORM);
+  // Controls the loading spinner on the "Save" button inside the modal
   const [saving,  setSaving]   = useState(false);
+  // Holds field-specific error messages (e.g. { name: "Required" })
   const [fErr,    setFErr]    = useState(EMPTY_ERRS);
 
+  // This function fetches the latest product catalogue from the backend
   const load = useCallback(async () => {
     setLoading(true);
-    try { const { data } = await api.get('/api/products'); setProducts(data); }
-    catch (err) { console.error('ManageProducts load error:', err.message, err.code); }
-    finally { setLoading(false); }
+    try { 
+      const { data } = await api.get('/api/products'); 
+      setProducts(data); 
+    } catch (err) { 
+      console.error('ManageProducts load error:', err.message, err.code); 
+    } finally { 
+      setLoading(false); 
+    }
   }, []);
 
+  // Fetch the products automatically when the screen mounts
   useEffect(() => { load(); }, [load]);
 
-  const openAdd  = () => { setEditing(null); setForm(EMPTY_FORM); setFErr(EMPTY_ERRS); setModal(true); };
+  // This function resets the form to empty and opens the modal to Add a new product
+  const openAdd  = () => { 
+    setEditing(null); 
+    setForm(EMPTY_FORM); 
+    setFErr(EMPTY_ERRS); 
+    setModal(true); 
+  };
+  
+  // This function pre-fills the form with existing data and opens the modal to Edit
   const openEdit = (p) => {
     setEditing(p);
-    setForm({ name:p.name, description:p.description||'', price:String(p.price), stock:String(p.stock||0), category:p.category||'custom', imageUri:null, imageMime:null, imageName:null });
+    setForm({ 
+      name: p.name, 
+      description: p.description || '', 
+      price: String(p.price), 
+      stock: String(p.stock || 0), 
+      category: p.category || 'custom', 
+      imageUri: null, imageMime: null, imageName: null 
+    });
     setFErr(EMPTY_ERRS);
     setModal(true);
   };
 
+  // This function opens the native device image gallery to select a product picture
   const pickImage = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes:['images'], quality:0.8 });
+    
+    // If the user selected an image, save its local URI to the form state for preview/upload
     if (!res.canceled && res.assets?.[0]) {
       const asset = res.assets[0];
       setForm(f => ({ ...f, imageUri:asset.uri, imageMime:asset.mimeType||'image/jpeg', imageName:asset.fileName||'image.jpg' }));
@@ -90,37 +123,52 @@ export default function ManageProductsScreen() {
     }
 
     setFErr(e);
+    
+    // Stop the submission if any client-side validation errors exist
     if (Object.keys(e).length) return;
 
     setSaving(true);
     try {
+      // Build a FormData payload to support multipart/form-data (required for image upload)
       const fd = new FormData();
       fd.append('name', form.name.trim());
       fd.append('description', form.description.trim());
       fd.append('price', form.price);
       fd.append('stock', form.stock || '0');
       fd.append('category', form.category);
+      
+      // If a new image was selected via expo-image-picker, append it to the payload
       if (form.imageUri) fd.append('image', { uri:form.imageUri, type:form.imageMime, name:form.imageName });
 
+      // Determine whether to send a PUT request (updating existing) or POST request (creating new)
       if (editing) await api.put(`/api/products/${editing._id}`, fd, { headers:{ 'Content-Type':'multipart/form-data' } });
       else         await api.post('/api/products', fd, { headers:{ 'Content-Type':'multipart/form-data' } });
 
+      // Close the modal and refresh the product list on success
       setModal(false);
       load();
     } catch (err) {
       const res = err.response?.data;
+      // Handle field-specific validation errors returned by the server
       if (res?.errors) setFErr(prev => ({ ...prev, ...res.errors }));
+      // Handle generic server errors via an alert popup
       else Alert.alert('Save Failed', res?.error || 'Could not save product');
     }
     finally { setSaving(false); }
   };
 
   const handleDelete = (id) => {
+    // Prompt the admin for confirmation before permanently deleting a product
     Alert.alert('Delete Product', 'Are you sure? This will remove it from all carts.', [
       { text:'Cancel', style:'cancel' },
       { text:'Delete', style:'destructive', onPress: async () => {
-        try { await api.delete(`/api/products/${id}`); load(); }
-        catch (err) { Alert.alert('Error', err.response?.data?.error || 'Delete failed'); }
+        try { 
+          // Send the delete request and refresh the product list if successful
+          await api.delete(`/api/products/${id}`); 
+          load(); 
+        } catch (err) { 
+          Alert.alert('Error', err.response?.data?.error || 'Delete failed'); 
+        }
       }},
     ]);
   };
