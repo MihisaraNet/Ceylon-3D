@@ -1,3 +1,24 @@
+/**
+ * RegisterScreen.jsx — User Registration Screen
+ *
+ * Allows new users to create an account with full name, email, and password.
+ *
+ * Features:
+ *   - Client-side validation (name length, email format, password strength)
+ *   - Real-time password strength indicator with visual progress bars
+ *   - Server-side error display (inline under fields + top banner)
+ *   - Password visibility toggle
+ *   - Auto-focus between form fields via keyboard return key
+ *   - Navigation link to LoginScreen
+ *   - On success: auto-login via AuthContext and navigate to MainTabs
+ *
+ * Password requirements enforced:
+ *   - Minimum 8 characters
+ *   - At least one uppercase letter (A-Z)
+ *   - At least one special character (!@#$%^&*...)
+ *
+ * @module screens/auth/RegisterScreen
+ */
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -55,15 +76,22 @@ export default function RegisterScreen({ navigation }) {
   const rules    = pwRules(password);
   const allRules = rules.length && rules.uppercase && rules.special;
 
-  /* ── Validate ────────────────────────────────────────── */
+  /* ── Client validation ──────────────────────────────── */
+  // Validate signup form before API call.
   const validate = () => {
     const e = {};
+    
+    // Basic full-name validation.
     if (!fullName.trim() || fullName.trim().length < 2)
       e.fullName = 'Full name must be at least 2 characters';
+      
+    // Email required + format check.
     if (!email.trim())
       e.email    = 'Email is required';
     else if (!isEmail(email))
       e.email    = 'Enter a valid email address';
+      
+    // Enforce password policy.
     if (!password)
       e.password = 'Password is required';
     else if (!rules.length)
@@ -72,26 +100,41 @@ export default function RegisterScreen({ navigation }) {
       e.password = 'Add at least one uppercase letter';
     else if (!rules.special)
       e.password = 'Add at least one special character (!@#$%…)';
+      
     setErrors(e);
+    // True means form is valid.
     return Object.keys(e).length === 0;
   };
 
   const handleRegister = async () => {
+    // Reset prior server banner.
     setServerErr('');
+    
+    // Stop early on invalid input.
     if (!validate()) return;
+    
     setLoading(true);
     try {
+      // Normalize payload before registration.
       const { data } = await api.post('/auth/register', {
         fullName: fullName.trim(),
         email:    email.trim().toLowerCase(),
         password,
       });
+      
+      // Auto-login after successful registration.
       await login(data.token, data.user);
     } catch (err) {
       const res = err.response?.data;
+      
+      // Merge backend field errors.
       if (res?.errors) setErrors(prev => ({ ...prev, ...res.errors }));
+      
+      // Show fallback server message.
       setServerErr(res?.error || 'Registration failed. Please try again.');
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));

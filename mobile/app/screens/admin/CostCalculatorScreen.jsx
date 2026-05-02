@@ -21,61 +21,24 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
 import api from '../../lib/api';
 
 export default function CostCalculatorScreen() {
   const [form, setForm] = useState({ printTimeHours:'0', printTimeMinutes:'0', weightGrams:'100', material:'PLA', supportStructures:false });
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
-  // Holds the optional STL file the admin uploads for auto weight estimation
-  const [stlFile, setStlFile] = useState(null);
 
-  // Pick optional STL file and prefill estimated weight.
-  const pickStlFile = async () => {
-    const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-    if (res.canceled) return;
-    const asset = res.assets?.[0];
-    if (!asset) return;
-    const ext = asset.name.split('.').pop().toLowerCase();
-    if (!['stl', 'pdf', 'jpg', 'jpeg'].includes(ext))
-      return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
-    // Auto-fill weight from file size when available: ~1g per 15KB (heuristic)
-    if (typeof asset.size === 'number' && asset.size > 0) {
-      const estimatedWeight = Math.max(5, Math.round((asset.size / 1024) / 15));
-      setForm(p => ({ ...p, weightGrams: String(estimatedWeight) }));
-    }
-    setStlFile(asset);
-  };
-
-  // Submit calculator inputs and render returned cost breakdown.
+  // This function sends the entered dimensions and material to the backend pricing algorithm
   const handleCalc = async () => {
     setLoading(true);
     try {
-      let data;
-      if (stlFile) {
-        // Send as multipart/form-data so the backend can also use file size for estimation
-        const fd = new FormData();
-        fd.append('file', { uri: stlFile.uri, name: stlFile.name, type: stlFile.mimeType || 'application/octet-stream' });
-        fd.append('printTimeHours',   form.printTimeHours);
-        fd.append('printTimeMinutes', form.printTimeMinutes);
-        fd.append('weightGrams',      form.weightGrams);
-        fd.append('material',         form.material);
-        fd.append('supportStructures',String(form.supportStructures));
-        const res = await api.post('/stl-orders/calculate-cost', fd,
-          { headers: { 'Content-Type': 'multipart/form-data' } });
-        data = res.data;
-      } else {
-        // Send as regular JSON when no file is attached
-        const res = await api.post('/stl-orders/calculate-cost', {
-          printTimeHours:   Number(form.printTimeHours),
-          printTimeMinutes: Number(form.printTimeMinutes),
-          weightGrams:      Number(form.weightGrams),
-          material:         form.material,
-          supportStructures:form.supportStructures,
-        });
-        data = res.data;
-      }
+      const { data } = await api.post('/stl-orders/calculate-cost', {
+        printTimeHours:   Number(form.printTimeHours),
+        printTimeMinutes: Number(form.printTimeMinutes),
+        weightGrams:      Number(form.weightGrams),
+        material:         form.material,
+        supportStructures:form.supportStructures,
+      });
       // Save the resulting breakdown (energy, labor, material, etc.) to display on screen
       setResult(data);
     } catch (err) { 
@@ -95,23 +58,6 @@ export default function CostCalculatorScreen() {
   return (
     <ScrollView style={s.container} contentContainerStyle={{ padding:20 }}>
       <Text style={s.title}>Cost Calculator</Text>
-
-      {/* ── Optional STL File Upload ── */}
-      <TouchableOpacity style={[s.uploadBtn, stlFile && s.uploadBtnDone]} onPress={pickStlFile}>
-        <Ionicons name={stlFile ? 'document-text' : 'cloud-upload-outline'} size={20}
-          color={stlFile ? '#22c55e' : '#6366f1'} />
-        <Text style={[s.uploadBtnText, stlFile && { color:'#22c55e' }]}>
-          {stlFile
-            ? `📎 ${stlFile.name.replace(/^[0-9a-f-]+-/i, '')}${typeof stlFile.size === 'number' ? ` · ${(stlFile.size/1024).toFixed(1)} KB` : ''}`
-            : 'Upload STL File (auto-fills weight)'}
-        </Text>
-      </TouchableOpacity>
-      {stlFile && (
-        <TouchableOpacity onPress={() => { setStlFile(null); }} style={s.clearFile}>
-          <Ionicons name="close-circle" size={14} color="#9ca3af" />
-          <Text style={s.clearFileText}>Remove file</Text>
-        </TouchableOpacity>
-      )}
 
       {[
         { key:'printTimeHours',   label:'Print Time (Hours)',   keyboard:'numeric' },
@@ -164,12 +110,7 @@ export default function CostCalculatorScreen() {
 
 const s = StyleSheet.create({
   container:      { flex:1, backgroundColor:'#f9fafb' },
-  title:          { fontSize:22, fontWeight:'800', color:'#111827', marginBottom:16 },
-  uploadBtn:      { flexDirection:'row', alignItems:'center', gap:10, borderWidth:2, borderStyle:'dashed', borderColor:'#6366f1', borderRadius:12, padding:14, backgroundColor:'#eef2ff', marginBottom:6 },
-  uploadBtnDone:  { borderColor:'#22c55e', backgroundColor:'#f0fdf4' },
-  uploadBtnText:  { fontSize:14, fontWeight:'700', color:'#6366f1', flex:1 },
-  clearFile:      { flexDirection:'row', alignItems:'center', gap:4, marginBottom:14, paddingLeft:4 },
-  clearFileText:  { fontSize:12, color:'#9ca3af' },
+  title:          { fontSize:22, fontWeight:'800', color:'#111827', marginBottom:20 },
   fieldGroup:     { marginBottom:14 },
   label:          { fontSize:14, fontWeight:'700', color:'#374151', marginBottom:6 },
   input:          { backgroundColor:'#fff', borderWidth:1, borderColor:'#e5e7eb', borderRadius:12, padding:13, fontSize:15, color:'#111827' },

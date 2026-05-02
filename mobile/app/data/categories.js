@@ -1,3 +1,17 @@
+/**
+ * categories.js — Static Data Constants
+ *
+ * Centralized definitions for categories, materials, and status configurations
+ * used across the mobile app for consistent display and color-coding.
+ *
+ * Exports:
+ *   - CATEGORIES     — Product category definitions (id, name, icon emoji)
+ *   - STL_MATERIALS  — Available 3D printing materials with descriptions
+ *   - ORDER_STATUSES — Shop order status labels and badge colors
+ *   - STL_STATUSES   — STL print order status labels and badge colors
+ *
+ * @module data/categories
+ */
 export const CATEGORIES = [
   { id: 'miniatures', name: 'Miniatures', icon: '🎮' },
   { id: 'prototypes', name: 'Prototypes', icon: '⚙️' },

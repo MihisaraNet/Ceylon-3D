@@ -1,3 +1,21 @@
+/**
+ * StlOrdersAdminScreen.jsx — Admin STL / 3D Print Order Management
+ *
+ * Displays all STL print orders for admin review, pricing, and status management.
+ *
+ * Features:
+ *   - Flat list of all STL orders with customer info, price, and status badge
+ *   - Expandable cards showing:
+ *       - File name, material, quantity, phone, address, notes
+ *       - Weight and print time (if set)
+ *       - Status change chips (PENDING_QUOTE through DELIVERED/CANCELLED)
+ *       - Delete order button (removes order + uploaded file from disk)
+ *   - Real-time status updates via PUT /stl-orders/admin/:id/status
+ *   - Delete confirmation dialog
+ *   - Color-coded status badges using STL_STATUSES from categories.js
+ *
+ * @module screens/admin/StlOrdersAdminScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,17 +37,27 @@ export default function StlOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  // This function updates the order status (e.g., from 'QUOTED' to 'PRINTING')
   const updateStatus = async (id, status) => {
-    try { await api.put(`/stl-orders/admin/${id}/status`, { status }); load(); }
-    catch (err) { Alert.alert('Error', err.response?.data?.error || 'Failed'); }
+    try { 
+      await api.put(`/stl-orders/admin/${id}/status`, { status }); 
+      load(); // Reload the list to show the new status badge
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Failed'); 
+    }
   };
 
+  // This function permanently deletes an STL order and its associated 3D file from the server
   const deleteOrder = (id) => {
     Alert.alert('Delete', 'Delete this STL order and its file?', [
       { text:'Cancel', style:'cancel' },
       { text:'Delete', style:'destructive', onPress: async () => {
-        try { await api.delete(`/stl-orders/admin/${id}`); load(); }
-        catch (err) { Alert.alert('Error', err.response?.data?.error || 'Delete failed'); }
+        try { 
+          await api.delete(`/stl-orders/admin/${id}`); 
+          load(); // Remove the deleted order from the screen
+        } catch (err) { 
+          Alert.alert('Error', err.response?.data?.error || 'Delete failed'); 
+        }
       }},
     ]);
   };

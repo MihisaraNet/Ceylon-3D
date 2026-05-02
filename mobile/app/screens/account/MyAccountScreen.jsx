@@ -1,5 +1,24 @@
+/**
+ * MyAccountScreen.jsx — User Account & Order History
+ *
+ * Displays user profile info, order history, and account management options.
+ *
+ * Tabs:
+ *   1. My Orders  — List of shop orders with expandable details (items, tracking, address)
+ *   2. 3D Orders  — List of STL print orders with status, specs, and confirm action
+ *   3. Profile    — View user name, email, and roles
+ *
+ * Features:
+ *   - Expandable order cards showing item details, tracking numbers, and shipping addresses
+ *   - STL order confirmation button (for QUOTED orders — transitions to CONFIRMED)
+ *   - Status badges color-coded by order/STL status
+ *   - Admin Dashboard shortcut button (visible only to admin users)
+ *   - Logout with confirmation dialog
+ *
+ * @module screens/account/MyAccountScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -27,6 +46,7 @@ export default function MyAccountScreen() {
   const [stlOrders, setStlOrders]    = useState([]);
   const [activeTab, setActiveTab]    = useState('orders');
   const [loading, setLoading]        = useState(false);
+  const [refreshing, setRefreshing]  = useState(false);
   const [expanded, setExpanded]      = useState(null);
   const [confirmingId, setConfirming] = useState(null);
 
@@ -46,6 +66,15 @@ export default function MyAccountScreen() {
 
   useEffect(() => { if (activeTab === 'orders' || activeTab === '3d') loadOrders(); }, [activeTab, loadOrders]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadOrders();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadOrders]);
+
   const confirmOrder = async (id) => {
     setConfirming(id);
     try {
@@ -64,7 +93,17 @@ export default function MyAccountScreen() {
   ];
 
   return (
-    <ScrollView style={s.container}>
+    <ScrollView
+      style={s.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={['#6366f1']}
+          tintColor="#6366f1"
+        />
+      }
+    >
       {/* Header */}
       <View style={s.header}>
         <View style={s.avatar}><Ionicons name="person" size={36} color="#fff" /></View>

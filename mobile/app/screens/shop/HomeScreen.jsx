@@ -1,3 +1,22 @@
+/**
+ * HomeScreen.jsx — Landing / Home Page
+ *
+ * The main entry screen of the Ceylon3D app, displayed as the first tab.
+ * Features a rich, branded layout with multiple sections.
+ *
+ * Sections:
+ *   1. Hero Banner — Gradient background with tagline, Upload STL & Browse Shop CTAs
+ *   2. Stats Row   — 500+ Orders, 99% Rating, 24h Delivery (overlapping card design)
+ *   3. Services Grid — Four service cards: Prototyping, Manufacturing, Design, Consultation
+ *   4. Quick Action Banner — "Ready to order?" gradient CTA linking to Browse
+ *   5. About Card  — Company info with email, phone, and location
+ *
+ * Conditional elements:
+ *   - Cart pill badge (top-right) if user has items in cart
+ *   - Admin Dashboard button if user has ROLE_ADMIN
+ *
+ * @module screens/shop/HomeScreen
+ */
 import React, { useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
@@ -136,7 +155,7 @@ export default function HomeScreen() {
           </Text>
           {[
             { icon: 'mail-outline',     text: 'contact@ceylon3d.com' },
-            { icon: 'call-outline',     text: '+94 (0) 123 4567' },
+            { icon: 'call-outline',     text: '+94 (077) 123 4567' },
             { icon: 'location-outline', text: 'Colombo, Sri Lanka' },
           ].map(({ icon, text }) => (
             <View key={text} style={s.contactRow}>

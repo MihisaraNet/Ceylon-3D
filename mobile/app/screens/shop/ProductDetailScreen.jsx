@@ -1,3 +1,23 @@
+/**
+ * ProductDetailScreen.jsx — Single Product Detail View
+ *
+ * Displays full details for a single product with add-to-cart functionality.
+ * Accessed by tapping a product card in BrowseScreen.
+ *
+ * Features:
+ *   - Large hero image (or placeholder with category-colored icon)
+ *   - Category pill badge, product name, and price
+ *   - Stock status indicator (In Stock / Low Stock / Out of Stock)
+ *   - Product description section
+ *   - Quantity selector with +/- buttons and live line total calculation
+ *   - Sticky bottom bar with:
+ *       - View Cart shortcut (with badge count)
+ *       - Add to Cart button (disabled when out of stock)
+ *       - Inline error banner for stock/server errors
+ *   - Success alert with "Keep Browsing" / "View Cart" options
+ *
+ * @module screens/shop/ProductDetailScreen
+ */
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, Image, TouchableOpacity, StyleSheet,
@@ -54,12 +74,20 @@ export default function ProductDetailScreen({ route }) {
   };
 
   /* ── Add to cart ─────────────────────────────────────── */
+  // This function adds the selected quantity of this product to the user's cart
   const handleAdd = async () => {
+    // Prevent multiple submissions if it is already adding
     if (adding) return;
+    
+    // Clear any previous error messages
     setAddErr('');
     setAdding(true);
+    
     try {
+      // Send the request to the CartContext to handle the API call
       await addToCart(product._id, qty);
+      
+      // If successful, show an alert with navigation options
       Alert.alert(
         'Added to Cart ✓',
         `${qty} × ${product.name} added successfully.`,
@@ -69,6 +97,7 @@ export default function ProductDetailScreen({ route }) {
         ]
       );
     } catch (err) {
+      // If there's an error (like trying to add more than the available stock), show it below the button
       const msg = err.response?.data?.error || err.message || 'Could not add to cart';
       setAddErr(msg);
     } finally {
