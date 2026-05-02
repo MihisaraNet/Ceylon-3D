@@ -1,3 +1,21 @@
+/**
+ * ShopOrdersAdminScreen.jsx — Admin Shop Order Management
+ *
+ * Displays all shop orders for admin review and management.
+ *
+ * Features:
+ *   - Flat list of all orders with customer name, order ID, total, and status badge
+ *   - Expandable cards showing:
+ *       - Order items (product name × quantity — price)
+ *       - Shipping address
+ *       - Tracking number input and "Set" button
+ *       - Status change chips (PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+ *   - Real-time status updates via PUT /orders/admin/:id/status
+ *   - Tracking number assignment via PUT /orders/admin/:id/tracking
+ *   - Color-coded status badges using ORDER_STATUSES from categories.js
+ *
+ * @module screens/admin/ShopOrdersAdminScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
 import api from '../../lib/api';

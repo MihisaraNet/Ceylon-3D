@@ -1,3 +1,21 @@
+/**
+ * AdminDashboardScreen.jsx — Admin Management Console
+ *
+ * The main admin landing page showing key statistics and quick action links.
+ *
+ * Stats cards:
+ *   - STL Orders count (navigates to StlOrdersAdmin)
+ *   - Shop Orders count (navigates to ShopOrdersAdmin)
+ *   - Products count (navigates to ManageProducts)
+ *   - Pending Quotes count (navigates to StlOrdersAdmin)
+ *
+ * Quick actions:
+ *   - Add Product, Manage Products, STL Orders, Shop Orders, Cost Calculator
+ *
+ * Data is fetched in parallel from /stl-orders/admin, /orders/admin, and /api/products.
+ *
+ * @module screens/admin/AdminDashboardScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

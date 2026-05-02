@@ -1,3 +1,18 @@
+/**
+ * LoginScreen.jsx — User Sign-In Screen
+ *
+ * Allows existing users to authenticate with email and password.
+ *
+ * Features:
+ *   - Client-side validation (email format, password required)
+ *   - Server-side error display (inline under fields + top banner)
+ *   - Password visibility toggle
+ *   - Auto-focus from email to password field
+ *   - Navigation link to RegisterScreen
+ *   - On success: calls AuthContext.login() to store token & navigate to MainTabs
+ *
+ * @module screens/auth/LoginScreen
+ */
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,

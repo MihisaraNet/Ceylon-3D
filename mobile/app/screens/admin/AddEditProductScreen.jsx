@@ -1,4 +1,14 @@
-// Placeholder for Add/Edit Product (full implementation in ManageProductsScreen modal)
+/**
+ * AddEditProductScreen.jsx — Add/Edit Product Placeholder
+ *
+ * This is a placeholder screen that redirects users to the ManageProductsScreen,
+ * where the full add/edit product functionality is implemented via a modal dialog.
+ *
+ * This screen exists as a navigation target in the AdminStack so that the
+ * "Add Product" quick action on the Admin Dashboard has a valid route.
+ *
+ * @module screens/admin/AddEditProductScreen
+ */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 

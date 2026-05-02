@@ -1,3 +1,22 @@
+/**
+ * ManageProductsScreen.jsx — Admin Product Management
+ *
+ * Full CRUD interface for managing the product catalogue.
+ *
+ * Features:
+ *   - Product list with thumbnail, name, category, price, and stock
+ *   - "Add New Product" button at the top
+ *   - Edit (pencil) and Delete (trash) actions per product
+ *   - Full-screen modal for Add/Edit with:
+ *       - Image picker (expo-image-picker)
+ *       - Name, Price, Stock, Description fields with validation
+ *       - Category selection chips
+ *       - Client-side + server-side error display
+ *   - Delete confirmation dialog with warning about cart cleanup
+ *   - Supports multipart/form-data image uploads
+ *
+ * @module screens/admin/ManageProductsScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput, Modal, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

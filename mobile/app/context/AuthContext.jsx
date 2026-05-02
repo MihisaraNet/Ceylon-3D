@@ -1,3 +1,23 @@
+/**
+ * AuthContext.jsx — Authentication State Management
+ *
+ * Provides global authentication state to the entire app via React Context.
+ * Persists auth data (JWT token + user object) in AsyncStorage for session persistence.
+ *
+ * Provided values:
+ *   - user    {Object|null} — Current user object { id, email, fullName, roles } or null
+ *   - token   {string|null} — JWT token string or null
+ *   - loading {boolean}     — True while restoring session from AsyncStorage on app start
+ *   - login(token, user)    — Save auth data and update state
+ *   - logout()              — Clear auth data from storage and state
+ *   - isAdmin {boolean}     — Convenience flag: true if user has 'ROLE_ADMIN'
+ *
+ * Usage:
+ *   import { useAuth } from './context/AuthContext';
+ *   const { user, login, logout, isAdmin } = useAuth();
+ *
+ * @module context/AuthContext
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

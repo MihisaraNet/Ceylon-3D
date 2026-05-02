@@ -1,3 +1,23 @@
+/**
+ * ProductDetailScreen.jsx — Single Product Detail View
+ *
+ * Displays full details for a single product with add-to-cart functionality.
+ * Accessed by tapping a product card in BrowseScreen.
+ *
+ * Features:
+ *   - Large hero image (or placeholder with category-colored icon)
+ *   - Category pill badge, product name, and price
+ *   - Stock status indicator (In Stock / Low Stock / Out of Stock)
+ *   - Product description section
+ *   - Quantity selector with +/- buttons and live line total calculation
+ *   - Sticky bottom bar with:
+ *       - View Cart shortcut (with badge count)
+ *       - Add to Cart button (disabled when out of stock)
+ *       - Inline error banner for stock/server errors
+ *   - Success alert with "Keep Browsing" / "View Cart" options
+ *
+ * @module screens/shop/ProductDetailScreen
+ */
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, Image, TouchableOpacity, StyleSheet,

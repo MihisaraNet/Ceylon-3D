@@ -1,3 +1,22 @@
+/**
+ * MyAccountScreen.jsx — User Account & Order History
+ *
+ * Displays user profile info, order history, and account management options.
+ *
+ * Tabs:
+ *   1. My Orders  — List of shop orders with expandable details (items, tracking, address)
+ *   2. 3D Orders  — List of STL print orders with status, specs, and confirm action
+ *   3. Profile    — View user name, email, and roles
+ *
+ * Features:
+ *   - Expandable order cards showing item details, tracking numbers, and shipping addresses
+ *   - STL order confirmation button (for QUOTED orders — transitions to CONFIRMED)
+ *   - Status badges color-coded by order/STL status
+ *   - Admin Dashboard shortcut button (visible only to admin users)
+ *   - Logout with confirmation dialog
+ *
+ * @module screens/account/MyAccountScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

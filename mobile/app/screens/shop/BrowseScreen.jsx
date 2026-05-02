@@ -1,3 +1,20 @@
+/**
+ * BrowseScreen.jsx — Product Catalogue / Shop Browser
+ *
+ * Displays all products in a responsive 2-column grid with rich card designs.
+ *
+ * Features:
+ *   - Real-time search filtering by product name
+ *   - Category tab filtering (All, Miniatures, Prototypes, Art, Functional, Custom)
+ *   - Quick "Add to Cart" button on each card with loading state
+ *   - Stock indicators: "Sold Out" overlay, "Only X left" low-stock badge
+ *   - Pull-to-refresh to reload products from the backend
+ *   - Floating "View Cart" button with item count (animated spring entrance)
+ *   - Category-specific accent colors for visual distinction
+ *   - Tap any card to navigate to ProductDetailScreen
+ *
+ * @module screens/shop/BrowseScreen
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity,

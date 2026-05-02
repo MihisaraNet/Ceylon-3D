@@ -1,3 +1,26 @@
+/**
+ * CartScreen.jsx — Shopping Cart & Checkout Flow
+ *
+ * Displays the user's cart items with full checkout functionality.
+ *
+ * States:
+ *   - Empty cart → Friendly empty state with "Browse Products" CTA
+ *   - Loading    → Spinner while cart data is being fetched
+ *   - Cart view  → List of items with quantity controls
+ *   - Checkout   → Delivery details form (name, phone, address, city)
+ *   - Success    → Order confirmation screen with "Continue Shopping" button
+ *
+ * Features:
+ *   - Quantity adjustment (+/-) with server-side stock validation
+ *   - Inline error messages per item when stock limits are exceeded
+ *   - Remove individual items or clear entire cart
+ *   - Order summary with subtotal, free delivery badge, and total
+ *   - Cash on Delivery (COD) payment notice
+ *   - Delivery form with client-side validation (phone format, required fields)
+ *   - Color-coded accent bars on each cart item card
+ *
+ * @module screens/shop/CartScreen
+ */
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,

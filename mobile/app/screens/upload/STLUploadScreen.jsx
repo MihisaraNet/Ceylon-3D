@@ -1,3 +1,26 @@
+/**
+ * STLUploadScreen.jsx — 3D Print Order Upload Wizard
+ *
+ * A 3-step wizard for submitting custom 3D print orders.
+ *
+ * Steps:
+ *   1. Upload File   — Pick a file (.stl/.pdf/.jpg/.jpeg), choose material & quantity, add notes
+ *   2. Your Details  — Enter contact info (name, email, phone, address)
+ *   3. Review & Submit — Review all details, see trust badges, then submit
+ *
+ * Features:
+ *   - Visual step indicator (dots + progress line)
+ *   - File picker using expo-document-picker with extension validation
+ *   - Material selection grid (PLA, ABS, PETG, Resin) with emoji icons
+ *   - Quantity selector with +/- buttons
+ *   - Contact form pre-filled from AuthContext user data
+ *   - Review panel with all submitted info before final submission
+ *   - Trust badges: "No upfront payment", "Quote before printing", "Secure upload"
+ *   - Success screen with order ID, file name, material, estimated price
+ *   - "Submit Another Order" button to reset and start over
+ *
+ * @module screens/upload/STLUploadScreen
+ */
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';

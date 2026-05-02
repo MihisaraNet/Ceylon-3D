@@ -1,3 +1,24 @@
+/**
+ * RegisterScreen.jsx — User Registration Screen
+ *
+ * Allows new users to create an account with full name, email, and password.
+ *
+ * Features:
+ *   - Client-side validation (name length, email format, password strength)
+ *   - Real-time password strength indicator with visual progress bars
+ *   - Server-side error display (inline under fields + top banner)
+ *   - Password visibility toggle
+ *   - Auto-focus between form fields via keyboard return key
+ *   - Navigation link to LoginScreen
+ *   - On success: auto-login via AuthContext and navigate to MainTabs
+ *
+ * Password requirements enforced:
+ *   - Minimum 8 characters
+ *   - At least one uppercase letter (A-Z)
+ *   - At least one special character (!@#$%^&*...)
+ *
+ * @module screens/auth/RegisterScreen
+ */
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
