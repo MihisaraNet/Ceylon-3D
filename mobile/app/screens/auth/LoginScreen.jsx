@@ -1,7 +1,8 @@
 /**
- * LoginScreen.jsx — User Authentication
- *
- * Modern, colorful and simple design.
+ * LoginScreen.jsx — High-End Authentication
+ * 
+ * Attractive, minimalist design with a focus on 
+ * premium typography and clean form elements.
  */
 import React, { useState } from 'react';
 import {
@@ -19,13 +20,13 @@ export default function LoginScreen({ navigation }) {
   const [error,    setError]    = useState('');
 
   const handleLogin = async () => {
-    if (!email || !password) return setError('Please fill all fields');
+    if (!email || !password) return setError('Email and password required');
     setError('');
     setLoading(true);
     try {
       await login(email, password);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || 'Authentication failed');
     } finally {
       setLoading(false);
     }
@@ -33,70 +34,68 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#4f46e5" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={s.scroll} bounces={false}>
+        <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
           
           <View style={s.header}>
             <View style={s.logoWrap}>
-              <Ionicons name="cube" size={40} color="#fff" />
+              <Ionicons name="cube" size={32} color="#0f172a" />
             </View>
-            <Text style={s.title}>Welcome Back</Text>
-            <Text style={s.sub}>Login to your LayerForge 3D account</Text>
+            <Text style={s.title}>Sign In</Text>
+            <Text style={s.sub}>Access your design workstation</Text>
           </View>
 
           <View style={s.form}>
             {!!error && (
-              <View style={s.errBanner}>
-                <Ionicons name="alert-circle" size={20} color="#ef4444" />
+              <View style={s.errBox}>
+                <Ionicons name="alert-circle" size={18} color="#f43f5e" />
                 <Text style={s.errText}>{error}</Text>
               </View>
             )}
 
-            <View style={s.inputGroup}>
+            <View style={s.field}>
               <Text style={s.label}>EMAIL ADDRESS</Text>
-              <View style={s.inputWrap}>
-                <Ionicons name="mail-outline" size={20} color="#94a3b8" style={s.inputIcon} />
-                <TextInput
-                  style={s.input}
-                  placeholder="name@example.com"
-                  placeholderTextColor="#94a3b8"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-              </View>
+              <TextInput
+                style={s.input}
+                placeholder="name@company.com"
+                placeholderTextColor="#94a3b8"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
             </View>
 
-            <View style={s.inputGroup}>
+            <View style={s.field}>
               <Text style={s.label}>PASSWORD</Text>
-              <View style={s.inputWrap}>
-                <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" style={s.inputIcon} />
-                <TextInput
-                  style={s.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#94a3b8"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-              </View>
+              <TextInput
+                style={s.input}
+                placeholder="Your secure password"
+                placeholderTextColor="#94a3b8"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
             </View>
 
-            <TouchableOpacity style={s.loginBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
-              {loading ? <ActivityIndicator color="#fff" /> : (
-                <>
-                  <Text style={s.loginBtnText}>Sign In</Text>
-                  <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
-                </>
+            <TouchableOpacity 
+              style={s.loginBtn} 
+              onPress={handleLogin} 
+              disabled={loading}
+              activeOpacity={0.9}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={s.loginBtnText}>Continue</Text>
               )}
             </TouchableOpacity>
 
             <View style={s.footer}>
-              <Text style={s.footerText}>New here? </Text>
+              <Text style={s.footerText}>Need an account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={s.linkText}>Create an account</Text>
+                <Text style={s.linkText}>Register now</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -107,27 +106,25 @@ export default function LoginScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#4f46e5' },
-  scroll:         { flexGrow: 1 },
-  header:         { paddingHorizontal: 32, paddingTop: 60, paddingBottom: 40, alignItems: 'center' },
-  logoWrap:       { width: 80, height: 80, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  title:          { fontSize: 32, fontWeight: '900', color: '#fff', textAlign: 'center', letterSpacing: -1 },
-  sub:            { fontSize: 16, color: '#e0e7ff', textAlign: 'center', marginTop: 8, fontWeight: '600' },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  content: { flexGrow: 1, padding: 32, justifyContent: 'center' },
+  header: { alignItems: 'center', marginBottom: 48 },
+  logoWrap: { width: 72, height: 72, backgroundColor: '#f8fafc', borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  title: { fontSize: 32, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5 },
+  sub: { fontSize: 15, color: '#64748b', marginTop: 8, fontWeight: '600' },
 
-  form:           { flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 32, paddingTop: 48 },
-  errBanner:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 12, borderRadius: 16, marginBottom: 24, borderWidth: 1, borderColor: '#fee2e2' },
-  errText:        { color: '#ef4444', marginLeft: 8, fontWeight: '700', fontSize: 14 },
+  form: { width: '100%' },
+  errBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 14, borderRadius: 16, marginBottom: 24, borderWidth: 1, borderColor: '#fee2e2' },
+  errText: { color: '#f43f5e', marginLeft: 10, fontWeight: '700', fontSize: 13 },
 
-  inputGroup:     { marginBottom: 20 },
-  label:           { fontSize: 11, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, marginBottom: 8 },
-  inputWrap:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9' },
-  inputIcon:      { marginLeft: 16 },
-  input:          { flex: 1, paddingVertical: 16, paddingHorizontal: 12, fontSize: 15, color: '#1e293b', fontWeight: '600' },
+  field: { marginBottom: 24 },
+  label: { fontSize: 11, fontWeight: '900', color: '#94a3b8', letterSpacing: 1.5, marginBottom: 10 },
+  input: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 20, fontSize: 15, color: '#1e293b', fontWeight: '600', borderWidth: 1, borderColor: '#f1f5f9' },
 
-  loginBtn:       { flexDirection: 'row', backgroundColor: '#4f46e5', borderRadius: 16, paddingVertical: 18, justifyContent: 'center', alignItems: 'center', marginTop: 12, shadowColor: '#4f46e5', shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
-  loginBtnText:   { color: '#fff', fontSize: 16, fontWeight: '800' },
+  loginBtn: { backgroundColor: '#0f172a', borderRadius: 24, height: 68, justifyContent: 'center', alignItems: 'center', marginTop: 12, shadowColor: '#0f172a', shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
+  loginBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 
-  footer:         { flexDirection: 'row', justifyContent: 'center', marginTop: 32 },
-  footerText:     { color: '#64748b', fontSize: 15, fontWeight: '600' },
-  linkText:       { color: '#4f46e5', fontSize: 15, fontWeight: '800' },
+  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 40 },
+  footerText: { color: '#64748b', fontSize: 14, fontWeight: '600' },
+  linkText: { color: '#0f172a', fontSize: 14, fontWeight: '800' },
 });
