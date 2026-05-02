@@ -15,11 +15,7 @@ import { View, Text, StyleSheet } from 'react-native';
 export default function AddEditProductScreen({ route }) {
   return (
     <View style={s.container}>
-      {/* 
-        This is a placeholder view.
-        The actual Add/Edit product form is implemented as a full-screen Modal
-        inside the ManageProductsScreen.jsx file.
-      */}
+      {/* Placeholder route: actual CRUD form lives in `ManageProductsScreen`. */}
       <Text style={s.text}>Add/Edit product functionality is available in Manage Products screen.</Text>
     </View>
   );
