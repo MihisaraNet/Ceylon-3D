@@ -1,7 +1,8 @@
 /**
- * MyAccountScreen.jsx — User Account & Order History
- *
- * Modern, colorful and simple design.
+ * MyAccountScreen.jsx — Personal Command Center
+ * 
+ * Premium, attractive design with a clean 
+ * profile header and refined order history.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, SafeAreaView, StatusBar } from 'react-native';
@@ -11,11 +12,11 @@ import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { ORDER_STATUSES, STL_STATUSES } from '../../data/categories';
 
-const StatusBadge = ({ status, map }) => {
+const StatusPill = ({ status, map }) => {
   const cfg = map[status] || { label: status, color: '#64748b' };
   return (
-    <View style={[s.badge, { backgroundColor: cfg.color + '15', borderColor: cfg.color + '30' }]}>
-      <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+    <View style={[s.statusPill, { backgroundColor: cfg.color + '10', borderColor: cfg.color + '20' }]}>
+      <Text style={[s.statusText, { color: cfg.color }]}>{cfg.label.toUpperCase()}</Text>
     </View>
   );
 };
@@ -25,12 +26,11 @@ export default function MyAccountScreen() {
   const nav = useNavigation();
   const [shopOrders, setShopOrders]  = useState([]);
   const [stlOrders, setStlOrders]    = useState([]);
-  const [activeTab, setActiveTab]    = useState('orders');
+  const [activeTab, setActiveTab]    = useState('shop');
   const [loading, setLoading]        = useState(false);
   const [refreshing, setRefreshing]  = useState(false);
-  const [expanded, setExpanded]      = useState(null);
 
-  const loadOrders = useCallback(async () => {
+  const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -43,25 +43,25 @@ export default function MyAccountScreen() {
     } catch { } finally { setLoading(false); }
   }, [user]);
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
+  useEffect(() => { load(); }, [load]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    try { await loadOrders(); } finally { setRefreshing(false); }
-  }, [loadOrders]);
+    try { await load(); } finally { setRefreshing(false); }
+  }, [load]);
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#4f46e5" />
+      <StatusBar barStyle="light-content" backgroundColor="#0f172a" />
       
-      <View style={s.header}>
+      <View style={s.profileHeader}>
         <View style={s.profileTop}>
-          <View style={s.avatarWrap}>
-            <Ionicons name="person" size={32} color="#fff" />
+          <View style={s.avatarBox}>
+            <Ionicons name="person" size={28} color="#0f172a" />
           </View>
           <View style={s.profileInfo}>
-            <Text style={s.name}>{user?.fullName}</Text>
-            <Text style={s.email}>{user?.email}</Text>
+            <Text style={s.userName}>{user?.fullName}</Text>
+            <Text style={s.userEmail}>{user?.email}</Text>
           </View>
           <TouchableOpacity style={s.logoutBtn} onPress={logout}>
             <Ionicons name="log-out-outline" size={24} color="#fff" />
@@ -69,25 +69,25 @@ export default function MyAccountScreen() {
         </View>
 
         {isAdmin && (
-          <TouchableOpacity style={s.adminPill} onPress={() => nav.navigate('AdminStack')}>
+          <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')}>
             <Ionicons name="shield-checkmark" size={16} color="#fff" />
-            <Text style={s.adminPillText}>Admin Dashboard</Text>
+            <Text style={s.adminBtnText}>Admin Console</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={s.tabContainer}>
+      <View style={s.tabBar}>
         {[
-          { id: 'orders', label: 'Shop Orders', icon: 'receipt-outline' },
-          { id: '3d',     label: '3D Orders',   icon: 'print-outline' },
-          { id: 'profile',label: 'Profile',     icon: 'person-outline' },
+          { id: 'shop', label: 'Shop', icon: 'cart-outline' },
+          { id: '3d',   label: '3D Print', icon: 'cube-outline' },
+          { id: 'info', label: 'Identity', icon: 'finger-print-outline' },
         ].map(t => (
           <TouchableOpacity
             key={t.id}
             style={[s.tab, activeTab === t.id && s.tabActive]}
             onPress={() => setActiveTab(t.id)}
           >
-            <Ionicons name={t.icon} size={20} color={activeTab === t.id ? '#6366f1' : '#94a3b8'} />
+            <Ionicons name={t.icon} size={18} color={activeTab === t.id ? '#0f172a' : '#94a3b8'} />
             <Text style={[s.tabText, activeTab === t.id && s.tabTextActive]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
@@ -96,29 +96,22 @@ export default function MyAccountScreen() {
       <ScrollView
         style={s.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#6366f1" />}
-        contentContainerStyle={{ padding: 20 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 24 }}
       >
-        {activeTab === 'orders' && (
+        {activeTab === 'shop' && (
           <>
             {loading && !refreshing ? <ActivityIndicator color="#6366f1" /> : shopOrders.length === 0 ? (
-              <Text style={s.empty}>No orders yet</Text>
+              <Text style={s.empty}>No activity found</Text>
             ) : shopOrders.map(o => (
-              <TouchableOpacity key={o._id} style={s.card} onPress={() => setExpanded(expanded === o._id ? null : o._id)}>
-                <View style={s.cardHeader}>
-                  <Text style={s.orderId}>ORDER #{o._id.slice(-6).toUpperCase()}</Text>
-                  <StatusBadge status={o.status} map={ORDER_STATUSES} />
+              <View key={o._id} style={s.orderCard}>
+                <View style={s.cardTop}>
+                  <Text style={s.orderRef}>REF: #{o._id.slice(-6).toUpperCase()}</Text>
+                  <StatusPill status={o.status} map={ORDER_STATUSES} />
                 </View>
-                <Text style={s.cardTotal}>LKR {o.totalAmount?.toFixed(2)}</Text>
-                <Text style={s.cardDate}>{new Date(o.createdAt).toLocaleDateString()}</Text>
-                {expanded === o._id && (
-                  <View style={s.details}>
-                    {o.items?.map((item, i) => (
-                      <Text key={i} style={s.detailItem}>{item.productName} × {item.quantity}</Text>
-                    ))}
-                    <Text style={s.addressText}>{o.shippingAddress}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
+                <Text style={s.cardTitle}>LKR {o.totalAmount?.toFixed(2)}</Text>
+                <Text style={s.cardDate}>{new Date(o.createdAt).toDateString()}</Text>
+              </View>
             ))}
           </>
         )}
@@ -128,37 +121,31 @@ export default function MyAccountScreen() {
             {loading && !refreshing ? <ActivityIndicator color="#6366f1" /> : stlOrders.length === 0 ? (
               <Text style={s.empty}>No 3D orders yet</Text>
             ) : stlOrders.map(o => (
-              <TouchableOpacity key={o._id} style={s.card} onPress={() => setExpanded(expanded === o._id ? null : o._id)}>
-                <View style={s.cardHeader}>
-                  <Text style={s.orderId}>3D #{o._id.slice(-6).toUpperCase()}</Text>
-                  <StatusBadge status={o.status} map={STL_STATUSES} />
+              <View key={o._id} style={s.orderCard}>
+                <View style={s.cardTop}>
+                  <Text style={s.orderRef}>3D: #{o._id.slice(-6).toUpperCase()}</Text>
+                  <StatusPill status={o.status} map={STL_STATUSES} />
                 </View>
-                <Text style={s.cardInfo}>{o.material} — Qty: {o.quantity}</Text>
-                {o.estimatedPrice && <Text style={s.cardTotal}>LKR {o.estimatedPrice?.toFixed(2)}</Text>}
-                {expanded === o._id && (
-                  <View style={s.details}>
-                    <Text style={s.detailItem}>File: {o.fileName?.replace(/^[0-9a-f-]+-/i,'')}</Text>
-                    {o.weightGrams && <Text style={s.detailItem}>Weight: {o.weightGrams}g</Text>}
-                  </View>
-                )}
-              </TouchableOpacity>
+                <Text style={s.cardTitle}>{o.material} × {o.quantity}</Text>
+                {o.estimatedPrice && <Text style={s.priceSub}>Est. LKR {o.estimatedPrice?.toFixed(0)}</Text>}
+              </View>
             ))}
           </>
         )}
 
-        {activeTab === 'profile' && (
-          <View style={s.profileCard}>
+        {activeTab === 'info' && (
+          <View style={s.infoSheet}>
             <View style={s.infoRow}>
-              <Text style={s.infoLabel}>FULL NAME</Text>
-              <Text style={s.infoVal}>{user?.fullName}</Text>
+              <Text style={s.infoLabel}>REGISTERED NAME</Text>
+              <Text style={s.infoValue}>{user?.fullName}</Text>
             </View>
             <View style={s.infoRow}>
-              <Text style={s.infoLabel}>EMAIL ADDRESS</Text>
-              <Text style={s.infoVal}>{user?.email}</Text>
-            </Text>
+              <Text style={s.infoLabel}>ACCOUNT EMAIL</Text>
+              <Text style={s.infoValue}>{user?.email}</Text>
+            </View>
             <View style={s.infoRow}>
-              <Text style={s.infoLabel}>ACCOUNT ROLE</Text>
-              <Text style={s.infoVal}>{user?.roles?.join(', ')}</Text>
+              <Text style={s.infoLabel}>AUTHORIZATION</Text>
+              <Text style={s.infoValue}>{user?.roles?.join(' · ').toUpperCase()}</Text>
             </View>
           </View>
         )}
@@ -168,39 +155,36 @@ export default function MyAccountScreen() {
 }
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8fafc' },
-  header:         { backgroundColor: '#4f46e5', paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-  profileTop:     { flexDirection: 'row', alignItems: 'center' },
-  avatarWrap:     { width: 64, height: 64, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  profileInfo:    { flex: 1, marginLeft: 16 },
-  name:           { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
-  email:          { fontSize: 14, color: '#e0e7ff', fontWeight: '600', marginTop: 2 },
-  logoutBtn:      { padding: 8 },
-  adminPill:      { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginTop: 24 },
-  adminPillText:  { color: '#fff', fontSize: 13, fontWeight: '700', marginLeft: 8 },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  profileHeader: { backgroundColor: '#0f172a', paddingHorizontal: 28, paddingTop: 20, paddingBottom: 48, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 },
+  profileTop: { flexDirection: 'row', alignItems: 'center' },
+  avatarBox: { width: 60, height: 60, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  profileInfo: { flex: 1, marginLeft: 16 },
+  userName: { fontSize: 24, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  userEmail: { fontSize: 14, color: '#94a3b8', fontWeight: '600', marginTop: 2 },
+  logoutBtn: { padding: 8 },
+  adminBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginTop: 28, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  adminBtnText: { color: '#fff', fontSize: 12, fontWeight: '800', marginLeft: 8, letterSpacing: 1 },
 
-  tabContainer:   { flexDirection: 'row', backgroundColor: '#fff', marginHorizontal: 20, marginTop: -24, borderRadius: 20, padding: 6, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 10 },
-  tab:            { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 16, gap: 4 },
-  tabActive:      { backgroundColor: '#f5f3ff' },
-  tabText:        { fontSize: 12, fontWeight: '700', color: '#94a3b8' },
-  tabTextActive:  { color: '#6366f1' },
+  tabBar: { flexDirection: 'row', backgroundColor: '#fff', marginHorizontal: 24, marginTop: -26, borderRadius: 24, padding: 6, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 20, elevation: 12 },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', height: 50, borderRadius: 20, gap: 4 },
+  tabActive: { backgroundColor: '#f1f5f9' },
+  tabText: { fontSize: 11, fontWeight: '800', color: '#94a3b8' },
+  tabTextActive: { color: '#0f172a' },
 
-  scroll:         { flex: 1 },
-  empty:          { textAlign: 'center', color: '#94a3b8', marginTop: 60, fontWeight: '700' },
-  card:           { backgroundColor: '#fff', borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
-  cardHeader:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  orderId:        { fontSize: 11, fontWeight: '900', color: '#94a3b8', letterSpacing: 1 },
-  badge:          { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },
-  badgeText:      { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  cardTotal:      { fontSize: 18, fontWeight: '900', color: '#1e293b' },
-  cardInfo:       { fontSize: 14, color: '#64748b', fontWeight: '600', marginBottom: 4 },
-  cardDate:       { fontSize: 12, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
-  details:        { borderTopWidth: 1, borderColor: '#f1f5f9', marginTop: 16, paddingTop: 16 },
-  detailItem:     { fontSize: 14, color: '#475569', marginBottom: 6, fontWeight: '600' },
-  addressText:    { fontSize: 13, color: '#94a3b8', marginTop: 8 },
+  scroll: { flex: 1 },
+  empty: { textAlign: 'center', color: '#cbd5e1', marginTop: 80, fontWeight: '700', letterSpacing: 1 },
+  orderCard: { backgroundColor: '#fff', borderRadius: 28, padding: 22, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  orderRef: { fontSize: 10, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1 },
+  statusPill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },
+  statusText: { fontSize: 10, fontWeight: '900' },
+  cardTitle: { fontSize: 20, fontWeight: '900', color: '#1e293b' },
+  priceSub: { fontSize: 14, color: '#6366f1', fontWeight: '800', marginTop: 4 },
+  cardDate: { fontSize: 12, color: '#94a3b8', marginTop: 6, fontWeight: '600' },
 
-  profileCard:    { backgroundColor: '#fff', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f1f5f9' },
-  infoRow:        { marginBottom: 20 },
-  infoLabel:      { fontSize: 11, fontWeight: '900', color: '#94a3b8', letterSpacing: 1, marginBottom: 8 },
-  infoVal:        { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  infoSheet: { backgroundColor: '#f8fafc', borderRadius: 32, padding: 32 },
+  infoRow: { marginBottom: 28 },
+  infoLabel: { fontSize: 10, fontWeight: '900', color: '#94a3b8', letterSpacing: 1.5, marginBottom: 8 },
+  infoValue: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
 });
