@@ -4,11 +4,12 @@
  * Handles creation and management of shop orders.
  *
  * Endpoints:
- *   POST /orders                    → Place a new order
+ *   POST /orders                    → Place a new order (optional receipt image upload)
  *   GET  /orders                    → Get current user's orders
  *   GET  /orders/admin              → Get ALL orders (admin)
  *   PUT  /orders/admin/:id/status   → Update order status (admin)
  *   PUT  /orders/admin/:id/tracking → Set tracking number (admin)
+ *   DELETE /orders/admin/:id        → Delete an order (admin)
  *
  * @module controllers/orderController
  * @requires ../models/Order
@@ -23,10 +24,18 @@ const Order = require('../models/Order');
 const placeOrder = async (req, res) => {
   try {
     // Extract shipping address and items array from the incoming request body
-    const { shippingAddress, items } = req.body;
-    
+    const { shippingAddress } = req.body;
+
+    // When sent via multipart/form-data (receipt image attached), Multer delivers
+    // all text fields as strings. Parse items back to an array if needed.
+    let items = req.body.items;
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch { items = []; }
+    }
+
     // Validate that the order contains at least one item
-    if (!items?.length) return res.status(400).json({ error: 'items required' });
+    if (!Array.isArray(items) || !items.length)
+      return res.status(400).json({ error: 'items required' });
     
     // Sanitize and format each item in the order
     // Ensures prices and quantities are treated as numbers, and missing product IDs are set to null
@@ -40,6 +49,11 @@ const placeOrder = async (req, res) => {
     // Calculate the total cost of the order securely on the server side
     const totalAmount = orderItems.reduce((s, i) => s + i.price * i.quantity, 0);
     
+    // If a receipt/payment proof image was uploaded via multipart/form-data, store its path
+    const receiptPath = req.file
+      ? `/api/products/images/${req.file.filename}`  // reuse image serving route
+      : null;
+    
     // Create and save the new order document in the database
     // Links the order to the currently authenticated user (req.user._id)
     const order = await Order.create({ 
@@ -47,7 +61,8 @@ const placeOrder = async (req, res) => {
       items: orderItems, 
       totalAmount, 
       shippingAddress: shippingAddress || '', 
-      category: 'SHOP' 
+      category: 'SHOP',
+      receiptPath,
     });
     
     // Respond with a 201 Created status and the new order data
@@ -112,4 +127,15 @@ const updateTracking = async (req, res) => {
   }
 };
 
-module.exports = { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking };
+/** Delete a shop order (admin only). Permanently removes the order record. */
+const deleteOrder = async (req, res) => {
+  try {
+    const o = await Order.findByIdAndDelete(req.params.id);
+    if (!o) return res.status(404).json({ error: 'Order not found' });
+    res.json({ message: 'Order deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking, deleteOrder };
