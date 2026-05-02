@@ -33,6 +33,16 @@ const StlOrder = require('../models/StlOrder');
 const Order    = require('../models/Order');
 const { calculateCost, estimateInitialPrice } = require('../utils/pricing');
 
+const parseBoolean = (value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return Boolean(value);
+};
+
 /**
  * Upload an STL file and create a new 3D print order.
  * Uses multer for file handling. Estimates initial price based on file size.
@@ -210,7 +220,7 @@ const setStlPrice = async (req, res) => {
     if (printTimeHours!=null)   o.printTimeHours   = Number(printTimeHours);
     if (printTimeMinutes!=null) o.printTimeMinutes = Number(printTimeMinutes);
     if (weightGrams!=null)      o.weightGrams      = Number(weightGrams);
-    if (supportStructures!=null)o.supportStructures= Boolean(supportStructures);
+    if (supportStructures!=null)o.supportStructures= parseBoolean(supportStructures);
     if (material)               o.material         = material.toUpperCase();
     // Auto-transition to QUOTED when admin sets pricing
     if (o.status==='PENDING_QUOTE') o.status = 'QUOTED';
@@ -242,11 +252,39 @@ const deleteStlOrder = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-/** Calculate cost breakdown endpoint using the pricing utility. */
+/** Calculate cost breakdown endpoint using the pricing utility.
+ *  Optionally accepts an uploaded STL file (field: 'file') to auto-estimate
+ *  weightGrams from file size when not manually specified.
+ */
 const calculateCostEndpoint = async (req, res) => {
   try {
-    const { printTimeHours, printTimeMinutes, weightGrams, material, supportStructures } = req.body;
-    res.json(calculateCost({ printTimeHours, printTimeMinutes, weightGrams, material, supportStructures }));
+    let { printTimeHours, printTimeMinutes, weightGrams, material, supportStructures } = req.body;
+
+    // If an STL file was uploaded and weightGrams was not manually provided,
+    // derive a rough weight estimate from the file size:
+    //   approx 1 gram per 15 KB of STL data (heuristic for dense geometry)
+    if (req.file && (weightGrams === undefined || weightGrams === '' || weightGrams === null)) {
+      const fileSizeKB = req.file.size / 1024;
+      weightGrams = Math.max(5, Math.round(fileSizeKB / 15)); // min 5g
+    }
+
+    // Clean up the temporarily uploaded calc file from disk (not an order, so we don't keep it)
+    if (req.file) {
+      const fs   = require('fs');
+      const path = require('path');
+      const fp   = path.join(__dirname, '../../uploads/stl-files', req.file.filename);
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    }
+
+    const parsedSupportStructures = parseBoolean(supportStructures);
+
+    res.json(calculateCost({
+      printTimeHours,
+      printTimeMinutes,
+      weightGrams,
+      material,
+      supportStructures: parsedSupportStructures,
+    }));
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
