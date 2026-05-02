@@ -83,7 +83,7 @@ export default function AdminDashboardScreen() {
     >
       <View style={s.header}>
         <Text style={s.headerTitle}>Admin Dashboard</Text>
-        <Text style={s.headerSub}>Ceylon 3D — Management Console</Text>
+        <Text style={s.headerSub}>LayerForge 3D — Management Console</Text>
       </View>
 
       {loading ? <ActivityIndicator color="#6366f1" style={{ marginTop:40 }} /> : (
