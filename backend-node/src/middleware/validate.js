@@ -1,11 +1,29 @@
 /**
- * validate.js — Reusable validation middleware for Express routes.
+ * validate.js — Reusable Validation Middleware for Express Routes
  *
- * Usage:
- *   const { body, validationResult } = require('express-validator');
- *   router.post('/', validate([body('email').isEmail()...]), handler);
+ * Provides request body validation middleware for all major API operations.
+ * Each validator checks the incoming data and returns structured error responses
+ * in the format: { error: "first error message", errors: { field: "message", ... } }
  *
- * Or use the plain helpers below without express-validator.
+ * Exported validators:
+ *   - validateRegister  — Validates registration (fullName, email, password strength)
+ *   - validateLogin     — Validates login (email format, password presence)
+ *   - validateProduct   — Validates product creation/update (name, price, stock)
+ *   - validateOrder     — Validates shop order placement (address, items array)
+ *   - validateAddToCart — Validates cart addition (productId, quantity range)
+ *   - validateStlOrder  — Validates STL order submission (contact info, material, quantity)
+ *
+ * Exported helpers (for use in controllers):
+ *   - isEmail(v)    — Returns true if the value is a valid email format
+ *   - isPhone(v)    — Returns true if the value is a valid phone number format
+ *   - isStrongPw(v) — Returns true if the password meets strength requirements
+ *
+ * Password strength requirements:
+ *   - Minimum 8 characters
+ *   - At least one uppercase letter (A-Z)
+ *   - At least one special character (!@#$%^&*...)
+ *
+ * @module middleware/validate
  */
 
 /* ── Pure helper functions ─────────────────────────────── */
@@ -85,7 +103,17 @@ const validateProduct = (req, res, next) => {
 /* ── Order validation ───────────────────────────────────── */
 
 const validateOrder = (req, res, next) => {
-  const { shippingAddress, items } = req.body;
+  const { shippingAddress } = req.body;
+
+  // When the request is multipart/form-data (e.g. receipt image attached),
+  // Multer puts all non-file fields in req.body as strings.
+  // So `items` may arrive as a JSON string — parse it back to an array.
+  let items = req.body.items;
+  if (typeof items === 'string') {
+    try { items = JSON.parse(items); } catch { items = []; }
+    req.body.items = items; // write the parsed value back so the controller sees an array
+  }
+
   const errors = {};
 
   if (!shippingAddress || String(shippingAddress).trim().length < 10)

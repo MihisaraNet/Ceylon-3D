@@ -44,25 +44,25 @@ export default function STLUploadScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult]         = useState(null);
 
-  // Pick and validate supported upload file types.
+  // This function opens the native file picker to let the user select their 3D design file
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-    if (res.canceled) return;
+    if (res.canceled) return; // User cancelled the picker
     
     const asset = res.assets?.[0];
     if (!asset) return;
     
-    // Accept only whitelisted file extensions.
+    // This part validates the selected file extension to ensure it is supported
     const ext = asset.name.split('.').pop().toLowerCase();
     if (!['stl','pdf','jpg','jpeg'].includes(ext)) {
       return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
     }
     
-    // Store selected file for preview + submission.
+    // Save the valid file to state so it can be previewed in Step 0
     setFile(asset);
   };
 
-  // Step 1 requires a file selection.
+  // This part checks if the user has selected a file before allowing them to proceed to Step 1
   const validateStep1 = () => {
     if (!file) {
       Alert.alert('Required', 'Please select a file');
@@ -71,20 +71,20 @@ export default function STLUploadScreen() {
     return true;
   };
   
-  // Step 2 requires complete contact details.
+  // This part checks if the contact information form is completely filled out
   const validateStep2 = () => {
     if (!form.name || !form.email || !form.phone || !form.address) {
       Alert.alert('Required', 'Please fill all required fields');
       return false;
     }
     
-    // Email format check.
+    // This part ensures the email format is valid
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       Alert.alert('Invalid', 'Invalid email');
       return false;
     }
     
-    // Phone format check.
+    // This part ensures the phone number format is valid
     if (!/^\+?[0-9\s()\-]{7,20}$/.test(form.phone)) {
       Alert.alert('Invalid', 'Invalid phone number');
       return false;
@@ -92,22 +92,23 @@ export default function STLUploadScreen() {
     return true;
   };
 
-  // Move to next step only when current step is valid.
+  // This function advances the wizard to the next step, running validation first
   const handleNext = () => {
     if (step===0 && !validateStep1()) return;
     if (step===1 && !validateStep2()) return;
-    setStep(s => s+1);
+    setStep(s => s+1); // Move to next step
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
+    setSubmitting(true); // Disable the submit button and show a loading indicator
     try {
-      // Send mixed payload (file + metadata) as multipart/form-data.
+      // Build a FormData object to send both the physical STL file and the text metadata
       const fd = new FormData();
       
+      // Append the selected file. Expo-document-picker provides the local URI.
       fd.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' });
       
-      // Append validated order details.
+      // Append the validated contact information and print specifications
       fd.append('name', form.name);
       fd.append('email', form.email);
       if (form.email2) fd.append('email2', form.email2);
@@ -117,13 +118,16 @@ export default function STLUploadScreen() {
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
       
+      // Post the multipart/form-data payload to the backend
       const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       
-      // Show success summary view.
+      // On success, save the returned order details to show the confirmation screen
       setResult(data);
     } catch (err) {
+      // If the backend validation fails or the server errors out, show an alert
       Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed. Please try again.');
     } finally { 
+      // Stop the loading indicator
       setSubmitting(false); 
     }
   };
