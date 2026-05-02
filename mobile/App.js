@@ -1,5 +1,5 @@
 /**
- * App.js — Root Component of the Ceylon3D Mobile Application
+ * App.js — Root Component of the LayerForge 3D Mobile Application
  *
  * This is the top-level React Native component rendered by Expo.
  * It wraps the entire application with the required context providers
