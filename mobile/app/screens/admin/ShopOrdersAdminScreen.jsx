@@ -1,20 +1,6 @@
 /**
  * ShopOrdersAdminScreen.jsx — Admin Shop Order Management
- *
- * Displays all shop orders for admin review and management.
- *
- * Features:
- *   - Flat list of all orders with customer name, order ID, total, and status badge
- *   - Expandable cards showing:
- *       - Order items (product name × quantity — price)
- *       - Shipping address
- *       - Tracking number input and "Set" button
- *       - Status change chips (PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
- *   - Real-time status updates via PUT /orders/admin/:id/status
- *   - Tracking number assignment via PUT /orders/admin/:id/tracking
- *   - Color-coded status badges using ORDER_STATUSES from categories.js
- *
- * @module screens/admin/ShopOrdersAdminScreen
+ * Minimalist design
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
@@ -37,31 +23,29 @@ export default function ShopOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  // This function sends an update to the backend to change the order's fulfillment stage
   const updateStatus = async (id, status) => {
     try { 
       await api.put(`/orders/admin/${id}/status`, { status }); 
-      load(); // Refresh the list to show the new status badge
+      load(); 
     } catch (err) { 
       Alert.alert('Error', err.response?.data?.error || 'Failed'); 
     }
   };
 
-  // This function attaches a delivery tracking number to the order
   const setTracking = async (id) => {
     const tn = trackingInputs[id];
     if (!tn) return Alert.alert('Error', 'Enter a tracking number');
     
     try { 
       await api.put(`/orders/admin/${id}/tracking`, { trackingNumber: tn }); 
-      load(); // Refresh to display the newly saved tracking number
+      load(); 
     } catch (err) { 
       Alert.alert('Error', err.response?.data?.error || 'Failed'); 
     }
   };
 
   const renderItem = ({ item }) => {
-    const cfg = ORDER_STATUSES[item.status] || { label:item.status, color:'#6b7280' };
+    const cfg = ORDER_STATUSES[item.status] || { label:item.status };
     const isOpen = expanded === item._id;
     const customerName = item.userId?.fullName || item.shippingAddress?.split('\n')[0] || 'Customer';
     return (
@@ -73,8 +57,8 @@ export default function ShopOrdersAdminScreen() {
           </View>
           <View style={s.right}>
             <Text style={s.total}>LKR {item.totalAmount?.toFixed(2)}</Text>
-            <View style={[s.badge, { backgroundColor: cfg.color + '20' }]}>
-              <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{cfg.label}</Text>
             </View>
           </View>
         </View>
@@ -88,7 +72,6 @@ export default function ShopOrdersAdminScreen() {
             <Text style={s.detailsTitle}>Shipping Address</Text>
             <Text style={s.addrText}>{item.shippingAddress}</Text>
 
-            {/* Tracking */}
             <Text style={s.detailsTitle}>Tracking Number</Text>
             {item.trackingNumber && <Text style={s.trackVal}>Current: {item.trackingNumber}</Text>}
             <View style={s.trackRow}>
@@ -97,19 +80,18 @@ export default function ShopOrdersAdminScreen() {
                 value={trackingInputs[item._id] || ''}
                 onChangeText={v => setTrackingInputs(p => ({...p,[item._id]:v}))}
                 placeholder="Enter tracking number"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor="#999"
               />
               <TouchableOpacity style={s.trackBtn} onPress={() => setTracking(item._id)}>
                 <Text style={s.trackBtnText}>Set</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Status */}
             <Text style={s.detailsTitle}>Status</Text>
             <View style={s.statusChips}>
               {STATUS_OPTIONS.map(st => (
                 <TouchableOpacity key={st} style={[s.statusChip, item.status===st && s.statusChipActive]} onPress={() => updateStatus(item._id, st)}>
-                  <Text style={[s.statusChipText, item.status===st && { color:'#fff' }]}>{st}</Text>
+                  <Text style={[s.statusChipText, item.status===st && s.statusChipTextActive]}>{st}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -119,40 +101,41 @@ export default function ShopOrdersAdminScreen() {
     );
   };
 
-  if (loading) return <ActivityIndicator size="large" color="#6366f1" style={{ marginTop:60 }} />;
+  if (loading) return <ActivityIndicator size="large" color="#000" style={{ marginTop:60 }} />;
 
   return (
     <FlatList
       data={orders}
       keyExtractor={i => i._id}
       renderItem={renderItem}
-      contentContainerStyle={{ padding:12, gap:10 }}
+      contentContainerStyle={{ padding:16, gap:12, backgroundColor: '#ffffff', flexGrow: 1 }}
       ListEmptyComponent={<Text style={s.empty}>No orders</Text>}
     />
   );
 }
 
 const s = StyleSheet.create({
-  card:          { backgroundColor:'#fff', borderRadius:14, padding:16, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:6, elevation:2 },
+  card:          { backgroundColor:'#fff', borderRadius:8, padding:16, borderWidth: 1, borderColor: '#eee' },
   cardHeader:    { flexDirection:'row', justifyContent:'space-between' },
-  orderId:       { fontSize:13, fontWeight:'700', color:'#111827' },
-  customerName:  { fontSize:15, fontWeight:'700', color:'#111827', marginTop:2 },
+  orderId:       { fontSize:13, fontWeight:'700', color:'#000' },
+  customerName:  { fontSize:15, fontWeight:'700', color:'#000', marginTop:2 },
   right:         { alignItems:'flex-end', gap:6 },
-  total:         { fontSize:16, fontWeight:'800', color:'#6366f1' },
-  badge:         { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
-  badgeText:     { fontSize:12, fontWeight:'700' },
-  details:       { borderTopWidth:1, borderTopColor:'#f3f4f6', marginTop:12, paddingTop:12 },
-  detailsTitle:  { fontSize:13, fontWeight:'700', color:'#374151', marginTop:10, marginBottom:4 },
-  itemLine:      { fontSize:13, color:'#6b7280', marginBottom:2 },
-  addrText:      { fontSize:13, color:'#374151' },
-  trackVal:      { fontSize:13, color:'#6366f1', fontWeight:'600', marginBottom:6 },
+  total:         { fontSize:16, fontWeight:'800', color:'#000' },
+  badge:         { borderRadius:4, paddingHorizontal:8, paddingVertical:4, backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#eee' },
+  badgeText:     { fontSize:10, fontWeight:'700', color: '#000', textTransform: 'uppercase' },
+  details:       { borderTopWidth:1, borderTopColor:'#eee', marginTop:12, paddingTop:12 },
+  detailsTitle:  { fontSize:12, fontWeight:'700', color:'#666', marginTop:10, marginBottom:4, textTransform: 'uppercase' },
+  itemLine:      { fontSize:13, color:'#333', marginBottom:4 },
+  addrText:      { fontSize:13, color:'#333' },
+  trackVal:      { fontSize:13, color:'#000', fontWeight:'700', marginBottom:6 },
   trackRow:      { flexDirection:'row', gap:8, marginBottom:4 },
-  trackInput:    { flex:1, backgroundColor:'#f9fafb', borderWidth:1, borderColor:'#e5e7eb', borderRadius:10, padding:10, fontSize:14, color:'#111827' },
-  trackBtn:      { backgroundColor:'#6366f1', borderRadius:10, paddingHorizontal:16, justifyContent:'center' },
+  trackInput:    { flex:1, backgroundColor:'#fff', borderWidth:1, borderColor:'#ccc', borderRadius:8, padding:10, fontSize:14, color:'#000' },
+  trackBtn:      { backgroundColor:'#000', borderRadius:8, paddingHorizontal:16, justifyContent:'center' },
   trackBtnText:  { color:'#fff', fontWeight:'700' },
-  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:6 },
-  statusChip:    { backgroundColor:'#f3f4f6', borderRadius:999, paddingHorizontal:10, paddingVertical:6 },
-  statusChipActive:{ backgroundColor:'#6366f1' },
-  statusChipText:  { fontSize:12, fontWeight:'600', color:'#374151' },
-  empty:         { textAlign:'center', color:'#9ca3af', marginTop:60, fontSize:16 },
+  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:8 },
+  statusChip:    { backgroundColor:'#fff', borderWidth: 1, borderColor: '#ccc', borderRadius:8, paddingHorizontal:12, paddingVertical:8 },
+  statusChipActive:{ backgroundColor:'#000', borderColor: '#000' },
+  statusChipText:  { fontSize:12, fontWeight:'700', color:'#666' },
+  statusChipTextActive: { color: '#fff' },
+  empty:         { textAlign:'center', color:'#999', marginTop:60, fontSize:16 },
 });

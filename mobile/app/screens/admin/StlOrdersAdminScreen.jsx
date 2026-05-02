@@ -1,20 +1,6 @@
 /**
  * StlOrdersAdminScreen.jsx — Admin STL / 3D Print Order Management
- *
- * Displays all STL print orders for admin review, pricing, and status management.
- *
- * Features:
- *   - Flat list of all STL orders with customer info, price, and status badge
- *   - Expandable cards showing:
- *       - File name, material, quantity, phone, address, notes
- *       - Weight and print time (if set)
- *       - Status change chips (PENDING_QUOTE through DELIVERED/CANCELLED)
- *       - Delete order button (removes order + uploaded file from disk)
- *   - Real-time status updates via PUT /stl-orders/admin/:id/status
- *   - Delete confirmation dialog
- *   - Color-coded status badges using STL_STATUSES from categories.js
- *
- * @module screens/admin/StlOrdersAdminScreen
+ * Minimalist design
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
@@ -37,24 +23,22 @@ export default function StlOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  // This function updates the order status (e.g., from 'QUOTED' to 'PRINTING')
   const updateStatus = async (id, status) => {
     try { 
       await api.put(`/stl-orders/admin/${id}/status`, { status }); 
-      load(); // Reload the list to show the new status badge
+      load(); 
     } catch (err) { 
       Alert.alert('Error', err.response?.data?.error || 'Failed'); 
     }
   };
 
-  // This function permanently deletes an STL order and its associated 3D file from the server
   const deleteOrder = (id) => {
     Alert.alert('Delete', 'Delete this STL order and its file?', [
       { text:'Cancel', style:'cancel' },
       { text:'Delete', style:'destructive', onPress: async () => {
         try { 
           await api.delete(`/stl-orders/admin/${id}`); 
-          load(); // Remove the deleted order from the screen
+          load(); 
         } catch (err) { 
           Alert.alert('Error', err.response?.data?.error || 'Delete failed'); 
         }
@@ -63,7 +47,7 @@ export default function StlOrdersAdminScreen() {
   };
 
   const renderItem = ({ item }) => {
-    const cfg = STL_STATUSES[item.status] || { label:item.status, color:'#6b7280' };
+    const cfg = STL_STATUSES[item.status] || { label:item.status };
     const isOpen = expanded === item._id;
     return (
       <TouchableOpacity style={s.card} onPress={() => setExpanded(isOpen ? null : item._id)}>
@@ -75,8 +59,8 @@ export default function StlOrdersAdminScreen() {
           </View>
           <View style={s.right}>
             {item.estimatedPrice && <Text style={s.price}>LKR {item.estimatedPrice?.toFixed(2)}</Text>}
-            <View style={[s.badge, { backgroundColor: cfg.color + '20' }]}>
-              <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{cfg.label}</Text>
             </View>
           </View>
         </View>
@@ -91,16 +75,17 @@ export default function StlOrdersAdminScreen() {
             {item.note    && <View style={s.noteBox}><Text style={s.noteText}>Note: {item.note}</Text></View>}
             {item.weightGrams     && <Info label="Weight"     value={`${item.weightGrams}g`} />}
             {item.printTimeHours != null && <Info label="Print Time" value={`${item.printTimeHours}h ${item.printTimeMinutes}m`} />}
-            <Text style={s.statusLabel}>Change Status:</Text>
+            
+            <Text style={s.statusLabel}>CHANGE STATUS</Text>
             <View style={s.statusChips}>
               {STATUS_OPTIONS.map(st => (
                 <TouchableOpacity key={st} style={[s.statusChip, item.status===st && s.statusChipActive]} onPress={() => updateStatus(item._id, st)}>
-                  <Text style={[s.statusChipText, item.status===st && { color:'#fff' }]}>{st.replace('_',' ')}</Text>
+                  <Text style={[s.statusChipText, item.status===st && s.statusChipTextActive]}>{st.replace('_',' ')}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <TouchableOpacity style={s.deleteBtn} onPress={() => deleteOrder(item._id)}>
-              <Ionicons name="trash-outline" size={16} color="#ef4444" />
+              <Ionicons name="trash-outline" size={16} color="#000" />
               <Text style={s.deleteBtnText}> Delete Order</Text>
             </TouchableOpacity>
           </View>
@@ -109,45 +94,46 @@ export default function StlOrdersAdminScreen() {
     );
   };
 
-  if (loading) return <ActivityIndicator size="large" color="#6366f1" style={{ marginTop:60 }} />;
+  if (loading) return <ActivityIndicator size="large" color="#000" style={{ marginTop:60 }} />;
 
   return (
     <FlatList
       data={orders}
       keyExtractor={i => i._id}
       renderItem={renderItem}
-      contentContainerStyle={{ padding:12, gap:10 }}
+      contentContainerStyle={{ padding:16, gap:12, backgroundColor: '#ffffff', flexGrow: 1 }}
       ListEmptyComponent={<Text style={s.empty}>No STL orders</Text>}
     />
   );
 }
 
 const Info = ({ label, value }) => (
-  <View style={{ flexDirection:'row', marginBottom:4 }}>
-    <Text style={{ fontSize:13, color:'#9ca3af', width:80 }}>{label}:</Text>
-    <Text style={{ fontSize:13, color:'#374151', flex:1 }}>{value}</Text>
+  <View style={{ flexDirection:'row', marginBottom:6 }}>
+    <Text style={{ fontSize:13, color:'#666', width:80, fontWeight: '600' }}>{label}:</Text>
+    <Text style={{ fontSize:13, color:'#000', flex:1 }}>{value}</Text>
   </View>
 );
 
 const s = StyleSheet.create({
-  card:          { backgroundColor:'#fff', borderRadius:14, padding:16, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:6, elevation:2 },
+  card:          { backgroundColor:'#fff', borderRadius:8, padding:16, borderWidth: 1, borderColor: '#eee' },
   cardHeader:    { flexDirection:'row', justifyContent:'space-between' },
-  orderId:       { fontSize:13, fontWeight:'700', color:'#111827' },
-  customerName:  { fontSize:15, fontWeight:'700', color:'#111827', marginTop:2 },
-  customerEmail: { fontSize:13, color:'#6b7280' },
+  orderId:       { fontSize:13, fontWeight:'700', color:'#000' },
+  customerName:  { fontSize:15, fontWeight:'700', color:'#000', marginTop:2 },
+  customerEmail: { fontSize:13, color:'#666' },
   right:         { alignItems:'flex-end', gap:6 },
-  price:         { fontSize:16, fontWeight:'800', color:'#6366f1' },
-  badge:         { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
-  badgeText:     { fontSize:12, fontWeight:'700' },
-  details:       { borderTopWidth:1, borderTopColor:'#f3f4f6', marginTop:12, paddingTop:12 },
-  noteBox:       { backgroundColor:'#fef3c7', borderRadius:8, padding:8, marginBottom:6 },
-  noteText:      { fontSize:13, color:'#92400e' },
-  statusLabel:   { fontSize:13, fontWeight:'700', color:'#374151', marginTop:8, marginBottom:6 },
-  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:6, marginBottom:12 },
-  statusChip:    { backgroundColor:'#f3f4f6', borderRadius:999, paddingHorizontal:10, paddingVertical:6 },
-  statusChipActive: { backgroundColor:'#6366f1' },
-  statusChipText:   { fontSize:12, fontWeight:'600', color:'#374151' },
-  deleteBtn:     { flexDirection:'row', alignItems:'center', padding:10, borderWidth:1.5, borderColor:'#ef4444', borderRadius:10, alignSelf:'flex-start' },
-  deleteBtnText: { color:'#ef4444', fontWeight:'700', fontSize:13 },
-  empty:         { textAlign:'center', color:'#9ca3af', marginTop:60, fontSize:16 },
+  price:         { fontSize:16, fontWeight:'800', color:'#000' },
+  badge:         { borderRadius:4, paddingHorizontal:8, paddingVertical:4, backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#eee' },
+  badgeText:     { fontSize:10, fontWeight:'700', color: '#000', textTransform: 'uppercase' },
+  details:       { borderTopWidth:1, borderTopColor:'#eee', marginTop:12, paddingTop:12 },
+  noteBox:       { backgroundColor:'#fafafa', borderRadius:6, padding:10, marginBottom:8, borderWidth: 1, borderColor: '#eee' },
+  noteText:      { fontSize:13, color:'#333' },
+  statusLabel:   { fontSize:12, fontWeight:'700', color:'#666', marginTop:12, marginBottom:8 },
+  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:8, marginBottom:16 },
+  statusChip:    { backgroundColor:'#fff', borderRadius:8, paddingHorizontal:12, paddingVertical:8, borderWidth: 1, borderColor: '#ccc' },
+  statusChipActive: { backgroundColor:'#000', borderColor: '#000' },
+  statusChipText:   { fontSize:12, fontWeight:'700', color:'#666' },
+  statusChipTextActive: { color: '#fff' },
+  deleteBtn:     { flexDirection:'row', alignItems:'center', padding:12, borderWidth:1, borderColor:'#000', borderRadius:8, alignSelf:'flex-start' },
+  deleteBtnText: { color:'#000', fontWeight:'700', fontSize:13 },
+  empty:         { textAlign:'center', color:'#999', marginTop:60, fontSize:16 },
 });
