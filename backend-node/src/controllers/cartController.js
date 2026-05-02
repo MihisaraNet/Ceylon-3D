@@ -57,7 +57,7 @@ const getCart = async (req, res) => {
           title:         i.productId.name, // Product display name
           price:         i.productId.price,
           image:         i.productId.imagePath,
-          seller:        'Ceylon3D',        // Hardcoded seller name
+          seller:        'LayerForge 3D',        // Hardcoded seller name
           quantity:      i.quantity,
           stock:         i.productId.stock,
           customFileUrl: i.customFileUrl || null, // Optional attached design file
