@@ -1,3 +1,21 @@
+/**
+ * StlOrdersAdminScreen.jsx — Admin STL / 3D Print Order Management
+ *
+ * Displays all STL print orders for admin review, pricing, and status management.
+ *
+ * Features:
+ *   - Flat list of all STL orders with customer info, price, and status badge
+ *   - Expandable cards showing:
+ *       - File name, material, quantity, phone, address, notes
+ *       - Weight and print time (if set)
+ *       - Status change chips (PENDING_QUOTE through DELIVERED/CANCELLED)
+ *       - Delete order button (removes order + uploaded file from disk)
+ *   - Real-time status updates via PUT /stl-orders/admin/:id/status
+ *   - Delete confirmation dialog
+ *   - Color-coded status badges using STL_STATUSES from categories.js
+ *
+ * @module screens/admin/StlOrdersAdminScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
