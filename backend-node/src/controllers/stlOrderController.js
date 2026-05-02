@@ -39,47 +39,100 @@ const { calculateCost, estimateInitialPrice } = require('../utils/pricing');
  */
 const uploadStl = async (req, res) => {
   try {
+    // Multer middleware should have populated req.file; reject if no file is present
     if (!req.file) return res.status(400).json({ error: 'File required' });
+    
+    // Extract customer and order details from the form data
     const { name, email, email2, phone, address, message, material, quantity } = req.body;
+    
+    // Validate required contact information
     if (!name || !email) return res.status(400).json({ error: 'name and email required' });
 
-    // Estimate an initial price based on file size, material, and quantity
+    // Estimate an initial price based on file size, material, and quantity.
+    // This is just a ballpark figure; the admin will set the final price later.
     const estimatedPrice = estimateInitialPrice(req.file.size, material, quantity);
 
+    // Create the STL order document.
+    // Associates the order with a registered user if they are logged in (req.user?._id),
+    // otherwise it's treated as a guest order (userId: null).
     const o = await StlOrder.create({
-      customerName: name, customerEmail: email, customerEmail2: email2||null,
-      phone: phone||null, address: address||'', fileName: req.file.filename,
-      fileSizeBytes: req.file.size, material: (material||'PLA').toUpperCase(),
-      quantity: Number(quantity||1), estimatedPrice, note: message||null,
-      userId: req.user?._id||null, status: 'PENDING_QUOTE',
+      customerName: name, 
+      customerEmail: email, 
+      customerEmail2: email2 || null,
+      phone: phone || null, 
+      address: address || '', 
+      fileName: req.file.filename,
+      fileSizeBytes: req.file.size, 
+      material: (material || 'PLA').toUpperCase(),
+      quantity: Number(quantity || 1), 
+      estimatedPrice, 
+      note: message || null,
+      userId: req.user?._id || null, 
+      status: 'PENDING_QUOTE',
     });
-    res.status(201).json({ message:'STL order submitted', fileName:o.fileName, name, email, phone, material:o.material, quantity:o.quantity, estimatedPrice, stlOrderId:o._id });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    
+    // Return a summary of the created order
+    res.status(201).json({ 
+      message: 'STL order submitted', 
+      fileName: o.fileName, 
+      name, email, phone, 
+      material: o.material, 
+      quantity: o.quantity, 
+      estimatedPrice, 
+      stlOrderId: o._id 
+    });
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 };
 
 /** Get the authenticated user's STL orders (matches by userId OR email). */
 const getMyStlOrders = async (req, res) => {
   try {
-    res.json(await StlOrder.find({ $or:[{userId:req.user._id},{customerEmail:req.user.email}] }).sort({createdAt:-1}));
-  } catch (err) { res.status(500).json({ error: err.message }); }
+    // Find orders belonging to the user.
+    // We match either by the strict userId reference OR by the customerEmail.
+    // Matching by email allows users to see orders they placed as guests before registering.
+    const orders = await StlOrder.find({ 
+      $or: [
+        { userId: req.user._id },
+        { customerEmail: req.user.email }
+      ] 
+    }).sort({ createdAt: -1 });
+    
+    res.json(orders);
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 };
 
 /** Edit own STL order (only allowed while status is PENDING_QUOTE). */
 const updateMyStlOrder = async (req, res) => {
   try {
+    // Look up the order to be updated
     const o = await StlOrder.findById(req.params.id);
     if (!o) return res.status(404).json({ error: 'Order not found' });
-    // Verify ownership by userId or email
-    const own = (o.userId?.toString()===req.user._id.toString()) || o.customerEmail===req.user.email;
+    
+    // Verify ownership: the logged-in user must either be the explicit owner (userId)
+    // or the email must match the user's registered email.
+    const own = (o.userId?.toString() === req.user._id.toString()) || o.customerEmail === req.user.email;
     if (!own) return res.status(403).json({ error: 'Forbidden' });
-    if (o.status!=='PENDING_QUOTE') return res.status(400).json({ error: 'Can only edit PENDING_QUOTE orders' });
+    
+    // Business rule: users can only modify orders before the admin has provided a quote
+    if (o.status !== 'PENDING_QUOTE') {
+      return res.status(400).json({ error: 'Can only edit PENDING_QUOTE orders' });
+    }
+    
+    // Apply updates
     const { material, quantity, note } = req.body;
     if (material) o.material = material.toUpperCase();
     if (quantity) o.quantity = Number(quantity);
-    if (note!=null) o.note = note;
+    if (note != null) o.note = note;
+    
     await o.save();
     res.json(o);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 };
 
 /**
@@ -91,17 +144,42 @@ const confirmStlOrder = async (req, res) => {
   try {
     const o = await StlOrder.findById(req.params.id);
     if (!o) return res.status(404).json({ error: 'Order not found' });
-    const own = (o.userId?.toString()===req.user._id.toString()) || o.customerEmail===req.user.email;
+    
+    // Verify ownership by checking ID or email
+    const own = (o.userId?.toString() === req.user._id.toString()) || o.customerEmail === req.user.email;
     if (!own) return res.status(403).json({ error: 'Forbidden' });
-    if (o.status!=='QUOTED') return res.status(400).json({ error: 'Can only confirm QUOTED orders' });
+    
+    // Business rule: orders must be in the QUOTED state (admin has set price) before the user can confirm
+    if (o.status !== 'QUOTED') {
+      return res.status(400).json({ error: 'Can only confirm QUOTED orders' });
+    }
+    
+    // Update the STL order status
     o.status = 'CONFIRMED';
     await o.save();
 
-    // Create a shop Order record for unified order tracking
-    const namePart = o.fileName.replace(/^[0-9a-f-]+-/i,'') || o.fileName;
-    await Order.create({ userId:req.user._id, items:[{productName:`3D Print: ${namePart} (${o.material})`, price:o.estimatedPrice, quantity:o.quantity}], totalAmount:o.estimatedPrice, category:'STL', status:'PENDING' });
+    // To unify the tracking experience, create a standard shop Order document
+    // representing this confirmed 3D print request.
+    
+    // Clean up the filename by removing the UUID prefix added by multer
+    const namePart = o.fileName.replace(/^[0-9a-f-]+-/i, '') || o.fileName;
+    
+    await Order.create({ 
+      userId: req.user._id, 
+      items: [{
+        productName: `3D Print: ${namePart} (${o.material})`, 
+        price: o.estimatedPrice, 
+        quantity: o.quantity
+      }], 
+      totalAmount: o.estimatedPrice, 
+      category: 'STL', 
+      status: 'PENDING' 
+    });
+    
     res.json(o);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 };
 
 /** Get all STL orders (admin only), newest first. */
