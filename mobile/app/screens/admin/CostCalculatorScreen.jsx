@@ -1,3 +1,23 @@
+/**
+ * CostCalculatorScreen.jsx — Admin 3D Printing Cost Calculator
+ *
+ * Allows admins to calculate detailed cost breakdowns for 3D print jobs.
+ *
+ * Input fields:
+ *   - Print Time (Hours + Minutes)
+ *   - Weight in grams
+ *   - Material selection (PLA, PLA+, ABS, ABS+)
+ *   - Support structures toggle (+LKR 100)
+ *
+ * Output (cost breakdown card):
+ *   - Material Cost, Machine Cost, Energy Cost, Labour Cost, Support Cost
+ *   - Total Cost
+ *   - Selling Price (Total × 1.5 markup)
+ *
+ * Calls POST /stl-orders/calculate-cost on the backend.
+ *
+ * @module screens/admin/CostCalculatorScreen
+ */
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
