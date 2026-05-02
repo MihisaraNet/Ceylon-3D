@@ -52,7 +52,10 @@ const PORT = process.env.PORT || 8080;
 // Enable CORS for the specified frontend origins (React web, Expo mobile, etc.)
 // The wildcard '*' is included as a fallback for development convenience.
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5175', 'http://localhost:8081', '*'],
+  origin: function(origin, callback) {
+    // dynamically allow all origins for deployment compatibility
+    callback(null, true);
+  },
   credentials: true,
 }));
 
