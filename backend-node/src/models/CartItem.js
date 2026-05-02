@@ -16,8 +16,13 @@
 const mongoose = require('mongoose');
 
 const cartItemSchema = new mongoose.Schema({
+  // Reference to the User document who owns this cart item. Required to associate the item with a specific shopper.
   userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  
+  // Reference to the Product document being added to the cart. Required to fetch product details (price, name).
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  
+  // The number of units of this product the user wants to buy. Defaults to 1, cannot be less than 1.
   quantity:  { type: Number, default: 1, min: 1 },
 });
 
