@@ -20,22 +20,11 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-  // The display name of the product, trimmed to remove whitespace
   name:        { type: String, required: true, trim: true },
-  
-  // A detailed description of the product, defaults to empty if not provided
   description: { type: String, default: '' },
-  
-  // The price in LKR, must be at least 0 to prevent negative pricing
   price:       { type: Number, required: true, min: 0 },
-  
-  // The current stock level available in inventory
   stock:       { type: Number, default: 0, min: 0 },
-  
-  // The path where the product image is stored (relative to /api/products/images/)
   imagePath:   { type: String, default: null },
-  
-  // Category tag for filtering products (e.g. 'figurines', 'parts', 'custom')
   category:    { type: String, default: 'custom', trim: true },
 }, { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } });
 
