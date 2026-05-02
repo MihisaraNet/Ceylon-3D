@@ -51,45 +51,44 @@ export default function LoginScreen({ navigation }) {
   const [serverErr,setServerErr]= useState('');
   const pwRef = useRef(null);
 
-  /* ── Client-side validation ─────────────────────────── */
-  // This function checks if the user entered an email and password before contacting the server
+  /* ── Client validation ──────────────────────────────── */
+  // Validate required fields before sending auth request.
   const validate = () => {
     const e = {};
     if (!email.trim())       e.email    = 'Email is required';
-    else if (!isEmail(email))e.email    = 'Enter a valid email address'; // This checks email format
+    else if (!isEmail(email))e.email    = 'Enter a valid email address';
     
     if (!password)           e.password = 'Password is required';
     
     setErrors(e);
-    // Returns true if there are zero validation errors
+    // True means form is valid.
     return Object.keys(e).length === 0;
   };
 
   const handleLogin = async () => {
-    // Clear any previous server error messages
+    // Reset prior server error banner.
     setServerErr('');
     
-    // Run client-side validation; stop if it fails
+    // Stop early on invalid input.
     if (!validate()) return;
     
-    setLoading(true); // Show loading spinner
+    setLoading(true);
     
     try {
-      // Send the login request to the backend. Normalize the email to lowercase to match DB.
+      // Normalize email for case-insensitive matching.
       const { data } = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
       
-      // Store the JWT token and user info globally, which automatically redirects to MainTabs
+      // Persist token/user via auth context.
       await login(data.token, data.user);
     } catch (err) {
       const res = err.response?.data;
       
-      // If the server returns field-specific errors, map them to the form fields
+      // Map backend field errors when available.
       if (res?.errors) setErrors(res.errors);
       
-      // Display the general server error message in the banner at the top
+      // Show general auth error.
       setServerErr(res?.error || 'Login failed. Please try again.');
     } finally { 
-      // Ensure the loading spinner is dismissed even if an error occurs
       setLoading(false); 
     }
   };
