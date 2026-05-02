@@ -86,22 +86,33 @@ export default function BrowseScreen() {
   useEffect(() => { load(); }, [load]);
 
   /* ── Quick add to cart ─────────────────────────────── */
+  // This function allows users to instantly add 1 unit of a product from the grid view
   const handleQuickAdd = useCallback(async (item) => {
-    if (addingId) return; // prevent double-tap
+    // If this specific item is already being added, ignore extra taps
+    if (addingId) return; 
+    
+    // Set the addingId to show a loading spinner on this specific card
     setAddingId(item._id);
+    
     try {
+      // Send the request to add 1 unit to the cart
       await addToCart(item._id, 1);
     } catch (err) {
+      // If it fails (e.g., out of stock), alert the user
       const msg = err.response?.data?.error || err.message || 'Could not add to cart';
       Alert.alert('Cannot Add', msg);
     } finally {
+      // Always remove the loading spinner when done
       setAddingId(null);
     }
   }, [addToCart, addingId]);
 
   /* ── Filter ────────────────────────────────────────── */
+  // This part calculates which products should be visible based on the search bar and category tabs
   const filtered = products.filter(p => {
     const q = search.trim().toLowerCase();
+    
+    // Only include products that match BOTH the search query (if typed) AND the selected category (if chosen)
     return (!q || p.name.toLowerCase().includes(q)) &&
            (!category || p.category === category);
   });
