@@ -67,16 +67,16 @@ const register = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
 
-    // Ensure all required fields are present
+    // Required payload check.
     if (!fullName || !email || !password) return res.status(400).json({ error: 'All fields required' });
 
-    // Check for existing account with the same email (case-insensitive)
+    // Prevent duplicate account creation.
     if (await User.findOne({ email: email.toLowerCase() })) return res.status(409).json({ error: 'Email already registered' });
 
-    // Hash the password and create the user document
+    // Hash password before persistence.
     const user = await User.create({ fullName, email, password: await bcrypt.hash(password, 12) });
 
-    // Respond with a signed token and the sanitized user object
+    // Return JWT + safe user payload.
     res.status(201).json({ token: sign(user), user: fmt(user) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
@@ -99,16 +99,16 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Ensure both fields are provided
+    // Required payload check.
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
-    // Look up the user by email (case-insensitive)
+    // Find account by normalized email.
     const user = await User.findOne({ email: email.toLowerCase() });
 
-    // Verify the user exists and the password matches the stored hash
+    // Reject invalid credentials.
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials' });
 
-    // Respond with a signed token and the sanitized user object
+    // Return JWT + safe user payload.
     res.json({ token: sign(user), user: fmt(user) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
