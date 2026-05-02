@@ -77,14 +77,21 @@ export default function RegisterScreen({ navigation }) {
   const allRules = rules.length && rules.uppercase && rules.special;
 
   /* ── Validate ────────────────────────────────────────── */
+  // This function verifies all inputs locally before trying to register the user on the server
   const validate = () => {
     const e = {};
+    
+    // This part ensures the user's name is at least 2 characters long
     if (!fullName.trim() || fullName.trim().length < 2)
       e.fullName = 'Full name must be at least 2 characters';
+      
+    // This part validates the email format
     if (!email.trim())
       e.email    = 'Email is required';
     else if (!isEmail(email))
       e.email    = 'Enter a valid email address';
+      
+    // This part enforces the strong password policy (length, uppercase, and special char)
     if (!password)
       e.password = 'Password is required';
     else if (!rules.length)
@@ -93,26 +100,43 @@ export default function RegisterScreen({ navigation }) {
       e.password = 'Add at least one uppercase letter';
     else if (!rules.special)
       e.password = 'Add at least one special character (!@#$%…)';
+      
     setErrors(e);
+    // Returns true if the form is completely error-free
     return Object.keys(e).length === 0;
   };
 
   const handleRegister = async () => {
+    // Clear any previous general server error messages
     setServerErr('');
+    
+    // Stop submission if client-side validation (like password strength) fails
     if (!validate()) return;
-    setLoading(true);
+    
+    setLoading(true); // Show a loading spinner on the submit button
     try {
+      // Send the registration payload. Normalize the email to lowercase and trim whitespace.
       const { data } = await api.post('/auth/register', {
         fullName: fullName.trim(),
         email:    email.trim().toLowerCase(),
         password,
       });
+      
+      // Registration successful! Store the returned JWT token to log the user in immediately
       await login(data.token, data.user);
     } catch (err) {
+      // Handle server-side errors (e.g., "Email already in use")
       const res = err.response?.data;
+      
+      // Map any field-specific validation errors from the server to the form state
       if (res?.errors) setErrors(prev => ({ ...prev, ...res.errors }));
+      
+      // Display any generic errors at the top of the screen
       setServerErr(res?.error || 'Registration failed. Please try again.');
-    } finally { setLoading(false); }
+    } finally { 
+      // Always stop the loading indicator
+      setLoading(false); 
+    }
   };
 
   const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));
