@@ -1,3 +1,35 @@
+/**
+ * StlOrder.js — STL / 3D Print Order Mongoose Model
+ *
+ * Represents a custom 3D print order submitted by a customer.
+ *
+ * Fields:
+ *   - customerName     {String}   — Full name of the customer (required).
+ *   - customerEmail    {String}   — Primary email (required, stored lowercase).
+ *   - customerEmail2   {String}   — Optional secondary/alternative email.
+ *   - phone            {String}   — Contact phone number.
+ *   - address          {String}   — Delivery address.
+ *   - fileName         {String}   — Stored filename on disk (UUID-prefixed, required).
+ *   - fileSizeBytes    {Number}   — Size of the uploaded file in bytes.
+ *   - material         {String}   — Printing material (PLA, ABS, PETG, RESIN). Default: 'PLA'.
+ *   - quantity         {Number}   — Number of copies to print (min: 1). Default: 1.
+ *   - estimatedPrice   {Number}   — Price estimate (set initially by algorithm, refined by admin).
+ *   - printTimeHours   {Number}   — Estimated print time hours (set by admin).
+ *   - printTimeMinutes {Number}   — Estimated print time minutes (set by admin).
+ *   - weightGrams      {Number}   — Estimated material weight in grams (set by admin).
+ *   - supportStructures{Boolean}  — Whether support structures are needed. Default: false.
+ *   - userId           {ObjectId} — Reference to User if the customer is logged in.
+ *   - note             {String}   — Special instructions from the customer.
+ *   - status           {String}   — Order lifecycle status. Default: 'PENDING_QUOTE'.
+ *
+ * Status lifecycle:
+ *   PENDING_QUOTE → QUOTED → CONFIRMED → PRINTING → READY → DELIVERED
+ *                                                            → CANCELLED
+ *
+ * @module models/StlOrder
+ * @requires mongoose
+ */
+
 const mongoose = require('mongoose');
 
 const stlOrderSchema = new mongoose.Schema({
