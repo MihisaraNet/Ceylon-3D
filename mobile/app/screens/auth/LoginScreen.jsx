@@ -52,27 +52,46 @@ export default function LoginScreen({ navigation }) {
   const pwRef = useRef(null);
 
   /* ── Client-side validation ─────────────────────────── */
+  // This function checks if the user entered an email and password before contacting the server
   const validate = () => {
     const e = {};
     if (!email.trim())       e.email    = 'Email is required';
-    else if (!isEmail(email))e.email    = 'Enter a valid email address';
+    else if (!isEmail(email))e.email    = 'Enter a valid email address'; // This checks email format
+    
     if (!password)           e.password = 'Password is required';
+    
     setErrors(e);
+    // Returns true if there are zero validation errors
     return Object.keys(e).length === 0;
   };
 
   const handleLogin = async () => {
+    // Clear any previous server error messages
     setServerErr('');
+    
+    // Run client-side validation; stop if it fails
     if (!validate()) return;
-    setLoading(true);
+    
+    setLoading(true); // Show loading spinner
+    
     try {
+      // Send the login request to the backend. Normalize the email to lowercase to match DB.
       const { data } = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
+      
+      // Store the JWT token and user info globally, which automatically redirects to MainTabs
       await login(data.token, data.user);
     } catch (err) {
       const res = err.response?.data;
+      
+      // If the server returns field-specific errors, map them to the form fields
       if (res?.errors) setErrors(res.errors);
+      
+      // Display the general server error message in the banner at the top
       setServerErr(res?.error || 'Login failed. Please try again.');
-    } finally { setLoading(false); }
+    } finally { 
+      // Ensure the loading spinner is dismissed even if an error occurs
+      setLoading(false); 
+    }
   };
 
   const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));
