@@ -57,7 +57,7 @@ npm install
 npm run dev
 ```
 * The backend will be available at: `http://localhost:8080`
-* **Default Admin Account:** `admin@layerforge3d.com` / `admin123`
+  
 
 ### 3. Start Mobile Application
 ```bash
