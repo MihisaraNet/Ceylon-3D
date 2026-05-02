@@ -28,6 +28,7 @@ export default function CostCalculatorScreen() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // This function sends the entered dimensions and material to the backend pricing algorithm
   const handleCalc = async () => {
     setLoading(true);
     try {
@@ -38,9 +39,13 @@ export default function CostCalculatorScreen() {
         material:         form.material,
         supportStructures:form.supportStructures,
       });
+      // Save the resulting breakdown (energy, labor, material, etc.) to display on screen
       setResult(data);
-    } catch (err) { Alert.alert('Error', err.response?.data?.error || 'Calculation failed'); }
-    finally { setLoading(false); }
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Calculation failed'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const Row = ({ label, val, bold }) => (
