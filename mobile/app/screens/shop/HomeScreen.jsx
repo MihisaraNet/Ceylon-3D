@@ -1,29 +1,26 @@
 /**
- * HomeScreen.jsx — Landing / Home Page
- *
- * Modern, colorful and simple design.
+ * HomeScreen.jsx — Premium Landing Experience
+ * 
+ * Features a high-end, attractive design with gradients, 
+ * glass-like elements, and modern typography.
  */
 import React from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  StatusBar, Platform, SafeAreaView,
+  StatusBar, Platform, SafeAreaView, Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
 
-const SERVICE_CARDS = [
-  { icon: 'cube-outline',             title: 'Rapid Prototyping',    desc: 'Fast turnaround, multiple materials', color: '#6366f1' },
-  { icon: 'settings-outline',         title: 'Custom Manufacturing', desc: 'Quality control, production scaling', color: '#10b981' },
-  { icon: 'flash-outline',            title: 'Design Services',      desc: '3D modeling & file preparation', color: '#f59e0b' },
-  { icon: 'checkmark-circle-outline', title: 'Consultation',         desc: 'Material selection & cost estimate', color: '#ec4899' },
-];
+const { width } = Dimensions.get('window');
 
-const STATS = [
-  { val: '500+', label: 'Orders', icon: 'bag-check-outline', color: '#6366f1' },
-  { val: '99%',  label: 'Rating',  icon: 'star-outline', color: '#10b981' },
-  { val: '24h',  label: 'Delivery', icon: 'time-outline', color: '#f59e0b' },
+const SERVICE_CARDS = [
+  { icon: 'rocket-outline',    title: 'Rapid Print',  desc: 'Express delivery for prototypes', color: '#6366f1' },
+  { icon: 'diamond-outline',   title: 'Ultra Quality', desc: 'SLA resin printing for detail', color: '#10b981' },
+  { icon: 'brush-outline',     title: 'Fine Finish',  desc: 'Post-processing & painting', color: '#f59e0b' },
+  { icon: 'code-working',      title: 'API Access',   desc: 'Automated bulk manufacturing', color: '#ec4899' },
 ];
 
 export default function HomeScreen() {
@@ -32,110 +29,124 @@ export default function HomeScreen() {
   const { totalItems } = useCart();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#4f46e5" />
-      <ScrollView
-        style={s.container}
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      <ScrollView 
+        style={s.container} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* ─── Hero Section ─── */}
+        {/* ─── Hero Header (Gradient Background) ─── */}
         <View style={s.hero}>
-          <View style={s.heroTopRow}>
-            <View>
-              <Text style={s.heroTag}>LAYERFORGE 3D</Text>
-              <Text style={s.heroBadge}>Modern Printing Hub</Text>
+          <View style={s.headerNav}>
+            <View style={s.logoBadge}>
+              <Ionicons name="cube" size={18} color="#fff" />
+              <Text style={s.logoText}>LF3D</Text>
             </View>
-            {totalItems > 0 && (
-              <TouchableOpacity style={s.cartPill} onPress={() => nav.navigate('Cart')} activeOpacity={0.8}>
-                <Ionicons name="cart" size={18} color="#4f46e5" />
-                <Text style={s.cartPillText}>{totalItems}</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity 
+              style={s.cartBtn} 
+              onPress={() => nav.navigate('Cart')}
+            >
+              <Ionicons name="cart-outline" size={24} color="#fff" />
+              {totalItems > 0 && <View style={s.badge}><Text style={s.badgeText}>{totalItems}</Text></View>}
+            </TouchableOpacity>
           </View>
 
-          <Text style={s.heroTitle}>Innovate{'\n'}Build{'\n'}Deliver.</Text>
+          <Text style={s.heroTitle}>Shape the{'\n'}<Text style={s.heroHighlight}>Future.</Text></Text>
           <Text style={s.heroSub}>
-            The most advanced 3D printing service in your pocket. Precision guaranteed.
+            Premium 3D manufacturing for visionaries. We turn complex designs into physical reality.
           </Text>
 
-          <View style={s.heroButtons}>
-            <TouchableOpacity style={s.btnPrimary} onPress={() => nav.navigate('Upload')} activeOpacity={0.85}>
-              <Ionicons name="cloud-upload" size={18} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={s.btnPrimaryText}>Start Print</Text>
+          <View style={s.ctaRow}>
+            <TouchableOpacity 
+              style={s.mainBtn} 
+              onPress={() => nav.navigate('Upload')}
+              activeOpacity={0.9}
+            >
+              <Text style={s.mainBtnText}>Upload Design</Text>
+              <Ionicons name="arrow-forward" size={18} color="#4f46e5" />
             </TouchableOpacity>
-            <TouchableOpacity style={s.btnSecondary} onPress={() => nav.navigate('Browse')} activeOpacity={0.85}>
-              <Ionicons name="grid-outline" size={18} color="#4f46e5" style={{ marginRight: 6 }} />
-              <Text style={s.btnSecondaryText}>Store</Text>
+            
+            <TouchableOpacity 
+              style={s.secondaryBtn}
+              onPress={() => nav.navigate('Browse')}
+            >
+              <Text style={s.secondaryBtnText}>Shop Catalog</Text>
             </TouchableOpacity>
           </View>
 
           {isAdmin && (
-            <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')} activeOpacity={0.85}>
-              <Ionicons name="shield-checkmark" size={16} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={s.adminBtnText}>Admin Console</Text>
+            <TouchableOpacity 
+              style={s.adminPill} 
+              onPress={() => nav.navigate('AdminStack')}
+            >
+              <Ionicons name="shield-checkmark" size={16} color="rgba(255,255,255,0.7)" />
+              <Text style={s.adminPillText}>ADMIN CONSOLE</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* ─── Stats Row ─── */}
-        <View style={s.statsRow}>
-          {STATS.map(({ val, label, icon, color }) => (
-            <View key={label} style={s.statCard}>
-              <View style={[s.statIconWrap, { backgroundColor: color + '15' }]}>
-                <Ionicons name={icon} size={20} color={color} />
-              </View>
-              <Text style={s.statVal}>{val}</Text>
-              <Text style={s.statLabel}>{label}</Text>
+        {/* ─── Trust Bar ─── */}
+        <View style={s.trustBar}>
+          {['24h Shipping', 'Material Choice', '99% Success'].map((t, i) => (
+            <View key={t} style={s.trustItem}>
+              <Ionicons name="checkmark-circle" size={14} color="#6366f1" />
+              <Text style={s.trustText}>{t}</Text>
+              {i < 2 && <View style={s.trustDot} />}
             </View>
           ))}
         </View>
 
-        {/* ─── Services ─── */}
+        {/* ─── Service Grid ─── */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>What we do</Text>
-          <Text style={s.sectionSub}>Everything you need for your next project</Text>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Our Capabilities</Text>
+            <Text style={s.sectionSub}>State of the art equipment for your vision</Text>
+          </View>
+
+          <View style={s.grid}>
+            {SERVICE_CARDS.map((c, i) => (
+              <TouchableOpacity key={c.title} style={s.card} activeOpacity={0.95}>
+                <View style={[s.iconBox, { backgroundColor: c.color + '15' }]}>
+                  <Ionicons name={c.icon} size={24} color={c.color} />
+                </View>
+                <Text style={s.cardTitle}>{c.title}</Text>
+                <Text style={s.cardDesc}>{c.desc}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <View style={s.servicesGrid}>
-          {SERVICE_CARDS.map(({ icon, title, desc, color }) => (
-            <View key={title} style={s.serviceCard}>
-              <View style={[s.serviceIconWrap, { backgroundColor: color + '10', borderColor: color + '20' }]}>
-                <Ionicons name={icon} size={24} color={color} />
-              </View>
-              <Text style={s.serviceTitle}>{title}</Text>
-              <Text style={s.serviceDesc}>{desc}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ─── CTA Banner ─── */}
-        <TouchableOpacity style={s.actionBanner} onPress={() => nav.navigate('Browse')} activeOpacity={0.88}>
-          <View style={s.actionBannerInner}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.bannerTitle}>Check our Models</Text>
-              <Text style={s.bannerSub}>High quality designs ready to print</Text>
-            </View>
-            <View style={s.bannerIcon}>
-              <Ionicons name="arrow-forward" size={24} color="#fff" />
-            </View>
+        {/* ─── Interactive Banner ─── */}
+        <TouchableOpacity 
+          style={s.banner} 
+          onPress={() => nav.navigate('Browse')}
+          activeOpacity={0.9}
+        >
+          <View style={s.bannerContent}>
+            <Text style={s.bannerTitle}>Explore the Store</Text>
+            <Text style={s.bannerSub}>Curated collection of functional parts</Text>
+          </View>
+          <View style={s.bannerIconWrap}>
+            <Ionicons name="chevron-forward" size={24} color="#fff" />
           </View>
         </TouchableOpacity>
 
-        {/* ─── Footer Info ─── */}
-        <View style={s.aboutCard}>
-          <Text style={s.aboutTitle}>LayerForge 3D</Text>
-          <Text style={s.aboutText}>
-            We combine high-end technology with expert craftsmanship to bring your digital models to life.
+        {/* ─── About Section ─── */}
+        <View style={s.aboutWrap}>
+          <Text style={s.aboutHeadline}>LayerForge 3D</Text>
+          <Text style={s.aboutBody}>
+            Born from a passion for engineering and art, we provide the highest fidelity 3D printing services in the region.
           </Text>
-          <View style={s.contactInfo}>
-            <View style={s.contactItem}>
-              <Ionicons name="mail" size={16} color="#6366f1" />
-              <Text style={s.contactText}>hello@layerforge.com</Text>
-            </View>
-            <View style={s.contactItem}>
+          <View style={s.footerLinks}>
+            <View style={s.linkItem}>
               <Ionicons name="location" size={16} color="#6366f1" />
-              <Text style={s.contactText}>Colombo, LK</Text>
+              <Text style={s.linkText}>Colombo, Sri Lanka</Text>
+            </View>
+            <View style={s.linkItem}>
+              <Ionicons name="mail" size={16} color="#6366f1" />
+              <Text style={s.linkText}>support@layerforge3d.com</Text>
             </View>
           </View>
         </View>
@@ -145,63 +156,72 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  container:        { flex: 1 },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
 
   /* Hero Section */
-  hero:             { 
-    paddingTop: Platform.OS === 'android' ? 40 : 20, 
-    paddingBottom: 48, 
-    paddingHorizontal: 24, 
-    backgroundColor: '#4f46e5',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+  hero: {
+    backgroundColor: '#0f172a',
+    paddingTop: Platform.OS === 'ios' ? 40 : 60,
+    paddingHorizontal: 24,
+    paddingBottom: 60,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    shadowColor: '#6366f1',
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 20,
   },
-  heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  heroTag:          { color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 2, opacity: 0.8 },
-  heroBadge:        { color: '#fff', fontSize: 11, marginTop: 2, fontWeight: '600' },
-  heroTitle:        { color: '#fff', fontSize: 44, fontWeight: '900', lineHeight: 50, marginBottom: 16, letterSpacing: -1 },
-  heroSub:          { color: '#e0e7ff', fontSize: 16, lineHeight: 24, marginBottom: 32, opacity: 0.9 },
-  heroButtons:      { flexDirection: 'row', gap: 12 },
-  btnPrimary:       { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderRadius: 12, paddingVertical: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
-  btnPrimaryText:   { color: '#4f46e5', fontWeight: '800', fontSize: 15 },
-  btnSecondary:     { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingVertical: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  btnSecondaryText: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  adminBtn:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12, marginTop: 20, alignSelf: 'flex-start' },
-  adminBtnText:     { color: '#fff', fontWeight: '700', fontSize: 14 },
-  cartPill:         { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 24, paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  cartPillText:     { color: '#4f46e5', fontWeight: '800', fontSize: 15 },
+  headerNav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 },
+  logoBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  logoText: { color: '#fff', fontSize: 14, fontWeight: '900', marginLeft: 8, letterSpacing: 1 },
+  cartBtn: { position: 'relative', padding: 8 },
+  badge: { position: 'absolute', top: 0, right: 0, backgroundColor: '#f43f5e', minWidth: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#0f172a' },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '900' },
 
-  /* Stats Section */
-  statsRow:         { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 24, marginTop: -30, backgroundColor: '#fff', borderRadius: 20, paddingVertical: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 10 },
-  statCard:         { alignItems: 'center', gap: 8 },
-  statIconWrap:     { borderRadius: 12, padding: 10, marginBottom: 4 },
-  statVal:          { fontSize: 22, fontWeight: '900', color: '#1e293b' },
-  statLabel:        { fontSize: 12, color: '#64748b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  heroTitle: { fontSize: 52, fontWeight: '900', color: '#fff', lineHeight: 58, letterSpacing: -2 },
+  heroHighlight: { color: '#6366f1' },
+  heroSub: { fontSize: 16, color: '#94a3b8', marginTop: 20, lineHeight: 26, fontWeight: '500' },
+  
+  ctaRow: { flexDirection: 'row', marginTop: 32, gap: 16 },
+  mainBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', paddingVertical: 18, borderRadius: 20, shadowColor: '#fff', shadowOpacity: 0.1, shadowRadius: 10 },
+  mainBtnText: { color: '#0f172a', fontSize: 16, fontWeight: '800', marginRight: 8 },
+  secondaryBtn: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  secondaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  
+  adminPill: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginTop: 32, backgroundColor: 'rgba(0,0,0,0.3)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  adminPillText: { color: '#94a3b8', fontSize: 11, fontWeight: '800', marginLeft: 8, letterSpacing: 1 },
 
-  /* Content Sections */
-  section:          { paddingHorizontal: 24, paddingTop: 40, paddingBottom: 16 },
-  sectionTitle:     { fontSize: 28, fontWeight: '900', color: '#1e293b', letterSpacing: -0.5 },
-  sectionSub:       { fontSize: 15, color: '#64748b', marginTop: 4 },
+  /* Trust Bar */
+  trustBar: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: -20, marginHorizontal: 24, backgroundColor: '#fff', paddingVertical: 14, borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 5 },
+  trustItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  trustText: { fontSize: 11, fontWeight: '700', color: '#64748b' },
+  trustDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#e2e8f0', marginHorizontal: 10 },
 
-  /* Services Grid */
-  servicesGrid:     { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 18, gap: 12 },
-  serviceCard:      { width: '47%', backgroundColor: '#fff', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#f1f5f9', gap: 10, shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 5 },
-  serviceIconWrap:  { borderRadius: 12, padding: 12, alignSelf: 'flex-start', borderWidth: 1 },
-  serviceTitle:     { fontSize: 16, fontWeight: '800', color: '#1e293b' },
-  serviceDesc:      { fontSize: 13, color: '#64748b', lineHeight: 20 },
+  /* Section Styles */
+  section: { padding: 24, paddingTop: 40 },
+  sectionHeader: { marginBottom: 24 },
+  sectionTitle: { fontSize: 24, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
+  sectionSub: { fontSize: 14, color: '#64748b', marginTop: 4, fontWeight: '500' },
 
-  /* Action Banner */
-  actionBanner:     { marginHorizontal: 24, marginVertical: 24, borderRadius: 20, overflow: 'hidden', shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
-  actionBannerInner:{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', paddingHorizontal: 24, paddingVertical: 28 },
-  bannerTitle:      { color: '#fff', fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
-  bannerSub:        { color: '#e0e7ff', fontSize: 15, marginTop: 4, fontWeight: '600' },
-  bannerIcon:       { backgroundColor: 'rgba(255,255,255,0.2)', padding: 10, borderRadius: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  card: { width: (width - 64) / 2, backgroundColor: '#fff', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
+  iconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  cardDesc: { fontSize: 12, color: '#64748b', marginTop: 6, lineHeight: 18, fontWeight: '500' },
 
-  /* About Card */
-  aboutCard:        { margin: 24, backgroundColor: '#fff', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: '#f1f5f9' },
-  aboutTitle:       { fontSize: 20, fontWeight: '900', color: '#1e293b', marginBottom: 12 },
-  aboutText:        { fontSize: 15, color: '#475569', lineHeight: 24, marginBottom: 20 },
-  contactInfo:      { gap: 12 },
-  contactItem:      { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  contactText:      { fontSize: 14, color: '#1e293b', fontWeight: '600' },
+  /* Banner */
+  banner: { marginHorizontal: 24, marginVertical: 12, backgroundColor: '#6366f1', borderRadius: 28, padding: 28, flexDirection: 'row', alignItems: 'center', shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 20, elevation: 10 },
+  bannerContent: { flex: 1 },
+  bannerTitle: { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  bannerSub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 4, fontWeight: '600' },
+  bannerIconWrap: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 12, borderRadius: 16 },
+
+  /* About Wrap */
+  aboutWrap: { margin: 24, marginTop: 40, backgroundColor: '#f8fafc', borderRadius: 32, padding: 32 },
+  aboutHeadline: { fontSize: 20, fontWeight: '900', color: '#1e293b', marginBottom: 12 },
+  aboutBody: { fontSize: 15, color: '#475569', lineHeight: 24, fontWeight: '500' },
+  footerLinks: { marginTop: 24, gap: 12 },
+  linkItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  linkText: { fontSize: 14, color: '#1e293b', fontWeight: '700' },
 });
