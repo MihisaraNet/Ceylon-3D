@@ -90,40 +90,26 @@ export default function ManageProductsScreen() {
     }
 
     setFErr(e);
-    // Halt submission if there are validation errors
     if (Object.keys(e).length) return;
 
     setSaving(true);
     try {
-      // ── Build multipart/form-data for image upload ──
       const fd = new FormData();
       fd.append('name', form.name.trim());
       fd.append('description', form.description.trim());
       fd.append('price', form.price);
       fd.append('stock', form.stock || '0');
       fd.append('category', form.category);
-      
-      // Append the selected image to the FormData if one was chosen
-      if (form.imageUri) {
-        fd.append('image', { uri: form.imageUri, type: form.imageMime, name: form.imageName });
-      }
+      if (form.imageUri) fd.append('image', { uri:form.imageUri, type:form.imageMime, name:form.imageName });
 
-      // Execute update (PUT) if editing, or create (POST) if adding a new product
-      if (editing) {
-        await api.put(`/api/products/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      } else {
-        await api.post('/api/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      }
+      if (editing) await api.put(`/api/products/${editing._id}`, fd, { headers:{ 'Content-Type':'multipart/form-data' } });
+      else         await api.post('/api/products', fd, { headers:{ 'Content-Type':'multipart/form-data' } });
 
-      // Close modal and refresh the product list on success
       setModal(false);
       load();
     } catch (err) {
-      // ── Server-side error handling ──
       const res = err.response?.data;
-      // Map field-specific validation errors back to the UI form
       if (res?.errors) setFErr(prev => ({ ...prev, ...res.errors }));
-      // Fallback to a global alert for unhandled errors
       else Alert.alert('Save Failed', res?.error || 'Could not save product');
     }
     finally { setSaving(false); }
