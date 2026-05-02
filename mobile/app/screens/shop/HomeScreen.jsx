@@ -1,7 +1,7 @@
 /**
  * HomeScreen.jsx — Landing / Home Page
  *
- * The main entry screen of the Ceylon3D app, displayed as the first tab.
+ * The main entry screen of the LayerForge 3D app, displayed as the first tab.
  * Features a rich, branded layout with multiple sections.
  *
  * Sections:
@@ -64,7 +64,7 @@ export default function HomeScreen() {
           {/* Top row */}
           <View style={s.heroTopRow}>
             <View>
-              <Text style={s.heroTag}>🖨️  Ceylon 3D Printing</Text>
+              <Text style={s.heroTag}>🖨️  LayerForge 3D Printing</Text>
               <Text style={s.heroBadge}>Sri Lanka's Premier Service</Text>
             </View>
             {totalItems > 0 && (
@@ -148,13 +148,13 @@ export default function HomeScreen() {
             <View style={s.aboutIconWrap}>
               <Ionicons name="business-outline" size={22} color="#6366f1" />
             </View>
-            <Text style={s.aboutTitle}>About Ceylon 3D</Text>
+            <Text style={s.aboutTitle}>About LayerForge 3D</Text>
           </View>
           <Text style={s.aboutText}>
-            Based in Colombo, Sri Lanka, Ceylon 3D uses cutting-edge technology and premium materials to deliver outstanding results for individuals, startups, and enterprises.
+            Based in Colombo, Sri Lanka, LayerForge 3D uses cutting-edge technology and premium materials to deliver outstanding results for individuals, startups, and enterprises.
           </Text>
           {[
-            { icon: 'mail-outline',     text: 'contact@ceylon3d.com' },
+            { icon: 'mail-outline',     text: 'contact@layerforge3d.com' },
             { icon: 'call-outline',     text: '+94 (077) 123 4567' },
             { icon: 'location-outline', text: 'Colombo, Sri Lanka' },
           ].map(({ icon, text }) => (
