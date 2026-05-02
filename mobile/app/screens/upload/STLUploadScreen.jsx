@@ -1,17 +1,18 @@
 /**
- * STLUploadScreen.jsx — 3D Print Order Upload Wizard
- *
- * Modern, colorful and simple design.
+ * STLUploadScreen.jsx — Premium 3D Project Initiation
+ * 
+ * Attractive, modern design with a refined 
+ * multi-step wizard and premium file dropzone.
  */
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, SafeAreaView, StatusBar, Dimensions } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { STL_MATERIALS } from '../../data/categories';
 
-const STEPS = ['Upload', 'Details', 'Review'];
+const STEPS = ['Asset', 'Setup', 'Finish'];
 
 export default function STLUploadScreen() {
   const { user } = useAuth();
@@ -30,19 +31,7 @@ export default function STLUploadScreen() {
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
     if (res.canceled) return;
     const asset = res.assets?.[0];
-    if (!asset) return;
-    
-    const ext = asset.name.split('.').pop().toLowerCase();
-    if (!['stl','pdf','jpg','jpeg'].includes(ext)) {
-      return Alert.alert('Invalid', 'Only .stl, .pdf, .jpg, .jpeg accepted');
-    }
-    setFile(asset);
-  };
-
-  const handleNext = () => {
-    if (step === 0 && !file) return Alert.alert('File Required', 'Please select a file.');
-    if (step === 1 && (!form.name || !form.email || !form.phone || !form.address)) return Alert.alert('Required', 'Please fill all fields.');
-    setStep(s => s + 1);
+    if (asset) setFile(asset);
   };
 
   const handleSubmit = async () => {
@@ -60,25 +49,24 @@ export default function STLUploadScreen() {
       
       const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(data);
-    } catch (err) {
-      Alert.alert('Failed', 'Submission failed. Please try again.');
-    } finally { setSubmitting(false); }
+    } catch { Alert.alert('Error', 'Upload failed. Check connection.'); }
+    finally { setSubmitting(false); }
   };
 
   if (result) return (
-    <ScrollView contentContainerStyle={s.successScroll} style={{ backgroundColor: '#fff' }}>
-      <View style={s.successIconWrap}>
-        <Ionicons name="checkmark-circle" size={100} color="#10b981" />
+    <ScrollView contentContainerStyle={s.successWrap} style={{ backgroundColor: '#fff' }}>
+      <View style={s.successCircle}>
+        <Ionicons name="checkmark-done" size={60} color="#fff" />
       </View>
-      <Text style={s.successTitle}>Order Placed!</Text>
-      <Text style={s.successSub}>We'll review your file and send a quote shortly.</Text>
-      <View style={s.resultCard}>
-        <View style={s.resultRow}><Text style={s.resultLabel}>ORDER ID</Text><Text style={s.resultVal}>#{result.stlOrderId?.slice(-6).toUpperCase()}</Text></View>
-        <View style={s.resultRow}><Text style={s.resultLabel}>MATERIAL</Text><Text style={s.resultVal}>{result.material}</Text></View>
-        <View style={s.resultRow}><Text style={s.resultLabel}>EST. PRICE</Text><Text style={[s.resultVal, { color: '#6366f1' }]}>LKR {result.estimatedPrice?.toFixed(2)}</Text></View>
+      <Text style={s.successTitle}>Request Sent</Text>
+      <Text style={s.successSub}>Your blueprint is being analyzed by our engineers.</Text>
+      <View style={s.finalCard}>
+        <View style={s.fRow}><Text style={s.fLabel}>Order</Text><Text style={s.fVal}>#{result.stlOrderId?.slice(-6).toUpperCase()}</Text></View>
+        <View style={s.fRow}><Text style={s.fLabel}>Mat.</Text><Text style={s.fVal}>{result.material}</Text></View>
+        <View style={s.fRow}><Text style={s.fLabel}>Est.</Text><Text style={[s.fVal, { color: '#6366f1' }]}>LKR {result.estimatedPrice?.toFixed(0)}</Text></View>
       </View>
-      <TouchableOpacity style={s.doneBtn} onPress={() => { setResult(null); setStep(0); setFile(null); }}>
-        <Text style={s.doneBtnText}>New Submission</Text>
+      <TouchableOpacity style={s.resetBtn} onPress={() => { setResult(null); setStep(0); setFile(null); }}>
+        <Text style={s.resetBtnText}>Submit Another</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -88,71 +76,60 @@ export default function STLUploadScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
       <View style={s.header}>
-        <Text style={s.headerTitle}>STL Upload</Text>
-        <View style={s.stepper}>
+        <Text style={s.title}>New Project</Text>
+        <View style={s.progressRow}>
           {STEPS.map((l, i) => (
-            <View key={l} style={s.stepWrap}>
-              <View style={[s.stepDot, i <= step && s.stepDotActive]}>
-                {i < step ? <Ionicons name="checkmark" size={12} color="#fff" /> : <Text style={[s.stepNum, i === step && { color: '#fff' }]}>{i + 1}</Text>}
+            <View key={l} style={s.stepItem}>
+              <View style={[s.stepNum, i <= step && s.stepNumActive]}>
+                {i < step ? <Ionicons name="checkmark" size={12} color="#fff" /> : <Text style={[s.sText, i === step && { color: '#fff' }]}>{i + 1}</Text>}
               </View>
-              <Text style={[s.stepLabel, i === step && s.stepLabelActive]}>{l}</Text>
-              {i < STEPS.length - 1 && <View style={[s.stepLine, i < step && s.stepLineActive]} />}
+              {i < STEPS.length - 1 && <View style={[s.line, i < step && s.lineActive]} />}
             </View>
           ))}
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: 28 }}>
         {step === 0 && (
           <View>
-            <TouchableOpacity style={[s.dropzone, file && s.dropzoneActive]} onPress={pickFile}>
-              <View style={[s.dropzoneIcon, { backgroundColor: file ? '#f0fdf4' : '#f5f3ff' }]}>
-                <Ionicons name={file ? 'document-text' : 'cloud-upload'} size={40} color={file ? '#10b981' : '#6366f1'} />
+            <TouchableOpacity style={[s.uploader, file && s.uploaderOn]} onPress={pickFile} activeOpacity={0.8}>
+              <View style={[s.upIcon, { backgroundColor: file ? '#f0fdf4' : '#f8fafc' }]}>
+                <Ionicons name={file ? 'document' : 'add'} size={32} color={file ? '#10b981' : '#6366f1'} />
               </View>
-              <Text style={s.dropzoneTitle}>{file ? file.name : 'Select Design File'}</Text>
-              <Text style={s.dropzoneSub}>{file ? `${(file.size/1024).toFixed(1)} KB` : 'STL, PDF, JPG, JPEG supported'}</Text>
+              <Text style={s.upTitle}>{file ? file.name : 'Choose Blueprint'}</Text>
+              <Text style={s.upSub}>{file ? `${(file.size/1024).toFixed(0)} KB` : 'STL, STEP or high-res images'}</Text>
             </TouchableOpacity>
 
-            <Text style={s.sectionLabel}>CHOOSE MATERIAL</Text>
-            <View style={s.materialGrid}>
+            <Text style={s.label}>MATERIAL SELECTION</Text>
+            <View style={s.matList}>
               {STL_MATERIALS.map(m => (
-                <TouchableOpacity key={m.id} style={[s.matCard, material === m.id && s.matCardActive]} onPress={() => setMat(m.id)}>
-                  <Text style={s.matEmoji}>{m.emoji}</Text>
-                  <Text style={[s.matTitle, material === m.id && s.matTitleActive]}>{m.label}</Text>
+                <TouchableOpacity key={m.id} style={[s.matItem, material === m.id && s.matItemOn]} onPress={() => setMat(m.id)}>
+                  <Text style={s.matIcon}>{m.emoji}</Text>
+                  <Text style={[s.matName, material === m.id && { color: '#fff' }]}>{m.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.sectionLabel}>QUANTITY</Text>
-            <View style={s.qtyRow}>
-              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q-1))}><Ionicons name="remove" size={24} color="#6366f1" /></TouchableOpacity>
-              <Text style={s.qtyVal}>{quantity}</Text>
-              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q+1)}><Ionicons name="add" size={24} color="#6366f1" /></TouchableOpacity>
+            <Text style={s.label}>QUANTITY</Text>
+            <View style={s.qtySection}>
+              <TouchableOpacity style={s.ctrl} onPress={() => setQty(Math.max(1, quantity-1))}><Ionicons name="remove" size={24} color="#0f172a" /></TouchableOpacity>
+              <Text style={s.qtyValText}>{quantity}</Text>
+              <TouchableOpacity style={s.ctrl} onPress={() => setQty(quantity+1)}><Ionicons name="add" size={24} color="#0f172a" /></TouchableOpacity>
             </View>
-
-            <Text style={s.sectionLabel}>NOTES</Text>
-            <TextInput
-              style={s.textarea}
-              placeholder="Any specific instructions..."
-              multiline
-              value={notes}
-              onChangeText={setNotes}
-            />
           </View>
         )}
 
         {step === 1 && (
           <View>
             {[
-              { key: 'name',    label: 'FULL NAME',     icon: 'person-outline' },
-              { key: 'email',   label: 'EMAIL ADDRESS', icon: 'mail-outline' },
-              { key: 'phone',   label: 'PHONE NUMBER',  icon: 'call-outline' },
-              { key: 'address', label: 'ADDRESS',       icon: 'location-outline', multi: true },
+              { key: 'name',    label: 'IDENTITY NAME', icon: 'person-outline' },
+              { key: 'phone',   label: 'CONTACT NUMBER', icon: 'call-outline' },
+              { key: 'address', label: 'SHIPPING DESTINATION', icon: 'location-outline', multi: true },
             ].map(f => (
-              <View key={f.key} style={s.inputGroup}>
-                <Text style={s.sectionLabel}>{f.label}</Text>
-                <View style={[s.inputWrap, f.multi && { alignItems: 'flex-start' }]}>
-                  <Ionicons name={f.icon} size={20} color="#94a3b8" style={{ marginTop: f.multi ? 16 : 0, marginLeft: 16 }} />
+              <View key={f.key} style={s.field}>
+                <Text style={s.label}>{f.label}</Text>
+                <View style={[s.fieldInput, f.multi && { height: 120, alignItems: 'flex-start' }]}>
+                  <Ionicons name={f.icon} size={20} color="#94a3b8" style={{ marginTop: f.multi ? 18 : 0, marginLeft: 18 }} />
                   <TextInput
                     style={[s.input, f.multi && { height: 100, textAlignVertical: 'top' }]}
                     value={form[f.key]}
@@ -168,18 +145,13 @@ export default function STLUploadScreen() {
 
         {step === 2 && (
           <View>
-            <View style={s.reviewCard}>
-              <Text style={s.reviewTitle}>Final Review</Text>
-              <ReviewRow label="File" value={file?.name} />
-              <ReviewRow label="Material" value={material} />
-              <ReviewRow label="Quantity" value={String(quantity)} />
-              <View style={s.reviewDivider} />
-              <ReviewRow label="Customer" value={form.name} />
-              <ReviewRow label="Phone" value={form.phone} />
-            </View>
-            <View style={s.trustBanner}>
-              <Ionicons name="shield-checkmark" size={24} color="#10b981" />
-              <Text style={s.trustText}>Secure upload & Encrypted storage</Text>
+            <View style={s.summaryBox}>
+              <Text style={s.sumHeader}>Summary</Text>
+              <SumRow l="Selected File" v={file?.name} />
+              <SumRow l="Material" v={material} />
+              <SumRow l="Quantity" v={String(quantity)} />
+              <View style={s.sumDivider} />
+              <SumRow l="Recipient" v={form.name} />
             </View>
           </View>
         )}
@@ -187,19 +159,19 @@ export default function STLUploadScreen() {
 
       <View style={s.footer}>
         {step > 0 && (
-          <TouchableOpacity style={s.backBtn} onPress={() => setStep(s => s - 1)}>
-            <Text style={s.backBtnText}>Back</Text>
+          <TouchableOpacity style={s.prevBtn} onPress={() => setStep(s => s - 1)}>
+            <Text style={s.prevBtnText}>Back</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
           style={[s.nextBtn, step === 2 && { backgroundColor: '#10b981' }]}
-          onPress={step === 2 ? handleSubmit : handleNext}
+          onPress={step === 2 ? handleSubmit : () => setStep(s => s + 1)}
           disabled={submitting}
         >
           {submitting ? <ActivityIndicator color="#fff" /> : (
             <>
-              <Text style={s.nextBtnText}>{step === 2 ? 'Submit Order' : 'Continue'}</Text>
-              <Ionicons name={step === 2 ? 'send' : 'arrow-forward'} size={18} color="#fff" style={{ marginLeft: 8 }} />
+              <Text style={s.nextBtnText}>{step === 2 ? 'Finalize' : 'Continue'}</Text>
+              <Ionicons name={step === 2 ? 'checkmark' : 'chevron-forward'} size={18} color="#fff" style={{ marginLeft: 8 }} />
             </>
           )}
         </TouchableOpacity>
@@ -208,74 +180,65 @@ export default function STLUploadScreen() {
   );
 }
 
-const ReviewRow = ({ label, value }) => (
-  <View style={s.reviewRow}>
-    <Text style={s.reviewLabel}>{label}</Text>
-    <Text style={s.reviewVal}>{value}</Text>
-  </View>
+const SumRow = ({ l, v }) => (
+  <View style={s.sumRow}><Text style={s.sumL}>{l}</Text><Text style={s.sumV}>{v}</Text></View>
 );
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#fff' },
-  header:         { paddingHorizontal: 24, paddingVertical: 20, borderBottomWidth: 1, borderColor: '#f1f5f9' },
-  headerTitle:    { fontSize: 28, fontWeight: '900', color: '#1e293b', marginBottom: 20 },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  header: { paddingHorizontal: 28, paddingVertical: 24, borderBottomWidth: 1, borderColor: '#f1f5f9' },
+  title: { fontSize: 36, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5, marginBottom: 24 },
   
-  stepper:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  stepWrap:       { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  stepDot:        { width: 24, height: 24, borderRadius: 12, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', zIndex: 1 },
-  stepDotActive:  { backgroundColor: '#6366f1' },
-  stepNum:        { fontSize: 10, fontWeight: '800', color: '#94a3b8' },
-  stepLabel:      { fontSize: 12, color: '#94a3b8', fontWeight: '700', marginLeft: 8 },
-  stepLabelActive:{ color: '#6366f1' },
-  stepLine:       { flex: 1, height: 2, backgroundColor: '#f1f5f9', marginHorizontal: 8 },
-  stepLineActive: { backgroundColor: '#6366f1' },
+  progressRow: { flexDirection: 'row', alignItems: 'center' },
+  stepItem: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  stepNum: { width: 24, height: 24, borderRadius: 8, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
+  stepNumActive: { backgroundColor: '#0f172a' },
+  sText: { fontSize: 10, fontWeight: '900', color: '#94a3b8' },
+  line: { flex: 1, height: 2, backgroundColor: '#f1f5f9', marginHorizontal: 12 },
+  lineActive: { backgroundColor: '#0f172a' },
 
-  dropzone:       { borderWidth: 2, borderStyle: 'dashed', borderColor: '#e2e8f0', borderRadius: 24, padding: 32, alignItems: 'center', backgroundColor: '#f8fafc', marginBottom: 32 },
-  dropzoneActive: { borderColor: '#6366f1', backgroundColor: '#f5f3ff' },
-  dropzoneIcon:   { padding: 16, borderRadius: 20, marginBottom: 16 },
-  dropzoneTitle:  { fontSize: 18, fontWeight: '800', color: '#1e293b' },
-  dropzoneSub:    { fontSize: 14, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
+  uploader: { borderWidth: 2, borderStyle: 'dashed', borderColor: '#e2e8f0', borderRadius: 32, padding: 40, alignItems: 'center', backgroundColor: '#f8fafc', marginBottom: 40 },
+  uploaderOn: { borderColor: '#10b981', backgroundColor: '#f0fdf4' },
+  upIcon: { padding: 18, borderRadius: 20, marginBottom: 16 },
+  upTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  upSub: { fontSize: 13, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
 
-  sectionLabel:   { fontSize: 11, fontWeight: '900', color: '#94a3b8', letterSpacing: 1, marginBottom: 12, textTransform: 'uppercase' },
-  materialGrid:   { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 32 },
-  matCard:        { width: '47%', backgroundColor: '#fff', borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
-  matCardActive:  { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  matEmoji:       { fontSize: 24, marginBottom: 4 },
-  matTitle:       { fontSize: 14, fontWeight: '800', color: '#1e293b' },
-  matTitleActive: { color: '#fff' },
+  label: { fontSize: 11, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase' },
+  matList: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 40 },
+  matItem: { width: '47%', backgroundColor: '#fff', borderRadius: 24, padding: 18, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+  matItemOn: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
+  matIcon: { fontSize: 24, marginBottom: 6 },
+  matName: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
 
-  qtyRow:         { flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 32 },
-  qtyBtn:         { backgroundColor: '#f5f3ff', padding: 12, borderRadius: 16 },
-  qtyVal:         { fontSize: 32, fontWeight: '900', color: '#1e293b' },
-  textarea:       { backgroundColor: '#f8fafc', borderRadius: 20, padding: 20, fontSize: 15, color: '#1e293b', borderWidth: 1, borderColor: '#f1f5f9', height: 120, textAlignVertical: 'top' },
+  qtySection: { flexDirection: 'row', alignItems: 'center', gap: 24, marginBottom: 40 },
+  ctrl: { backgroundColor: '#f8fafc', padding: 14, borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9' },
+  qtyValText: { fontSize: 40, fontWeight: '900', color: '#0f172a' },
 
-  inputGroup:     { marginBottom: 20 },
-  inputWrap:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 20, borderWidth: 1, borderColor: '#f1f5f9' },
-  input:          { flex: 1, padding: 16, fontSize: 15, color: '#1e293b', fontWeight: '600' },
+  field: { marginBottom: 28 },
+  fieldInput: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  input: { flex: 1, padding: 20, fontSize: 15, color: '#1e293b', fontWeight: '700' },
 
-  reviewCard:     { backgroundColor: '#f5f3ff', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#e0e7ff' },
-  reviewTitle:    { fontSize: 20, fontWeight: '900', color: '#6366f1', marginBottom: 20 },
-  reviewRow:      { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  reviewLabel:    { fontSize: 14, color: '#64748b', fontWeight: '700' },
-  reviewVal:      { fontSize: 14, color: '#1e293b', fontWeight: '800' },
-  reviewDivider:  { height: 1, backgroundColor: '#e0e7ff', marginVertical: 16 },
-  trustBanner:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0fdf4', padding: 20, borderRadius: 20, marginTop: 20, gap: 12 },
-  trustText:      { fontSize: 14, color: '#166534', fontWeight: '700' },
+  summaryBox: { backgroundColor: '#f8fafc', borderRadius: 32, padding: 32, borderWidth: 1, borderColor: '#f1f5f9' },
+  sumHeader: { fontSize: 24, fontWeight: '900', color: '#0f172a', marginBottom: 24 },
+  sumRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
+  sumL: { fontSize: 14, color: '#64748b', fontWeight: '600' },
+  sumV: { fontSize: 14, color: '#0f172a', fontWeight: '800' },
+  sumDivider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 20 },
 
-  footer:         { flexDirection: 'row', padding: 24, borderTopWidth: 1, borderColor: '#f1f5f9', gap: 12 },
-  backBtn:        { paddingHorizontal: 24, justifyContent: 'center' },
-  backBtnText:    { fontSize: 15, fontWeight: '800', color: '#64748b' },
-  nextBtn:        { flex: 1, flexDirection: 'row', backgroundColor: '#6366f1', borderRadius: 20, paddingVertical: 18, justifyContent: 'center', alignItems: 'center', shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
-  nextBtnText:    { color: '#fff', fontSize: 16, fontWeight: '800' },
+  footer: { flexDirection: 'row', padding: 28, borderTopWidth: 1, borderColor: '#f1f5f9', gap: 16 },
+  prevBtn: { paddingHorizontal: 24, justifyContent: 'center' },
+  prevBtnText: { fontSize: 15, fontWeight: '800', color: '#94a3b8' },
+  nextBtn: { flex: 1, flexDirection: 'row', backgroundColor: '#0f172a', borderRadius: 24, height: 68, justifyContent: 'center', alignItems: 'center', shadowColor: '#0f172a', shadowOpacity: 0.2, shadowRadius: 15 },
+  nextBtnText: { color: '#fff', fontSize: 18, fontWeight: '800' },
 
-  successScroll:  { flexGrow: 1, alignItems: 'center', padding: 40, paddingTop: 80 },
-  successIconWrap:{ width: 160, height: 160, backgroundColor: '#f0fdf4', borderRadius: 80, justifyContent: 'center', alignItems: 'center', marginBottom: 32 },
-  successTitle:   { fontSize: 32, fontWeight: '900', color: '#1e293b' },
-  successSub:     { fontSize: 16, color: '#64748b', textAlign: 'center', marginTop: 12, lineHeight: 24, marginBottom: 40 },
-  resultCard:     { width: '100%', backgroundColor: '#f8fafc', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 40 },
-  resultRow:      { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  resultLabel:    { fontSize: 11, fontWeight: '900', color: '#94a3b8', letterSpacing: 1 },
-  resultVal:      { fontSize: 15, fontWeight: '800', color: '#1e293b' },
-  doneBtn:        { backgroundColor: '#1e293b', paddingHorizontal: 40, paddingVertical: 20, borderRadius: 20 },
-  doneBtnText:    { color: '#fff', fontSize: 16, fontWeight: '800' },
+  successWrap: { flexGrow: 1, alignItems: 'center', padding: 48, paddingTop: 100 },
+  successCircle: { width: 120, height: 120, backgroundColor: '#10b981', borderRadius: 60, justifyContent: 'center', alignItems: 'center', marginBottom: 32 },
+  successTitle: { fontSize: 36, fontWeight: '900', color: '#0f172a' },
+  successSub: { fontSize: 16, color: '#64748b', textAlign: 'center', marginTop: 12, lineHeight: 26, fontWeight: '600' },
+  finalCard: { width: '100%', backgroundColor: '#f8fafc', borderRadius: 32, padding: 32, marginTop: 48, borderWidth: 1, borderColor: '#f1f5f9' },
+  fRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  fLabel: { fontSize: 11, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1 },
+  fVal: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
+  resetBtn: { backgroundColor: '#0f172a', paddingHorizontal: 40, paddingVertical: 22, borderRadius: 24, marginTop: 48 },
+  resetBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });
