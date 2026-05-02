@@ -38,15 +38,19 @@ export default function AdminDashboardScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // This part fetches data from three different API endpoints concurrently for speed
       const [stl, shop, prods] = await Promise.all([
         api.get('/stl-orders/admin'),
         api.get('/orders/admin'),
         api.get('/api/products'),
       ]);
+      
+      // This part processes the raw data arrays to calculate the summary statistics
       setStats({
         stlOrders:     stl.data.length,
         shopOrders:    shop.data.length,
         products:      prods.data.length,
+        // Only count STL orders that are in the initial 'PENDING_QUOTE' phase
         pendingQuotes: stl.data.filter(o => o.status === 'PENDING_QUOTE').length,
       });
     } catch { }
