@@ -1,25 +1,6 @@
 /**
  * STLUploadScreen.jsx — 3D Print Order Upload Wizard
- *
- * A 3-step wizard for submitting custom 3D print orders.
- *
- * Steps:
- *   1. Upload File   — Pick a file (.stl/.pdf/.jpg/.jpeg), choose material & quantity, add notes
- *   2. Your Details  — Enter contact info (name, email, phone, address)
- *   3. Review & Submit — Review all details, see trust badges, then submit
- *
- * Features:
- *   - Visual step indicator (dots + progress line)
- *   - File picker using expo-document-picker with extension validation
- *   - Material selection grid (PLA, ABS, PETG, Resin) with emoji icons
- *   - Quantity selector with +/- buttons
- *   - Contact form pre-filled from AuthContext user data
- *   - Review panel with all submitted info before final submission
- *   - Trust badges: "No upfront payment", "Quote before printing", "Secure upload"
- *   - Success screen with order ID, file name, material, estimated price
- *   - "Submit Another Order" button to reset and start over
- *
- * @module screens/upload/STLUploadScreen
+ * Minimalist design version.
  */
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
@@ -29,7 +10,7 @@ import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { STL_MATERIALS } from '../../data/categories';
 
-const STEPS = ['Upload File', 'Your Details', 'Review & Submit'];
+const STEPS = ['Upload File', 'Your Details', 'Review'];
 
 export default function STLUploadScreen() {
   const { user } = useAuth();
@@ -44,25 +25,19 @@ export default function STLUploadScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult]         = useState(null);
 
-  // This function opens the native file picker to let the user select their 3D design file
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-    if (res.canceled) return; // User cancelled the picker
-    
+    if (res.canceled) return;
     const asset = res.assets?.[0];
     if (!asset) return;
     
-    // This part validates the selected file extension to ensure it is supported
     const ext = asset.name.split('.').pop().toLowerCase();
     if (!['stl','pdf','jpg','jpeg'].includes(ext)) {
       return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
     }
-    
-    // Save the valid file to state so it can be previewed in Step 0
     setFile(asset);
   };
 
-  // This part checks if the user has selected a file before allowing them to proceed to Step 1
   const validateStep1 = () => {
     if (!file) {
       Alert.alert('Required', 'Please select a file');
@@ -71,20 +46,15 @@ export default function STLUploadScreen() {
     return true;
   };
   
-  // This part checks if the contact information form is completely filled out
   const validateStep2 = () => {
     if (!form.name || !form.email || !form.phone || !form.address) {
       Alert.alert('Required', 'Please fill all required fields');
       return false;
     }
-    
-    // This part ensures the email format is valid
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       Alert.alert('Invalid', 'Invalid email');
       return false;
     }
-    
-    // This part ensures the phone number format is valid
     if (!/^\+?[0-9\s()\-]{7,20}$/.test(form.phone)) {
       Alert.alert('Invalid', 'Invalid phone number');
       return false;
@@ -92,23 +62,17 @@ export default function STLUploadScreen() {
     return true;
   };
 
-  // This function advances the wizard to the next step, running validation first
   const handleNext = () => {
     if (step===0 && !validateStep1()) return;
     if (step===1 && !validateStep2()) return;
-    setStep(s => s+1); // Move to next step
+    setStep(s => s+1);
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true); // Disable the submit button and show a loading indicator
+    setSubmitting(true);
     try {
-      // Build a FormData object to send both the physical STL file and the text metadata
       const fd = new FormData();
-      
-      // Append the selected file. Expo-document-picker provides the local URI.
       fd.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' });
-      
-      // Append the validated contact information and print specifications
       fd.append('name', form.name);
       fd.append('email', form.email);
       if (form.email2) fd.append('email2', form.email2);
@@ -118,23 +82,18 @@ export default function STLUploadScreen() {
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
       
-      // Post the multipart/form-data payload to the backend
       const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      
-      // On success, save the returned order details to show the confirmation screen
       setResult(data);
     } catch (err) {
-      // If the backend validation fails or the server errors out, show an alert
       Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed. Please try again.');
     } finally { 
-      // Stop the loading indicator
       setSubmitting(false); 
     }
   };
 
   if (result) return (
     <ScrollView contentContainerStyle={s.successContainer}>
-      <Ionicons name="checkmark-circle" size={80} color="#22c55e" />
+      <Ionicons name="checkmark-circle-outline" size={80} color="#000" />
       <Text style={s.successTitle}>Order Submitted!</Text>
       <Text style={s.successSub}>Our team will review your file and send you a quote.</Text>
       <View style={s.resultCard}>
@@ -153,11 +112,10 @@ export default function STLUploadScreen() {
 
   return (
     <View style={s.container}>
-      {/* Stepper */}
       <View style={s.stepper}>
         {STEPS.map((label, i) => (
           <View key={i} style={s.stepItem}>
-            <View style={[s.stepDot, i<step && s.stepDone, i===step && s.stepActive]}>
+            <View style={[s.stepDot, i<=step && s.stepActive]}>
               {i<step ? <Ionicons name="checkmark" size={14} color="#fff" /> : <Text style={[s.stepNum, i===step && { color:'#fff' }]}>{i+1}</Text>}
             </View>
             <Text style={[s.stepLabel, i===step && s.stepLabelActive]}>{label}</Text>
@@ -167,12 +125,11 @@ export default function STLUploadScreen() {
       </View>
 
       <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:20 }}>
-        {/* Step 0 — Upload File */}
         {step===0 && (
           <View>
             <TouchableOpacity style={[s.dropzone, file && s.dropzoneDone]} onPress={pickFile}>
-              <Ionicons name={file ? 'document-text' : 'cloud-upload-outline'} size={48} color={file?'#22c55e':'#6366f1'} />
-              <Text style={[s.dropzoneText, file && { color:'#22c55e' }]}>
+              <Ionicons name={file ? 'document-text-outline' : 'cloud-upload-outline'} size={48} color={file?'#000':'#ccc'} />
+              <Text style={[s.dropzoneText, file && { color:'#000' }]}>
                 {file ? file.name : 'Tap to select file\n(.stl, .pdf, .jpg, .jpeg)'}
               </Text>
               {file && <Text style={s.fileSize}>{(file.size/1024).toFixed(1)} KB</Text>}
@@ -191,17 +148,16 @@ export default function STLUploadScreen() {
 
             <Text style={s.fieldLabel}>Quantity</Text>
             <View style={s.qtyRow}>
-              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q-1))}><Ionicons name="remove" size={20} color="#6366f1" /></TouchableOpacity>
+              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q-1))}><Ionicons name="remove" size={20} color="#000" /></TouchableOpacity>
               <Text style={s.qtyVal}>{quantity}</Text>
-              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q+1)}><Ionicons name="add" size={20} color="#6366f1" /></TouchableOpacity>
+              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q+1)}><Ionicons name="add" size={20} color="#000" /></TouchableOpacity>
             </View>
 
             <Text style={s.fieldLabel}>Special Instructions (optional)</Text>
-            <TextInput style={s.textarea} value={notes} onChangeText={setNotes} placeholder="Any special notes..." multiline numberOfLines={3} placeholderTextColor="#9ca3af" />
+            <TextInput style={s.textarea} value={notes} onChangeText={setNotes} placeholder="Any special notes..." multiline numberOfLines={3} placeholderTextColor="#999" />
           </View>
         )}
 
-        {/* Step 1 — Your Details */}
         {step===1 && (
           <View>
             {[
@@ -213,7 +169,7 @@ export default function STLUploadScreen() {
               <View key={f.key} style={s.fieldGroup}>
                 <Text style={s.fieldLabel}>{f.label}</Text>
                 <View style={s.inputRow}>
-                  <Ionicons name={f.icon} size={18} color="#9ca3af" style={s.inputIcon} />
+                  <Ionicons name={f.icon} size={18} color="#999" style={s.inputIcon} />
                   <TextInput
                     style={[s.inputField, f.disabled && s.inputDisabled]}
                     value={form[f.key]}
@@ -221,7 +177,7 @@ export default function STLUploadScreen() {
                     keyboardType={f.keyboard}
                     autoCapitalize="none"
                     editable={!f.disabled}
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor="#999"
                     placeholder={f.label}
                   />
                 </View>
@@ -230,14 +186,13 @@ export default function STLUploadScreen() {
             <View style={s.fieldGroup}>
               <Text style={s.fieldLabel}>Delivery Address *</Text>
               <View style={s.inputRow}>
-                <Ionicons name="map-outline" size={18} color="#9ca3af" style={s.inputIcon} />
-                <TextInput style={[s.inputField, { height:80 }]} value={form.address} onChangeText={v => setForm(p => ({...p,address:v}))} multiline numberOfLines={3} placeholder="Full delivery address" placeholderTextColor="#9ca3af" />
+                <Ionicons name="map-outline" size={18} color="#999" style={s.inputIcon} />
+                <TextInput style={[s.inputField, { height:80 }]} value={form.address} onChangeText={v => setForm(p => ({...p,address:v}))} multiline numberOfLines={3} placeholder="Full delivery address" placeholderTextColor="#999" />
               </View>
             </View>
           </View>
         )}
 
-        {/* Step 2 — Review */}
         {step===2 && (
           <View>
             <Panel title="Design File">
@@ -257,23 +212,22 @@ export default function STLUploadScreen() {
               <Row label="Address" value={form.address} />
             </Panel>
             <View style={s.infoBox}>
-              <Ionicons name="information-circle-outline" size={18} color="#3b82f6" />
+              <Ionicons name="information-circle-outline" size={18} color="#000" />
               <Text style={s.infoBoxText}> Our team will review your file and send you an accurate quote before any printing begins.</Text>
             </View>
             <View style={s.trustBadges}>
               {['No upfront payment','Quote before printing','Secure file upload'].map(t => (
-                <View key={t} style={s.trustBadge}><Ionicons name="checkmark-circle" size={14} color="#22c55e" /><Text style={s.trustText}> {t}</Text></View>
+                <View key={t} style={s.trustBadge}><Ionicons name="checkmark-outline" size={14} color="#000" /><Text style={s.trustText}> {t}</Text></View>
               ))}
             </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Footer Navigation */}
       <View style={s.footer}>
         {step>0 && (
           <TouchableOpacity style={s.backBtn} onPress={() => setStep(s => s-1)}>
-            <Ionicons name="arrow-back" size={18} color="#6366f1" />
+            <Ionicons name="arrow-back" size={18} color="#000" />
             <Text style={s.backBtnText}> Back</Text>
           </TouchableOpacity>
         )}
@@ -310,58 +264,57 @@ const Row = ({ label, value }) => (
 );
 
 const s = StyleSheet.create({
-  container:       { flex:1, backgroundColor:'#f9fafb' },
-  stepper:         { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', padding:16, paddingBottom:12 },
+  container:       { flex:1, backgroundColor:'#ffffff' },
+  stepper:         { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', padding:16, paddingBottom:12, borderBottomWidth: 1, borderColor: '#eee' },
   stepItem:        { flex:1, alignItems:'center', position:'relative' },
-  stepDot:         { width:28, height:28, borderRadius:14, backgroundColor:'#e5e7eb', justifyContent:'center', alignItems:'center', marginBottom:4 },
-  stepActive:      { backgroundColor:'#6366f1' },
-  stepDone:        { backgroundColor:'#22c55e' },
-  stepNum:         { fontSize:12, fontWeight:'700', color:'#6b7280' },
-  stepLabel:       { fontSize:10, color:'#9ca3af', textAlign:'center' },
-  stepLabelActive: { color:'#6366f1', fontWeight:'700' },
-  stepLine:        { position:'absolute', top:14, right:'-50%', width:'100%', height:2, backgroundColor:'#e5e7eb', zIndex:-1 },
-  stepLineDone:    { backgroundColor:'#22c55e' },
-  dropzone:        { borderWidth:2, borderStyle:'dashed', borderColor:'#6366f1', borderRadius:16, padding:32, alignItems:'center', marginBottom:20 },
-  dropzoneDone:    { borderColor:'#22c55e' },
-  dropzoneText:    { fontSize:15, color:'#6366f1', textAlign:'center', marginTop:10 },
-  fileSize:        { fontSize:12, color:'#6b7280', marginTop:6 },
-  fieldLabel:      { fontSize:14, fontWeight:'700', color:'#374151', marginBottom:8, marginTop:4 },
+  stepDot:         { width:28, height:28, borderRadius:14, backgroundColor:'#f5f5f5', justifyContent:'center', alignItems:'center', marginBottom:4, borderWidth: 1, borderColor: '#ddd' },
+  stepActive:      { backgroundColor:'#000', borderColor: '#000' },
+  stepNum:         { fontSize:12, fontWeight:'700', color:'#666' },
+  stepLabel:       { fontSize:10, color:'#999', textAlign:'center', textTransform: 'uppercase', fontWeight: '700' },
+  stepLabelActive: { color:'#000' },
+  stepLine:        { position:'absolute', top:14, right:'-50%', width:'100%', height:1, backgroundColor:'#eee', zIndex:-1 },
+  stepLineDone:    { backgroundColor:'#000' },
+  dropzone:        { borderWidth:1, borderStyle:'dashed', borderColor:'#ccc', borderRadius:8, padding:32, alignItems:'center', marginBottom:20, backgroundColor: '#fafafa' },
+  dropzoneDone:    { borderColor:'#000', backgroundColor: '#fff' },
+  dropzoneText:    { fontSize:15, color:'#666', textAlign:'center', marginTop:10 },
+  fileSize:        { fontSize:12, color:'#999', marginTop:6 },
+  fieldLabel:      { fontSize:12, fontWeight:'700', color:'#666', marginBottom:8, marginTop:4, textTransform: 'uppercase' },
   materialGrid:    { flexDirection:'row', flexWrap:'wrap', gap:10, marginBottom:16 },
-  matBtn:          { flex:1, minWidth:'45%', backgroundColor:'#fff', borderWidth:2, borderColor:'#e5e7eb', borderRadius:12, padding:12, alignItems:'center' },
-  matBtnActive:    { borderColor:'#6366f1', backgroundColor:'#eef2ff' },
+  matBtn:          { flex:1, minWidth:'45%', backgroundColor:'#fff', borderWidth:1, borderColor:'#eee', borderRadius:8, padding:12, alignItems:'center' },
+  matBtnActive:    { borderColor:'#000', backgroundColor:'#000' },
   matEmoji:        { fontSize:24, marginBottom:4 },
-  matLabel:        { fontSize:14, fontWeight:'700', color:'#374151' },
-  matLabelActive:  { color:'#6366f1' },
-  matDesc:         { fontSize:11, color:'#9ca3af', textAlign:'center', marginTop:2 },
+  matLabel:        { fontSize:14, fontWeight:'700', color:'#333' },
+  matLabelActive:  { color:'#fff' },
+  matDesc:         { fontSize:11, color:'#999', textAlign:'center', marginTop:2 },
   qtyRow:          { flexDirection:'row', alignItems:'center', marginBottom:16, gap:12 },
-  qtyBtn:          { backgroundColor:'#eef2ff', borderRadius:10, padding:10 },
-  qtyVal:          { fontSize:22, fontWeight:'800', color:'#111827', minWidth:40, textAlign:'center' },
-  textarea:        { backgroundColor:'#fff', borderWidth:1, borderColor:'#e5e7eb', borderRadius:12, padding:12, fontSize:14, color:'#111827', height:80 },
+  qtyBtn:          { backgroundColor:'#fff', borderWidth: 1, borderColor: '#ccc', borderRadius:8, padding:10 },
+  qtyVal:          { fontSize:22, fontWeight:'800', color:'#000', minWidth:40, textAlign:'center' },
+  textarea:        { backgroundColor:'#fff', borderWidth:1, borderColor:'#eee', borderRadius:8, padding:12, fontSize:14, color:'#000', height:80 },
   fieldGroup:      { marginBottom:12 },
-  inputRow:        { flexDirection:'row', alignItems:'flex-start', backgroundColor:'#fff', borderWidth:1, borderColor:'#e5e7eb', borderRadius:12 },
+  inputRow:        { flexDirection:'row', alignItems:'flex-start', backgroundColor:'#fff', borderWidth:1, borderColor:'#eee', borderRadius:8 },
   inputIcon:       { padding:13 },
-  inputField:      { flex:1, padding:12, fontSize:14, color:'#111827' },
-  inputDisabled:   { color:'#9ca3af' },
-  panel:           { backgroundColor:'#fff', borderRadius:14, padding:16, marginBottom:12 },
-  panelTitle:      { fontSize:15, fontWeight:'700', color:'#111827', marginBottom:10 },
+  inputField:      { flex:1, padding:12, fontSize:14, color:'#000' },
+  inputDisabled:   { color:'#999', backgroundColor: '#fafafa' },
+  panel:           { backgroundColor:'#fff', borderRadius:8, padding:16, marginBottom:12, borderWidth: 1, borderColor: '#eee' },
+  panelTitle:      { fontSize:13, fontWeight:'700', color:'#666', marginBottom:10, textTransform: 'uppercase' },
   reviewRow:       { flexDirection:'row', justifyContent:'space-between', marginBottom:6 },
-  reviewLabel:     { fontSize:13, color:'#6b7280', flex:1 },
-  reviewVal:       { fontSize:13, color:'#111827', fontWeight:'600', flex:2, textAlign:'right' },
-  infoBox:         { flexDirection:'row', alignItems:'flex-start', backgroundColor:'#dbeafe', borderRadius:12, padding:14, marginBottom:12 },
-  infoBoxText:     { fontSize:13, color:'#1d4ed8', flex:1, lineHeight:20 },
+  reviewLabel:     { fontSize:13, color:'#666', flex:1 },
+  reviewVal:       { fontSize:13, color:'#000', fontWeight:'600', flex:2, textAlign:'right' },
+  infoBox:         { flexDirection:'row', alignItems:'flex-start', backgroundColor:'#fafafa', borderRadius:8, padding:14, marginBottom:12, borderWidth: 1, borderColor: '#eee' },
+  infoBoxText:     { fontSize:13, color:'#000', flex:1, lineHeight:20 },
   trustBadges:     { gap:6, marginBottom:8 },
   trustBadge:      { flexDirection:'row', alignItems:'center' },
-  trustText:       { fontSize:13, color:'#374151' },
-  footer:          { flexDirection:'row', justifyContent:'space-between', padding:16, backgroundColor:'#fff', borderTopWidth:1, borderTopColor:'#e5e7eb' },
-  backBtn:         { flexDirection:'row', alignItems:'center', padding:14, borderRadius:12, borderWidth:2, borderColor:'#6366f1' },
-  backBtnText:     { color:'#6366f1', fontWeight:'700', fontSize:15 },
-  nextBtn:         { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', backgroundColor:'#6366f1', borderRadius:12, padding:14, marginLeft:12, gap:6 },
-  submitBtn:       { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', backgroundColor:'#22c55e', borderRadius:12, padding:14, marginLeft:12, gap:6 },
+  trustText:       { fontSize:13, color:'#333' },
+  footer:          { flexDirection:'row', justifyContent:'space-between', padding:16, backgroundColor:'#fff', borderTopWidth:1, borderTopColor:'#eee' },
+  backBtn:         { flexDirection:'row', alignItems:'center', padding:14, borderRadius:8, borderWidth:1, borderColor:'#000' },
+  backBtnText:     { color:'#000', fontWeight:'700', fontSize:15 },
+  nextBtn:         { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', backgroundColor:'#000', borderRadius:8, padding:14, marginLeft:12, gap:6 },
+  submitBtn:       { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', backgroundColor:'#000', borderRadius:8, padding:14, marginLeft:12, gap:6 },
   nextBtnText:     { color:'#fff', fontWeight:'700', fontSize:15 },
-  successContainer:{ flexGrow:1, alignItems:'center', padding:24, paddingTop:40 },
-  successTitle:    { fontSize:28, fontWeight:'900', color:'#111827', marginTop:16 },
-  successSub:      { fontSize:15, color:'#6b7280', textAlign:'center', marginTop:8, marginBottom:20 },
-  resultCard:      { width:'100%', backgroundColor:'#f9fafb', borderRadius:16, padding:16, borderWidth:1, borderColor:'#e5e7eb', marginBottom:20 },
-  resetBtn:        { backgroundColor:'#6366f1', borderRadius:12, paddingHorizontal:24, paddingVertical:14 },
+  successContainer:{ flexGrow:1, alignItems:'center', padding:24, paddingTop:40, backgroundColor: '#ffffff' },
+  successTitle:    { fontSize:28, fontWeight:'900', color:'#000', marginTop:16 },
+  successSub:      { fontSize:15, color:'#666', textAlign:'center', marginTop:8, marginBottom:20 },
+  resultCard:      { width:'100%', backgroundColor:'#fff', borderRadius:8, padding:16, borderWidth:1, borderColor:'#eee', marginBottom:20 },
+  resetBtn:        { backgroundColor:'#000', borderRadius:8, paddingHorizontal:24, paddingVertical:14 },
   resetBtnText:    { color:'#fff', fontWeight:'700', fontSize:15 },
 });

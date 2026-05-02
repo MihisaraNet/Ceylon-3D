@@ -1,21 +1,6 @@
 /**
  * MyAccountScreen.jsx — User Account & Order History
- *
- * Displays user profile info, order history, and account management options.
- *
- * Tabs:
- *   1. My Orders  — List of shop orders with expandable details (items, tracking, address)
- *   2. 3D Orders  — List of STL print orders with status, specs, and confirm action
- *   3. Profile    — View user name, email, and roles
- *
- * Features:
- *   - Expandable order cards showing item details, tracking numbers, and shipping addresses
- *   - STL order confirmation button (for QUOTED orders — transitions to CONFIRMED)
- *   - Status badges color-coded by order/STL status
- *   - Admin Dashboard shortcut button (visible only to admin users)
- *   - Logout with confirmation dialog
- *
- * @module screens/account/MyAccountScreen
+ * Minimalist design
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
@@ -33,10 +18,12 @@ const Section = ({ title, children }) => (
 );
 
 const StatusBadge = ({ status, map }) => {
-  const cfg = map[status] || { label: status, color: '#6b7280' };
-  return <View style={[s.badge, { backgroundColor: cfg.color + '20' }]}>
-    <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
-  </View>;
+  const cfg = map[status] || { label: status };
+  return (
+    <View style={s.badge}>
+      <Text style={s.badgeText}>{cfg.label}</Text>
+    </View>
+  );
 };
 
 export default function MyAccountScreen() {
@@ -95,22 +82,14 @@ export default function MyAccountScreen() {
   return (
     <ScrollView
       style={s.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          colors={['#6366f1']}
-          tintColor="#6366f1"
-        />
-      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000" />}
     >
-      {/* Header */}
       <View style={s.header}>
-        <View style={s.avatar}><Ionicons name="person" size={36} color="#fff" /></View>
+        <View style={s.avatar}><Ionicons name="person" size={32} color="#000" /></View>
         <View>
           <Text style={s.name}>{user?.fullName}</Text>
           <Text style={s.email}>{user?.email}</Text>
-          {isAdmin && <Text style={s.adminTag}>Admin</Text>}
+          {isAdmin && <View style={s.adminTag}><Text style={s.adminTagText}>ADMIN</Text></View>}
         </View>
       </View>
 
@@ -121,20 +100,18 @@ export default function MyAccountScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Tabs */}
       <View style={s.tabRow}>
         {tabs.map(t => (
           <TouchableOpacity key={t.key} style={[s.tab, activeTab===t.key && s.tabActive]} onPress={() => setActiveTab(t.key)}>
-            <Ionicons name={t.icon} size={16} color={activeTab===t.key?'#6366f1':'#6b7280'} />
+            <Ionicons name={t.icon} size={16} color={activeTab===t.key?'#fff':'#666'} />
             <Text style={[s.tabText, activeTab===t.key && s.tabTextActive]}> {t.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Orders */}
       {activeTab==='orders' && (
         <Section title="Shop Orders">
-          {loading ? <ActivityIndicator color="#6366f1" /> : shopOrders.length===0 ? (
+          {loading ? <ActivityIndicator color="#000" /> : shopOrders.length===0 ? (
             <Text style={s.empty}>No orders yet</Text>
           ) : shopOrders.map(o => (
             <TouchableOpacity key={o._id} style={s.orderCard} onPress={() => setExpanded(expanded===o._id?null:o._id)}>
@@ -160,7 +137,7 @@ export default function MyAccountScreen() {
 
       {activeTab==='3d' && (
         <Section title="3D Print Orders">
-          {loading ? <ActivityIndicator color="#6366f1" /> : stlOrders.length===0 ? (
+          {loading ? <ActivityIndicator color="#000" /> : stlOrders.length===0 ? (
             <Text style={s.empty}>No 3D print orders yet</Text>
           ) : stlOrders.map(o => (
             <TouchableOpacity key={o._id} style={s.orderCard} onPress={() => setExpanded(expanded===o._id?null:o._id)}>
@@ -205,9 +182,8 @@ export default function MyAccountScreen() {
         </Section>
       )}
 
-      {/* Logout */}
       <TouchableOpacity style={s.logoutBtn} onPress={() => Alert.alert('Logout','Are you sure you want to logout?',[{text:'Cancel',style:'cancel'},{text:'Logout',style:'destructive',onPress:logout}])}>
-        <Ionicons name="log-out-outline" size={18} color="#ef4444" />
+        <Ionicons name="log-out-outline" size={18} color="#000" />
         <Text style={s.logoutText}>  Log Out</Text>
       </TouchableOpacity>
       <View style={{ height:32 }} />
@@ -216,39 +192,40 @@ export default function MyAccountScreen() {
 }
 
 const s = StyleSheet.create({
-  container:    { flex:1, backgroundColor:'#f9fafb' },
-  header:       { flexDirection:'row', alignItems:'center', backgroundColor:'#6366f1', padding:24, gap:16 },
-  avatar:       { width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.3)', justifyContent:'center', alignItems:'center' },
-  name:         { fontSize:20, fontWeight:'800', color:'#fff' },
-  email:        { fontSize:14, color:'#c7d2fe' },
-  adminTag:     { backgroundColor:'#fbbf24', borderRadius:999, paddingHorizontal:8, paddingVertical:2, marginTop:4, alignSelf:'flex-start', fontSize:11, fontWeight:'700', color:'#78350f' },
-  adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor:'#4338ca', margin:16, borderRadius:12, padding:14, justifyContent:'center' },
+  container:    { flex:1, backgroundColor:'#fafafa' },
+  header:       { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', padding:24, gap:16, borderBottomWidth: 1, borderColor: '#eee' },
+  avatar:       { width:64, height:64, borderRadius:32, backgroundColor:'#f0f0f0', justifyContent:'center', alignItems:'center', borderWidth: 1, borderColor: '#ccc' },
+  name:         { fontSize:20, fontWeight:'800', color:'#000' },
+  email:        { fontSize:14, color:'#666' },
+  adminTag:     { backgroundColor:'#000', borderRadius:4, paddingHorizontal:6, paddingVertical:2, marginTop:4, alignSelf:'flex-start' },
+  adminTagText: { fontSize:10, fontWeight:'800', color:'#fff', letterSpacing: 1 },
+  adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor:'#000', margin:16, borderRadius:8, padding:14, justifyContent:'center' },
   adminBtnText: { color:'#fff', fontWeight:'700', fontSize:15 },
-  tabRow:       { flexDirection:'row', backgroundColor:'#fff', marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4 },
-  tab:          { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', padding:10, borderRadius:10 },
-  tabActive:    { backgroundColor:'#eef2ff' },
-  tabText:      { fontSize:13, color:'#6b7280', fontWeight:'600' },
-  tabTextActive:{ color:'#6366f1' },
+  tabRow:       { flexDirection:'row', marginHorizontal:16, marginBottom:8, borderRadius:8, padding:4, backgroundColor: '#eee' },
+  tab:          { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', padding:10, borderRadius:6 },
+  tabActive:    { backgroundColor:'#000' },
+  tabText:      { fontSize:13, color:'#666', fontWeight:'600' },
+  tabTextActive:{ color:'#fff' },
   section:      { padding:16, paddingTop:8 },
-  sectionTitle: { fontSize:18, fontWeight:'800', color:'#111827', marginBottom:12 },
-  empty:        { color:'#9ca3af', textAlign:'center', padding:24 },
-  orderCard:    { backgroundColor:'#fff', borderRadius:14, padding:16, marginBottom:10, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:6, elevation:2 },
+  sectionTitle: { fontSize:16, fontWeight:'800', color:'#000', marginBottom:12, textTransform: 'uppercase' },
+  empty:        { color:'#999', textAlign:'center', padding:24 },
+  orderCard:    { backgroundColor:'#fff', borderRadius:8, padding:16, marginBottom:10, borderWidth: 1, borderColor: '#eaeaea' },
   orderHeader:  { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:4 },
-  orderId:      { fontSize:14, fontWeight:'700', color:'#111827' },
-  badge:        { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
-  badgeText:    { fontSize:12, fontWeight:'700' },
-  orderTotal:   { fontSize:16, fontWeight:'800', color:'#6366f1' },
-  orderInfo:    { fontSize:13, color:'#6b7280', marginBottom:2 },
-  orderDate:    { fontSize:12, color:'#9ca3af', marginTop:2 },
-  orderDetails: { borderTopWidth:1, borderTopColor:'#f3f4f6', marginTop:10, paddingTop:10 },
-  orderItem:    { fontSize:13, color:'#6b7280', marginBottom:4 },
-  tracking:     { fontSize:13, color:'#6366f1', fontWeight:'600', marginTop:6 },
-  shipAddr:     { fontSize:13, color:'#6b7280', marginTop:6 },
-  confirmBtn:   { backgroundColor:'#22c55e', borderRadius:10, padding:12, alignItems:'center', marginTop:10 },
+  orderId:      { fontSize:14, fontWeight:'700', color:'#000' },
+  badge:        { borderRadius:4, paddingHorizontal:8, paddingVertical:4, backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#eee' },
+  badgeText:    { fontSize:10, fontWeight:'700', color: '#000', textTransform: 'uppercase' },
+  orderTotal:   { fontSize:16, fontWeight:'800', color:'#000' },
+  orderInfo:    { fontSize:13, color:'#666', marginBottom:2 },
+  orderDate:    { fontSize:12, color:'#999', marginTop:2 },
+  orderDetails: { borderTopWidth:1, borderTopColor:'#eee', marginTop:10, paddingTop:10 },
+  orderItem:    { fontSize:13, color:'#333', marginBottom:4 },
+  tracking:     { fontSize:13, color:'#000', fontWeight:'600', marginTop:6 },
+  shipAddr:     { fontSize:13, color:'#666', marginTop:6 },
+  confirmBtn:   { backgroundColor:'#000', borderRadius:8, padding:12, alignItems:'center', marginTop:10 },
   confirmBtnText:{ color:'#fff', fontWeight:'700', fontSize:14 },
-  profileCard:  { backgroundColor:'#fff', borderRadius:14, padding:16 },
-  profileLabel: { fontSize:12, color:'#9ca3af', fontWeight:'600', marginTop:10, marginBottom:2 },
-  profileVal:   { fontSize:16, color:'#111827', fontWeight:'600' },
-  logoutBtn:    { flexDirection:'row', alignItems:'center', justifyContent:'center', margin:16, backgroundColor:'#fff', borderWidth:2, borderColor:'#ef4444', borderRadius:12, padding:14 },
-  logoutText:   { color:'#ef4444', fontSize:15, fontWeight:'700' },
+  profileCard:  { backgroundColor:'#fff', borderRadius:8, padding:16, borderWidth: 1, borderColor: '#eaeaea' },
+  profileLabel: { fontSize:11, color:'#666', fontWeight:'700', marginTop:10, marginBottom:2, textTransform: 'uppercase' },
+  profileVal:   { fontSize:16, color:'#000', fontWeight:'600' },
+  logoutBtn:    { flexDirection:'row', alignItems:'center', justifyContent:'center', margin:16, backgroundColor:'#fff', borderWidth:1, borderColor:'#000', borderRadius:8, padding:14 },
+  logoutText:   { color:'#000', fontSize:15, fontWeight:'700' },
 });
