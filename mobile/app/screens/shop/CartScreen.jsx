@@ -57,32 +57,51 @@ export default function CartScreen() {
   const [qtyErr,  setQtyErr]     = useState({}); // { [cartItemId]: 'error string' }
 
   /* ── Quantity update with error display ──────────────── */
+  // This function handles when the user presses '+' or '-' on a cart item
   const handleQtyChange = async (cartItemId, newQty) => {
+    // Prevent the quantity from dropping below 1
     if (newQty < 1) return;
+    
+    // Clear any previous error messages for this specific item before trying
     setQtyErr(e => ({ ...e, [cartItemId]: null }));
+    
     try {
+      // Send the update to the server
       await updateQuantity(cartItemId, newQty);
     } catch (err) {
+      // If the server rejects the update (e.g., "Not enough stock"), display the exact error message
       const msg = err.response?.data?.error || err.message || 'Could not update quantity';
       setQtyErr(e => ({ ...e, [cartItemId]: msg }));
     }
   };
 
   /* ── Place order ─────────────────────────────────────── */
+  // This function finalizes the checkout process
   const handlePlaceOrder = async () => {
     const { fullName, phone, address, city } = form;
+    
+    // This part ensures all mandatory delivery fields are filled out
     if (!fullName.trim()) return Alert.alert('Missing Info', 'Please enter your full name');
     if (!phone.trim())    return Alert.alert('Missing Info', 'Please enter your phone number');
     if (!address.trim())  return Alert.alert('Missing Info', 'Please enter your delivery address');
     if (!city.trim())     return Alert.alert('Missing Info', 'Please enter your city');
+    
+    // This part validates the phone number format
     if (!/^\d{7,15}$/.test(phone.replace(/\s/g, '')))
       return Alert.alert('Invalid Phone', 'Enter a valid phone number (7-15 digits)');
 
     setPlacing(true);
     try {
+      // Combine the delivery form fields into a single shipping address string
       const shipping   = `${fullName}\n${phone}\n${address}\n${city}`;
+      
+      // Map the current cart items into the format required by the orders API
       const orderItems = items.map(i => ({ productName: i.title, quantity: i.quantity, unitPrice: i.price }));
+      
+      // Send the complete order to the backend
       await api.post('/orders', { shippingAddress: shipping, items: orderItems });
+      
+      // On success, clear the local cart and show the confirmation screen
       await clearCart();
       setDone(true);
       setCheckout(false);
