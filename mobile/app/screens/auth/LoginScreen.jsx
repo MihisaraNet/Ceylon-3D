@@ -97,7 +97,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
 
         {/* Brand */}
@@ -174,27 +174,27 @@ export default function LoginScreen({ navigation }) {
 /* Shared field styles */
 const f = StyleSheet.create({
   group:  { marginBottom: 14 },
-  label:  { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
-  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, overflow: 'hidden' },
+  label:  { fontSize: 13, fontWeight: '700', color: '#000', marginBottom: 6 },
+  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, overflow: 'hidden' },
   rowErr: { borderColor: '#ef4444', backgroundColor: '#fff5f5' },
   icon:   { paddingLeft: 13, paddingRight: 4 },
-  input:  { flex: 1, height: 50, fontSize: 15, color: '#1e1b4b', paddingHorizontal: 8 },
+  input:  { flex: 1, height: 50, fontSize: 15, color: '#000', paddingHorizontal: 8 },
   errRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
   errText:{ fontSize: 12, color: '#ef4444', fontWeight: '600' },
 });
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8f7ff' },
+  safe:           { flex: 1, backgroundColor: '#ffffff' },
   container:      { flexGrow: 1, padding: 24, justifyContent: 'center' },
   brand:          { alignItems: 'center', marginBottom: 32 },
-  logoBox:        { width: 72, height: 72, borderRadius: 20, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 16, elevation: 6 },
-  logo:           { fontSize: 30, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  tagline:        { fontSize: 15, color: '#9ca3af', marginTop: 4 },
-  serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 12, padding: 12, marginBottom: 14 },
+  logoBox:        { width: 64, height: 64, borderRadius: 16, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  logo:           { fontSize: 28, fontWeight: '800', color: '#000', letterSpacing: -0.5 },
+  tagline:        { fontSize: 15, color: '#666', marginTop: 4 },
+  serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 8, padding: 12, marginBottom: 14 },
   serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
-  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 8, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
-  btnText:        { color: '#fff', fontSize: 16, fontWeight: '900' },
+  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#000', borderRadius: 8, paddingVertical: 15, marginTop: 8 },
+  btnText:        { color: '#fff', fontSize: 15, fontWeight: '700' },
   link:           { alignItems: 'center', marginTop: 22 },
-  linkText:       { color: '#9ca3af', fontSize: 14 },
-  linkBold:       { color: '#6366f1', fontWeight: '800' },
+  linkText:       { color: '#666', fontSize: 14 },
+  linkBold:       { color: '#000', fontWeight: '700' },
 });
