@@ -37,8 +37,8 @@ router.get('/my',             verifyToken, requireAuth, getMyStlOrders);      //
 router.put('/my/:id',         verifyToken, requireAuth, updateMyStlOrder);    // Edit pending order
 router.put('/my/:id/confirm', verifyToken, requireAuth, confirmStlOrder);     // Confirm quoted order
 
-// Cost calculator (require authentication)
-router.post('/calculate-cost', verifyToken, requireAuth, calculateCostEndpoint);
+// Cost calculator — optional STL file upload for auto weight/size estimation
+router.post('/calculate-cost', verifyToken, requireAuth, multerStl.single('file'), calculateCostEndpoint);
 
 // Admin endpoints (require admin role)
 router.get('/admin',              verifyToken, requireAdmin, getAllStlOrders);   // List all STL orders
