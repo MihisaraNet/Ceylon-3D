@@ -21,23 +21,20 @@
  *
  * @module screens/shop/CartScreen
  */
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Image, TextInput, Alert, ActivityIndicator, SafeAreaView,
-  StatusBar, Platform,
+  StatusBar, Platform, RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useCart } from '../../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
-/* ── Colour palette for item cards ─────────────────────── */
-const ITEM_COLORS = ['#fff7ed','#f0fdf4','#eff6ff','#fdf4ff','#fefce8'];
-const itemBg = (i) => ITEM_COLORS[i % ITEM_COLORS.length];
-
-/* ── Accent colours per card row ───────────────────────── */
+/* ── Accent colours per card row ───────────────────────────── */
 const ACCENTS = ['#f97316','#22c55e','#3b82f6','#a855f7','#f59e0b'];
 const accent  = (i) => ACCENTS[i % ACCENTS.length];
 
@@ -55,9 +52,82 @@ export default function CartScreen() {
   const [placing, setPlacing]   = useState(false);
   const [done,    setDone]       = useState(false);
   const [qtyErr,  setQtyErr]     = useState({}); // { [cartItemId]: 'error string' }
+  // Optional payment proof image selected by the user at checkout
+  const [receipt, setReceipt]   = useState(null);
+  // Per-item custom design files: { [cartItemId]: { uri, type, name } | null }
+  const [itemFiles, setItemFiles] = useState({});
+  // Uploading state per item
+  const [uploadingFile, setUploadingFile] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
 
-  /* ── Quantity update with error display ──────────────── */
-  // This function handles when the user presses '+' or '-' on a cart item
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await reloadCart();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [reloadCart]);
+
+  /* ── Receipt image picker ────────────────────────────── */
+  // Pick optional payment proof image for checkout.
+  const pickReceipt = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    if (!res.canceled && res.assets?.[0]) {
+      const asset = res.assets[0];
+      setReceipt({
+        uri:  asset.uri,
+        type: asset.mimeType || 'image/jpeg',
+        name: asset.fileName || 'receipt.jpg',
+      });
+    }
+  };
+
+  /* ── Per-item design file picker ────────────────────────── */
+  // This lets the user attach or replace a custom design/personalisation image for a specific cart item
+  const pickItemFile = async (cartItemId) => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    if (res.canceled || !res.assets?.[0]) return;
+    const asset = res.assets[0];
+    const fileObj = {
+      uri:  asset.uri,
+      type: asset.mimeType || 'image/jpeg',
+      name: asset.fileName || 'design.jpg',
+    };
+    // Optimistically show the file in the UI immediately
+    setItemFiles(prev => ({ ...prev, [cartItemId]: fileObj }));
+    // Upload the file to the backend to attach it to this cart item
+    setUploadingFile(prev => ({ ...prev, [cartItemId]: true }));
+    try {
+      const fd = new FormData();
+      fd.append('customFile', fileObj);
+      // PUT /cart/:id with multipart to update the customFileUrl on this cart item
+      await api.put(`/cart/${cartItemId}/file`, fd,
+        { headers: { 'Content-Type': 'multipart/form-data' } });
+    } catch (err) {
+      Alert.alert('Upload Failed', err.response?.data?.error || 'Could not attach file');
+      setItemFiles(prev => ({ ...prev, [cartItemId]: null }));
+    } finally {
+      setUploadingFile(prev => ({ ...prev, [cartItemId]: false }));
+    }
+  };
+
+  // Remove attached custom file for one cart row.
+  const removeItemFile = async (cartItemId) => {
+    setItemFiles(prev => ({ ...prev, [cartItemId]: null }));
+    try {
+      await api.put(`/cart/${cartItemId}/file`, { removeFile: true });
+    } catch (_) { /* silent */ }
+  };
+
+  /* ── Quantity update with inline stock error display ─── */
+  // Handles + / - taps, and keeps server-side stock errors scoped to the changed item
   const handleQtyChange = async (cartItemId, newQty) => {
     // Prevent the quantity from dropping below 1
     if (newQty < 1) return;
@@ -76,17 +146,17 @@ export default function CartScreen() {
   };
 
   /* ── Place order ─────────────────────────────────────── */
-  // This function finalizes the checkout process
+  // Validate inputs and submit final order payload.
   const handlePlaceOrder = async () => {
     const { fullName, phone, address, city } = form;
     
-    // This part ensures all mandatory delivery fields are filled out
+    // Required delivery fields.
     if (!fullName.trim()) return Alert.alert('Missing Info', 'Please enter your full name');
     if (!phone.trim())    return Alert.alert('Missing Info', 'Please enter your phone number');
     if (!address.trim())  return Alert.alert('Missing Info', 'Please enter your delivery address');
     if (!city.trim())     return Alert.alert('Missing Info', 'Please enter your city');
     
-    // This part validates the phone number format
+    // Basic phone number sanity check.
     if (!/^\d{7,15}$/.test(phone.replace(/\s/g, '')))
       return Alert.alert('Invalid Phone', 'Enter a valid phone number (7-15 digits)');
 
@@ -94,13 +164,21 @@ export default function CartScreen() {
     try {
       // Combine the delivery form fields into a single shipping address string
       const shipping   = `${fullName}\n${phone}\n${address}\n${city}`;
-      
       // Map the current cart items into the format required by the orders API
       const orderItems = items.map(i => ({ productName: i.title, quantity: i.quantity, unitPrice: i.price }));
-      
-      // Send the complete order to the backend
-      await api.post('/orders', { shippingAddress: shipping, items: orderItems });
-      
+
+      if (receipt) {
+        // If a receipt image was attached, send as multipart/form-data
+        const fd = new FormData();
+        fd.append('shippingAddress', shipping);
+        fd.append('items',           JSON.stringify(orderItems));
+        fd.append('receipt', receipt);
+        await api.post('/orders', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } else {
+        // No receipt — send as regular JSON
+        await api.post('/orders', { shippingAddress: shipping, items: orderItems });
+      }
+
       // On success, clear the local cart and show the confirmation screen
       await clearCart();
       setDone(true);
@@ -178,12 +256,23 @@ export default function CartScreen() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#6366f1']}
+            tintColor="#6366f1"
+          />
+        }
+      >
 
         {/* ── Cart Items ── */}
         <View style={{ paddingHorizontal: 16, gap: 12, paddingTop: 8 }}>
           {items.map((item, idx) => (
-            <View key={item.cartItemId?.toString()} style={[s.itemCard, { backgroundColor: itemBg(idx) }]}>
+            <View key={item.cartItemId?.toString()} style={[s.itemCard, { backgroundColor: '#ffffff' }]}>
               {/* Left accent bar */}
               <View style={[s.accentBar, { backgroundColor: accent(idx) }]} />
 
@@ -229,6 +318,47 @@ export default function CartScreen() {
                 {qtyErr[item.cartItemId] && (
                   <Text style={s.qtyErrText}>⚠ {qtyErr[item.cartItemId]}</Text>
                 )}
+
+                {/* ── Design / Personalisation File Picker ── */}
+                <TouchableOpacity
+                  style={[
+                    s.itemFileBtn,
+                    itemFiles[item.cartItemId] && s.itemFileBtnDone,
+                  ]}
+                  onPress={() => pickItemFile(item.cartItemId)}
+                  activeOpacity={0.8}
+                >
+                  {uploadingFile[item.cartItemId] ? (
+                    <ActivityIndicator size={12} color="#6366f1" />
+                  ) : (
+                    <Ionicons
+                      name={itemFiles[item.cartItemId] ? 'image' : 'attach-outline'}
+                      size={13}
+                      color={itemFiles[item.cartItemId] ? '#22c55e' : accent(idx)}
+                    />
+                  )}
+                  <Text
+                    style={[
+                      s.itemFileBtnText,
+                      { color: itemFiles[item.cartItemId] ? '#22c55e' : accent(idx) },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {uploadingFile[item.cartItemId]
+                      ? 'Uploading…'
+                      : itemFiles[item.cartItemId]
+                        ? itemFiles[item.cartItemId].name
+                        : 'Attach design file'}
+                  </Text>
+                  {itemFiles[item.cartItemId] && !uploadingFile[item.cartItemId] && (
+                    <TouchableOpacity
+                      onPress={() => removeItemFile(item.cartItemId)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="close-circle" size={14} color="#9ca3af" />
+                    </TouchableOpacity>
+                  )}
+                </TouchableOpacity>
               </View>
 
               {/* Line total */}
@@ -248,7 +378,7 @@ export default function CartScreen() {
           </View>
           <View style={s.sumRow}>
             <Text style={s.sumLabel}>Delivery</Text>
-            <Text style={[s.sumVal, { color: '#22c55e', fontWeight: '800' }]}>FREE 🚀</Text>
+            <Text style={[s.sumVal, { color: '#22c55e', fontWeight: '800' }]}>FREE </Text>
           </View>
           <View style={s.sumDivider} />
           <View style={s.sumRow}>
@@ -297,6 +427,27 @@ export default function CartScreen() {
                 />
               </View>
             ))}
+
+            {/* ── Optional Payment Proof Image ── */}
+            <TouchableOpacity
+              style={[s.receiptBtn, receipt && s.receiptBtnDone]}
+              onPress={pickReceipt}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={receipt ? 'image' : 'camera-outline'}
+                size={18}
+                color={receipt ? '#22c55e' : '#6366f1'}
+              />
+              <Text style={[s.receiptBtnText, receipt && { color:'#22c55e' }]}>
+                {receipt ? `✔ Receipt attached: ${receipt.name}` : 'Attach Payment Proof (optional)'}
+              </Text>
+              {receipt && (
+                <TouchableOpacity onPress={() => setReceipt(null)} hitSlop={{ top:8, bottom:8, left:8, right:8 }}>
+                  <Ionicons name="close-circle" size={16} color="#9ca3af" />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[s.placeBtn, placing && { opacity: 0.7 }]}
@@ -355,6 +506,9 @@ const s = StyleSheet.create({
   qtyVal:          { fontSize: 16, fontWeight: '900', color: '#1e1b4b', minWidth: 22, textAlign: 'center' },
   removeBtn:       { marginLeft: 4, padding: 4 },
   qtyErrText:      { fontSize: 11, color: '#ef4444', fontWeight: '600', marginTop: 2 },
+  itemFileBtn:     { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,0.6)' },
+  itemFileBtnDone: { borderColor: '#22c55e', backgroundColor: 'rgba(240,253,244,0.8)' },
+  itemFileBtnText: { fontSize: 11, fontWeight: '700', flex: 1 },
   lineTotal:       { fontSize: 12, fontWeight: '900', textAlign: 'right', lineHeight: 18, minWidth: 64 },
 
   /* Summary */
@@ -383,6 +537,9 @@ const s = StyleSheet.create({
   fieldRow:        { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#f8f7ff', borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', marginBottom: 10, overflow: 'hidden' },
   fieldIcon:       { paddingHorizontal: 14, paddingTop: 14 },
   fieldInput:      { flex: 1, paddingVertical: 12, paddingRight: 14, fontSize: 15, color: '#1e1b4b' },
+  receiptBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#6366f1', borderRadius: 12, padding: 13, backgroundColor: '#eef2ff', marginBottom: 12 },
+  receiptBtnDone:  { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
+  receiptBtnText:  { flex: 1, fontSize: 14, fontWeight: '700', color: '#6366f1' },
   placeBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 15, marginTop: 6, shadowColor: '#22c55e', shadowOpacity: 0.35, shadowRadius: 10, elevation: 5 },
   placeBtnText:    { color: '#fff', fontSize: 16, fontWeight: '900' },
   cancelBtn:       { alignItems: 'center', padding: 14 },
