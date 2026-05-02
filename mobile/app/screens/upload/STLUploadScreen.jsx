@@ -44,38 +44,71 @@ export default function STLUploadScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult]         = useState(null);
 
+  // This function opens the native file picker to let the user select their 3D design file
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-    if (res.canceled) return;
+    if (res.canceled) return; // User cancelled the picker
+    
     const asset = res.assets?.[0];
     if (!asset) return;
+    
+    // This part validates the selected file extension to ensure it is supported
     const ext = asset.name.split('.').pop().toLowerCase();
-    if (!['stl','pdf','jpg','jpeg'].includes(ext)) return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
+    if (!['stl','pdf','jpg','jpeg'].includes(ext)) {
+      return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
+    }
+    
+    // Save the valid file to state so it can be previewed in Step 0
     setFile(asset);
   };
 
+  // This part checks if the user has selected a file before allowing them to proceed to Step 1
   const validateStep1 = () => {
-    if (!file) return Alert.alert('Required', 'Please select a file'), false;
+    if (!file) {
+      Alert.alert('Required', 'Please select a file');
+      return false;
+    }
     return true;
   };
+  
+  // This part checks if the contact information form is completely filled out
   const validateStep2 = () => {
-    if (!form.name || !form.email || !form.phone || !form.address) return Alert.alert('Required', 'Please fill all required fields'), false;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return Alert.alert('Invalid', 'Invalid email'), false;
-    if (!/^\+?[0-9\s()\-]{7,20}$/.test(form.phone)) return Alert.alert('Invalid', 'Invalid phone number'), false;
+    if (!form.name || !form.email || !form.phone || !form.address) {
+      Alert.alert('Required', 'Please fill all required fields');
+      return false;
+    }
+    
+    // This part ensures the email format is valid
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      Alert.alert('Invalid', 'Invalid email');
+      return false;
+    }
+    
+    // This part ensures the phone number format is valid
+    if (!/^\+?[0-9\s()\-]{7,20}$/.test(form.phone)) {
+      Alert.alert('Invalid', 'Invalid phone number');
+      return false;
+    }
     return true;
   };
 
+  // This function advances the wizard to the next step, running validation first
   const handleNext = () => {
     if (step===0 && !validateStep1()) return;
     if (step===1 && !validateStep2()) return;
-    setStep(s => s+1);
+    setStep(s => s+1); // Move to next step
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
+    setSubmitting(true); // Disable the submit button and show a loading indicator
     try {
+      // Build a FormData object to send both the physical STL file and the text metadata
       const fd = new FormData();
+      
+      // Append the selected file. Expo-document-picker provides the local URI.
       fd.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' });
+      
+      // Append the validated contact information and print specifications
       fd.append('name', form.name);
       fd.append('email', form.email);
       if (form.email2) fd.append('email2', form.email2);
@@ -84,11 +117,19 @@ export default function STLUploadScreen() {
       fd.append('material', material);
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
+      
+      // Post the multipart/form-data payload to the backend
       const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      
+      // On success, save the returned order details to show the confirmation screen
       setResult(data);
     } catch (err) {
+      // If the backend validation fails or the server errors out, show an alert
       Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed. Please try again.');
-    } finally { setSubmitting(false); }
+    } finally { 
+      // Stop the loading indicator
+      setSubmitting(false); 
+    }
   };
 
   if (result) return (
