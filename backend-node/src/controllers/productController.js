@@ -1,7 +1,7 @@
 /**
  * productController.js — Product CRUD Controller
  *
- * Manages the product catalogue for the Ceylon3D shop.
+ * Manages the product catalogue for the LayerForge 3D shop.
  *
  * Endpoints (via routes/products.js):
  *   GET    /api/products      → List all products
