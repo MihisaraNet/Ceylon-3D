@@ -37,16 +37,27 @@ export default function ShopOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  // This function sends an update to the backend to change the order's fulfillment stage
   const updateStatus = async (id, status) => {
-    try { await api.put(`/orders/admin/${id}/status`, { status }); load(); }
-    catch (err) { Alert.alert('Error', err.response?.data?.error || 'Failed'); }
+    try { 
+      await api.put(`/orders/admin/${id}/status`, { status }); 
+      load(); // Refresh the list to show the new status badge
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Failed'); 
+    }
   };
 
+  // This function attaches a delivery tracking number to the order
   const setTracking = async (id) => {
     const tn = trackingInputs[id];
     if (!tn) return Alert.alert('Error', 'Enter a tracking number');
-    try { await api.put(`/orders/admin/${id}/tracking`, { trackingNumber: tn }); load(); }
-    catch (err) { Alert.alert('Error', err.response?.data?.error || 'Failed'); }
+    
+    try { 
+      await api.put(`/orders/admin/${id}/tracking`, { trackingNumber: tn }); 
+      load(); // Refresh to display the newly saved tracking number
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Failed'); 
+    }
   };
 
   const renderItem = ({ item }) => {
