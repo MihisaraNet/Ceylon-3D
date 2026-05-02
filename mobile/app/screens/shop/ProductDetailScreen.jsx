@@ -74,12 +74,20 @@ export default function ProductDetailScreen({ route }) {
   };
 
   /* ── Add to cart ─────────────────────────────────────── */
+  // This function adds the selected quantity of this product to the user's cart
   const handleAdd = async () => {
+    // Prevent multiple submissions if it is already adding
     if (adding) return;
+    
+    // Clear any previous error messages
     setAddErr('');
     setAdding(true);
+    
     try {
+      // Send the request to the CartContext to handle the API call
       await addToCart(product._id, qty);
+      
+      // If successful, show an alert with navigation options
       Alert.alert(
         'Added to Cart ✓',
         `${qty} × ${product.name} added successfully.`,
@@ -89,6 +97,7 @@ export default function ProductDetailScreen({ route }) {
         ]
       );
     } catch (err) {
+      // If there's an error (like trying to add more than the available stock), show it below the button
       const msg = err.response?.data?.error || err.message || 'Could not add to cart';
       setAddErr(msg);
     } finally {
