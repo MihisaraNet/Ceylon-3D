@@ -1,18 +1,35 @@
 /**
- * STLUploadScreen.jsx — Premium 3D Project Initiation
- * 
- * Attractive, modern design with a refined 
- * multi-step wizard and premium file dropzone.
+ * STLUploadScreen.jsx — 3D Print Order Upload Wizard
+ *
+ * A 3-step wizard for submitting custom 3D print orders.
+ *
+ * Steps:
+ *   1. Upload File   — Pick a file (.stl/.pdf/.jpg/.jpeg), choose material & quantity, add notes
+ *   2. Your Details  — Enter contact info (name, email, phone, address)
+ *   3. Review & Submit — Review all details, see trust badges, then submit
+ *
+ * Features:
+ *   - Visual step indicator (dots + progress line)
+ *   - File picker using expo-document-picker with extension validation
+ *   - Material selection grid (PLA, ABS, PETG, Resin) with emoji icons
+ *   - Quantity selector with +/- buttons
+ *   - Contact form pre-filled from AuthContext user data
+ *   - Review panel with all submitted info before final submission
+ *   - Trust badges: "No upfront payment", "Quote before printing", "Secure upload"
+ *   - Success screen with order ID, file name, material, estimated price
+ *   - "Submit Another Order" button to reset and start over
+ *
+ * @module screens/upload/STLUploadScreen
  */
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, SafeAreaView, StatusBar, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { STL_MATERIALS } from '../../data/categories';
 
-const STEPS = ['Asset', 'Setup', 'Finish'];
+const STEPS = ['Upload File', 'Your Details', 'Review & Submit'];
 
 export default function STLUploadScreen() {
   const { user } = useAuth();
@@ -22,223 +39,329 @@ export default function STLUploadScreen() {
   const [quantity, setQty]  = useState(1);
   const [notes, setNotes]   = useState('');
   const [form, setForm]     = useState({
-    name: user?.fullName || '', email: user?.email || '', phone: '', address: ''
+    name: user?.fullName || '', email: user?.email || '', phone: '', address: '', email2: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult]         = useState(null);
 
+  // This function opens the native file picker to let the user select their 3D design file
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-    if (res.canceled) return;
+    if (res.canceled) return; // User cancelled the picker
+    
     const asset = res.assets?.[0];
-    if (asset) setFile(asset);
+    if (!asset) return;
+    
+    // This part validates the selected file extension to ensure it is supported
+    const ext = asset.name.split('.').pop().toLowerCase();
+    if (!['stl','pdf','jpg','jpeg'].includes(ext)) {
+      return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
+    }
+    
+    // Save the valid file to state so it can be previewed in Step 0
+    setFile(asset);
+  };
+
+  // This part checks if the user has selected a file before allowing them to proceed to Step 1
+  const validateStep1 = () => {
+    if (!file) {
+      Alert.alert('Required', 'Please select a file');
+      return false;
+    }
+    return true;
+  };
+  
+  // This part checks if the contact information form is completely filled out
+  const validateStep2 = () => {
+    if (!form.name || !form.email || !form.phone || !form.address) {
+      Alert.alert('Required', 'Please fill all required fields');
+      return false;
+    }
+    
+    // This part ensures the email format is valid
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      Alert.alert('Invalid', 'Invalid email');
+      return false;
+    }
+    
+    // This part ensures the phone number format is valid
+    if (!/^\+?[0-9\s()\-]{7,20}$/.test(form.phone)) {
+      Alert.alert('Invalid', 'Invalid phone number');
+      return false;
+    }
+    return true;
+  };
+
+  // This function advances the wizard to the next step, running validation first
+  const handleNext = () => {
+    if (step===0 && !validateStep1()) return;
+    if (step===1 && !validateStep2()) return;
+    setStep(s => s+1); // Move to next step
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
+    setSubmitting(true); // Disable the submit button and show a loading indicator
     try {
+      // Build a FormData object to send both the physical STL file and the text metadata
       const fd = new FormData();
+      
+      // Append the selected file. Expo-document-picker provides the local URI.
       fd.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' });
+      
+      // Append the validated contact information and print specifications
       fd.append('name', form.name);
       fd.append('email', form.email);
+      if (form.email2) fd.append('email2', form.email2);
       fd.append('phone', form.phone);
       fd.append('address', form.address);
       fd.append('material', material);
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
       
+      // Post the multipart/form-data payload to the backend
       const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      
+      // On success, save the returned order details to show the confirmation screen
       setResult(data);
-    } catch { Alert.alert('Error', 'Upload failed. Check connection.'); }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      // If the backend validation fails or the server errors out, show an alert
+      Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed. Please try again.');
+    } finally { 
+      // Stop the loading indicator
+      setSubmitting(false); 
+    }
   };
 
   if (result) return (
-    <ScrollView contentContainerStyle={s.successWrap} style={{ backgroundColor: '#fff' }}>
-      <View style={s.successCircle}>
-        <Ionicons name="checkmark-done" size={60} color="#fff" />
+    <ScrollView contentContainerStyle={s.successContainer}>
+      <Ionicons name="checkmark-circle" size={80} color="#22c55e" />
+      <Text style={s.successTitle}>Order Submitted!</Text>
+      <Text style={s.successSub}>Our team will review your file and send you a quote.</Text>
+      <View style={s.resultCard}>
+        <Row label="Order ID" value={`#${result.stlOrderId?.slice(-6).toUpperCase()}`} />
+        <Row label="File"     value={result.fileName?.replace(/^[0-9a-f-]+-/i,'')} />
+        <Row label="Material" value={result.material} />
+        <Row label="Quantity" value={String(result.quantity)} />
+        <Row label="Est. Price" value={`LKR ${result.estimatedPrice?.toFixed(2)}`} />
+        <Row label="Status"   value="Pending Quote" />
       </View>
-      <Text style={s.successTitle}>Request Sent</Text>
-      <Text style={s.successSub}>Your blueprint is being analyzed by our engineers.</Text>
-      <View style={s.finalCard}>
-        <View style={s.fRow}><Text style={s.fLabel}>Order</Text><Text style={s.fVal}>#{result.stlOrderId?.slice(-6).toUpperCase()}</Text></View>
-        <View style={s.fRow}><Text style={s.fLabel}>Mat.</Text><Text style={s.fVal}>{result.material}</Text></View>
-        <View style={s.fRow}><Text style={s.fLabel}>Est.</Text><Text style={[s.fVal, { color: '#6366f1' }]}>LKR {result.estimatedPrice?.toFixed(0)}</Text></View>
-      </View>
-      <TouchableOpacity style={s.resetBtn} onPress={() => { setResult(null); setStep(0); setFile(null); }}>
-        <Text style={s.resetBtnText}>Submit Another</Text>
+      <TouchableOpacity style={s.resetBtn} onPress={() => { setResult(null); setStep(0); setFile(null); setNotes(''); setQty(1); }}>
+        <Text style={s.resetBtnText}>Submit Another Order</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      <View style={s.header}>
-        <Text style={s.title}>New Project</Text>
-        <View style={s.progressRow}>
-          {STEPS.map((l, i) => (
-            <View key={l} style={s.stepItem}>
-              <View style={[s.stepNum, i <= step && s.stepNumActive]}>
-                {i < step ? <Ionicons name="checkmark" size={12} color="#fff" /> : <Text style={[s.sText, i === step && { color: '#fff' }]}>{i + 1}</Text>}
-              </View>
-              {i < STEPS.length - 1 && <View style={[s.line, i < step && s.lineActive]} />}
+    <View style={s.container}>
+      {/* Stepper */}
+      <View style={s.stepper}>
+        {STEPS.map((label, i) => (
+          <View key={i} style={s.stepItem}>
+            <View style={[s.stepDot, i<step && s.stepDone, i===step && s.stepActive]}>
+              {i<step ? <Ionicons name="checkmark" size={14} color="#fff" /> : <Text style={[s.stepNum, i===step && { color:'#fff' }]}>{i+1}</Text>}
             </View>
-          ))}
-        </View>
+            <Text style={[s.stepLabel, i===step && s.stepLabelActive]}>{label}</Text>
+            {i<STEPS.length-1 && <View style={[s.stepLine, i<step && s.stepLineDone]} />}
+          </View>
+        ))}
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 28 }}>
-        {step === 0 && (
+      <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:20 }}>
+        {/* Step 0 — Upload File */}
+        {step===0 && (
           <View>
-            <TouchableOpacity style={[s.uploader, file && s.uploaderOn]} onPress={pickFile} activeOpacity={0.8}>
-              <View style={[s.upIcon, { backgroundColor: file ? '#f0fdf4' : '#f8fafc' }]}>
-                <Ionicons name={file ? 'document' : 'add'} size={32} color={file ? '#10b981' : '#6366f1'} />
-              </View>
-              <Text style={s.upTitle}>{file ? file.name : 'Choose Blueprint'}</Text>
-              <Text style={s.upSub}>{file ? `${(file.size/1024).toFixed(0)} KB` : 'STL, STEP or high-res images'}</Text>
+            <TouchableOpacity style={[s.dropzone, file && s.dropzoneDone]} onPress={pickFile}>
+              <Ionicons name={file ? 'document-text' : 'cloud-upload-outline'} size={48} color={file?'#22c55e':'#6366f1'} />
+              <Text style={[s.dropzoneText, file && { color:'#22c55e' }]}>
+                {file ? file.name : 'Tap to select file\n(.stl, .pdf, .jpg, .jpeg)'}
+              </Text>
+              {file && <Text style={s.fileSize}>{(file.size/1024).toFixed(1)} KB</Text>}
             </TouchableOpacity>
 
-            <Text style={s.label}>MATERIAL SELECTION</Text>
-            <View style={s.matList}>
+            <Text style={s.fieldLabel}>Material</Text>
+            <View style={s.materialGrid}>
               {STL_MATERIALS.map(m => (
-                <TouchableOpacity key={m.id} style={[s.matItem, material === m.id && s.matItemOn]} onPress={() => setMat(m.id)}>
-                  <Text style={s.matIcon}>{m.emoji}</Text>
-                  <Text style={[s.matName, material === m.id && { color: '#fff' }]}>{m.label}</Text>
+                <TouchableOpacity key={m.id} style={[s.matBtn, material===m.id && s.matBtnActive]} onPress={() => setMat(m.id)}>
+                  <Text style={s.matEmoji}>{m.emoji}</Text>
+                  <Text style={[s.matLabel, material===m.id && s.matLabelActive]}>{m.label}</Text>
+                  <Text style={s.matDesc}>{m.desc}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.label}>QUANTITY</Text>
-            <View style={s.qtySection}>
-              <TouchableOpacity style={s.ctrl} onPress={() => setQty(Math.max(1, quantity-1))}><Ionicons name="remove" size={24} color="#0f172a" /></TouchableOpacity>
-              <Text style={s.qtyValText}>{quantity}</Text>
-              <TouchableOpacity style={s.ctrl} onPress={() => setQty(quantity+1)}><Ionicons name="add" size={24} color="#0f172a" /></TouchableOpacity>
+            <Text style={s.fieldLabel}>Quantity</Text>
+            <View style={s.qtyRow}>
+              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q-1))}><Ionicons name="remove" size={20} color="#6366f1" /></TouchableOpacity>
+              <Text style={s.qtyVal}>{quantity}</Text>
+              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q+1)}><Ionicons name="add" size={20} color="#6366f1" /></TouchableOpacity>
             </View>
+
+            <Text style={s.fieldLabel}>Special Instructions (optional)</Text>
+            <TextInput style={s.textarea} value={notes} onChangeText={setNotes} placeholder="Any special notes..." multiline numberOfLines={3} placeholderTextColor="#9ca3af" />
           </View>
         )}
 
-        {step === 1 && (
+        {/* Step 1 — Your Details */}
+        {step===1 && (
           <View>
             {[
-              { key: 'name',    label: 'IDENTITY NAME', icon: 'person-outline' },
-              { key: 'phone',   label: 'CONTACT NUMBER', icon: 'call-outline' },
-              { key: 'address', label: 'SHIPPING DESTINATION', icon: 'location-outline', multi: true },
+              { key:'name',   label:'Full Name *',          icon:'person-outline',   keyboard:'default' },
+              { key:'email',  label:'Email *',              icon:'mail-outline',     keyboard:'email-address', disabled: !!user },
+              { key:'phone',  label:'Phone * (+94 7X XXX)', icon:'call-outline',     keyboard:'phone-pad' },
+              { key:'email2', label:'Alternative Email',    icon:'mail-open-outline',keyboard:'email-address' },
             ].map(f => (
-              <View key={f.key} style={s.field}>
-                <Text style={s.label}>{f.label}</Text>
-                <View style={[s.fieldInput, f.multi && { height: 120, alignItems: 'flex-start' }]}>
-                  <Ionicons name={f.icon} size={20} color="#94a3b8" style={{ marginTop: f.multi ? 18 : 0, marginLeft: 18 }} />
+              <View key={f.key} style={s.fieldGroup}>
+                <Text style={s.fieldLabel}>{f.label}</Text>
+                <View style={s.inputRow}>
+                  <Ionicons name={f.icon} size={18} color="#9ca3af" style={s.inputIcon} />
                   <TextInput
-                    style={[s.input, f.multi && { height: 100, textAlignVertical: 'top' }]}
+                    style={[s.inputField, f.disabled && s.inputDisabled]}
                     value={form[f.key]}
-                    onChangeText={v => setForm(p => ({...p, [f.key]: v}))}
-                    placeholder={`Enter ${f.label.toLowerCase()}`}
-                    multiline={f.multi}
+                    onChangeText={v => setForm(p => ({...p,[f.key]:v}))}
+                    keyboardType={f.keyboard}
+                    autoCapitalize="none"
+                    editable={!f.disabled}
+                    placeholderTextColor="#9ca3af"
+                    placeholder={f.label}
                   />
                 </View>
               </View>
             ))}
+            <View style={s.fieldGroup}>
+              <Text style={s.fieldLabel}>Delivery Address *</Text>
+              <View style={s.inputRow}>
+                <Ionicons name="map-outline" size={18} color="#9ca3af" style={s.inputIcon} />
+                <TextInput style={[s.inputField, { height:80 }]} value={form.address} onChangeText={v => setForm(p => ({...p,address:v}))} multiline numberOfLines={3} placeholder="Full delivery address" placeholderTextColor="#9ca3af" />
+              </View>
+            </View>
           </View>
         )}
 
-        {step === 2 && (
+        {/* Step 2 — Review */}
+        {step===2 && (
           <View>
-            <View style={s.summaryBox}>
-              <Text style={s.sumHeader}>Summary</Text>
-              <SumRow l="Selected File" v={file?.name} />
-              <SumRow l="Material" v={material} />
-              <SumRow l="Quantity" v={String(quantity)} />
-              <View style={s.sumDivider} />
-              <SumRow l="Recipient" v={form.name} />
+            <Panel title="Design File">
+              <Row label="File"     value={file?.name?.replace(/^[0-9a-f-]+-/i,'') || '-'} />
+              <Row label="Size"     value={file ? `${(file.size/1024).toFixed(1)} KB` : '-'} />
+            </Panel>
+            <Panel title="Print Details">
+              <Row label="Material" value={material} />
+              <Row label="Quantity" value={String(quantity)} />
+              {notes && <Row label="Notes" value={notes} />}
+            </Panel>
+            <Panel title="Contact Info">
+              <Row label="Name"    value={form.name} />
+              <Row label="Email"   value={form.email} />
+              {form.email2 && <Row label="Alt Email" value={form.email2} />}
+              <Row label="Phone"   value={form.phone} />
+              <Row label="Address" value={form.address} />
+            </Panel>
+            <View style={s.infoBox}>
+              <Ionicons name="information-circle-outline" size={18} color="#3b82f6" />
+              <Text style={s.infoBoxText}> Our team will review your file and send you an accurate quote before any printing begins.</Text>
+            </View>
+            <View style={s.trustBadges}>
+              {['No upfront payment','Quote before printing','Secure file upload'].map(t => (
+                <View key={t} style={s.trustBadge}><Ionicons name="checkmark-circle" size={14} color="#22c55e" /><Text style={s.trustText}> {t}</Text></View>
+              ))}
             </View>
           </View>
         )}
       </ScrollView>
 
+      {/* Footer Navigation */}
       <View style={s.footer}>
-        {step > 0 && (
-          <TouchableOpacity style={s.prevBtn} onPress={() => setStep(s => s - 1)}>
-            <Text style={s.prevBtnText}>Back</Text>
+        {step>0 && (
+          <TouchableOpacity style={s.backBtn} onPress={() => setStep(s => s-1)}>
+            <Ionicons name="arrow-back" size={18} color="#6366f1" />
+            <Text style={s.backBtnText}> Back</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity
-          style={[s.nextBtn, step === 2 && { backgroundColor: '#10b981' }]}
-          onPress={step === 2 ? handleSubmit : () => setStep(s => s + 1)}
-          disabled={submitting}
-        >
-          {submitting ? <ActivityIndicator color="#fff" /> : (
-            <>
-              <Text style={s.nextBtnText}>{step === 2 ? 'Finalize' : 'Continue'}</Text>
-              <Ionicons name={step === 2 ? 'checkmark' : 'chevron-forward'} size={18} color="#fff" style={{ marginLeft: 8 }} />
-            </>
-          )}
-        </TouchableOpacity>
+        {step<2 ? (
+          <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
+            <Text style={s.nextBtnText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={s.submitBtn} onPress={handleSubmit} disabled={submitting}>
+            {submitting ? <ActivityIndicator color="#fff" /> : <>
+              <Ionicons name="send" size={18} color="#fff" />
+              <Text style={s.nextBtnText}> Submit Order</Text>
+            </>}
+          </TouchableOpacity>
+        )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const SumRow = ({ l, v }) => (
-  <View style={s.sumRow}><Text style={s.sumL}>{l}</Text><Text style={s.sumV}>{v}</Text></View>
+const Panel = ({ title, children }) => (
+  <View style={s.panel}>
+    <Text style={s.panelTitle}>{title}</Text>
+    {children}
+  </View>
+);
+
+const Row = ({ label, value }) => (
+  <View style={s.reviewRow}>
+    <Text style={s.reviewLabel}>{label}</Text>
+    <Text style={s.reviewVal}>{value}</Text>
+  </View>
 );
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
-  header: { paddingHorizontal: 28, paddingVertical: 24, borderBottomWidth: 1, borderColor: '#f1f5f9' },
-  title: { fontSize: 36, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5, marginBottom: 24 },
-  
-  progressRow: { flexDirection: 'row', alignItems: 'center' },
-  stepItem: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  stepNum: { width: 24, height: 24, borderRadius: 8, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
-  stepNumActive: { backgroundColor: '#0f172a' },
-  sText: { fontSize: 10, fontWeight: '900', color: '#94a3b8' },
-  line: { flex: 1, height: 2, backgroundColor: '#f1f5f9', marginHorizontal: 12 },
-  lineActive: { backgroundColor: '#0f172a' },
-
-  uploader: { borderWidth: 2, borderStyle: 'dashed', borderColor: '#e2e8f0', borderRadius: 32, padding: 40, alignItems: 'center', backgroundColor: '#f8fafc', marginBottom: 40 },
-  uploaderOn: { borderColor: '#10b981', backgroundColor: '#f0fdf4' },
-  upIcon: { padding: 18, borderRadius: 20, marginBottom: 16 },
-  upTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  upSub: { fontSize: 13, color: '#94a3b8', marginTop: 4, fontWeight: '600' },
-
-  label: { fontSize: 11, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase' },
-  matList: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 40 },
-  matItem: { width: '47%', backgroundColor: '#fff', borderRadius: 24, padding: 18, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
-  matItemOn: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
-  matIcon: { fontSize: 24, marginBottom: 6 },
-  matName: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
-
-  qtySection: { flexDirection: 'row', alignItems: 'center', gap: 24, marginBottom: 40 },
-  ctrl: { backgroundColor: '#f8fafc', padding: 14, borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9' },
-  qtyValText: { fontSize: 40, fontWeight: '900', color: '#0f172a' },
-
-  field: { marginBottom: 28 },
-  fieldInput: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 24, borderWidth: 1, borderColor: '#f1f5f9' },
-  input: { flex: 1, padding: 20, fontSize: 15, color: '#1e293b', fontWeight: '700' },
-
-  summaryBox: { backgroundColor: '#f8fafc', borderRadius: 32, padding: 32, borderWidth: 1, borderColor: '#f1f5f9' },
-  sumHeader: { fontSize: 24, fontWeight: '900', color: '#0f172a', marginBottom: 24 },
-  sumRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
-  sumL: { fontSize: 14, color: '#64748b', fontWeight: '600' },
-  sumV: { fontSize: 14, color: '#0f172a', fontWeight: '800' },
-  sumDivider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 20 },
-
-  footer: { flexDirection: 'row', padding: 28, borderTopWidth: 1, borderColor: '#f1f5f9', gap: 16 },
-  prevBtn: { paddingHorizontal: 24, justifyContent: 'center' },
-  prevBtnText: { fontSize: 15, fontWeight: '800', color: '#94a3b8' },
-  nextBtn: { flex: 1, flexDirection: 'row', backgroundColor: '#0f172a', borderRadius: 24, height: 68, justifyContent: 'center', alignItems: 'center', shadowColor: '#0f172a', shadowOpacity: 0.2, shadowRadius: 15 },
-  nextBtnText: { color: '#fff', fontSize: 18, fontWeight: '800' },
-
-  successWrap: { flexGrow: 1, alignItems: 'center', padding: 48, paddingTop: 100 },
-  successCircle: { width: 120, height: 120, backgroundColor: '#10b981', borderRadius: 60, justifyContent: 'center', alignItems: 'center', marginBottom: 32 },
-  successTitle: { fontSize: 36, fontWeight: '900', color: '#0f172a' },
-  successSub: { fontSize: 16, color: '#64748b', textAlign: 'center', marginTop: 12, lineHeight: 26, fontWeight: '600' },
-  finalCard: { width: '100%', backgroundColor: '#f8fafc', borderRadius: 32, padding: 32, marginTop: 48, borderWidth: 1, borderColor: '#f1f5f9' },
-  fRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  fLabel: { fontSize: 11, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1 },
-  fVal: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
-  resetBtn: { backgroundColor: '#0f172a', paddingHorizontal: 40, paddingVertical: 22, borderRadius: 24, marginTop: 48 },
-  resetBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  container:       { flex:1, backgroundColor:'#f9fafb' },
+  stepper:         { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', padding:16, paddingBottom:12 },
+  stepItem:        { flex:1, alignItems:'center', position:'relative' },
+  stepDot:         { width:28, height:28, borderRadius:14, backgroundColor:'#e5e7eb', justifyContent:'center', alignItems:'center', marginBottom:4 },
+  stepActive:      { backgroundColor:'#6366f1' },
+  stepDone:        { backgroundColor:'#22c55e' },
+  stepNum:         { fontSize:12, fontWeight:'700', color:'#6b7280' },
+  stepLabel:       { fontSize:10, color:'#9ca3af', textAlign:'center' },
+  stepLabelActive: { color:'#6366f1', fontWeight:'700' },
+  stepLine:        { position:'absolute', top:14, right:'-50%', width:'100%', height:2, backgroundColor:'#e5e7eb', zIndex:-1 },
+  stepLineDone:    { backgroundColor:'#22c55e' },
+  dropzone:        { borderWidth:2, borderStyle:'dashed', borderColor:'#6366f1', borderRadius:16, padding:32, alignItems:'center', marginBottom:20 },
+  dropzoneDone:    { borderColor:'#22c55e' },
+  dropzoneText:    { fontSize:15, color:'#6366f1', textAlign:'center', marginTop:10 },
+  fileSize:        { fontSize:12, color:'#6b7280', marginTop:6 },
+  fieldLabel:      { fontSize:14, fontWeight:'700', color:'#374151', marginBottom:8, marginTop:4 },
+  materialGrid:    { flexDirection:'row', flexWrap:'wrap', gap:10, marginBottom:16 },
+  matBtn:          { flex:1, minWidth:'45%', backgroundColor:'#fff', borderWidth:2, borderColor:'#e5e7eb', borderRadius:12, padding:12, alignItems:'center' },
+  matBtnActive:    { borderColor:'#6366f1', backgroundColor:'#eef2ff' },
+  matEmoji:        { fontSize:24, marginBottom:4 },
+  matLabel:        { fontSize:14, fontWeight:'700', color:'#374151' },
+  matLabelActive:  { color:'#6366f1' },
+  matDesc:         { fontSize:11, color:'#9ca3af', textAlign:'center', marginTop:2 },
+  qtyRow:          { flexDirection:'row', alignItems:'center', marginBottom:16, gap:12 },
+  qtyBtn:          { backgroundColor:'#eef2ff', borderRadius:10, padding:10 },
+  qtyVal:          { fontSize:22, fontWeight:'800', color:'#111827', minWidth:40, textAlign:'center' },
+  textarea:        { backgroundColor:'#fff', borderWidth:1, borderColor:'#e5e7eb', borderRadius:12, padding:12, fontSize:14, color:'#111827', height:80 },
+  fieldGroup:      { marginBottom:12 },
+  inputRow:        { flexDirection:'row', alignItems:'flex-start', backgroundColor:'#fff', borderWidth:1, borderColor:'#e5e7eb', borderRadius:12 },
+  inputIcon:       { padding:13 },
+  inputField:      { flex:1, padding:12, fontSize:14, color:'#111827' },
+  inputDisabled:   { color:'#9ca3af' },
+  panel:           { backgroundColor:'#fff', borderRadius:14, padding:16, marginBottom:12 },
+  panelTitle:      { fontSize:15, fontWeight:'700', color:'#111827', marginBottom:10 },
+  reviewRow:       { flexDirection:'row', justifyContent:'space-between', marginBottom:6 },
+  reviewLabel:     { fontSize:13, color:'#6b7280', flex:1 },
+  reviewVal:       { fontSize:13, color:'#111827', fontWeight:'600', flex:2, textAlign:'right' },
+  infoBox:         { flexDirection:'row', alignItems:'flex-start', backgroundColor:'#dbeafe', borderRadius:12, padding:14, marginBottom:12 },
+  infoBoxText:     { fontSize:13, color:'#1d4ed8', flex:1, lineHeight:20 },
+  trustBadges:     { gap:6, marginBottom:8 },
+  trustBadge:      { flexDirection:'row', alignItems:'center' },
+  trustText:       { fontSize:13, color:'#374151' },
+  footer:          { flexDirection:'row', justifyContent:'space-between', padding:16, backgroundColor:'#fff', borderTopWidth:1, borderTopColor:'#e5e7eb' },
+  backBtn:         { flexDirection:'row', alignItems:'center', padding:14, borderRadius:12, borderWidth:2, borderColor:'#6366f1' },
+  backBtnText:     { color:'#6366f1', fontWeight:'700', fontSize:15 },
+  nextBtn:         { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', backgroundColor:'#6366f1', borderRadius:12, padding:14, marginLeft:12, gap:6 },
+  submitBtn:       { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', backgroundColor:'#22c55e', borderRadius:12, padding:14, marginLeft:12, gap:6 },
+  nextBtnText:     { color:'#fff', fontWeight:'700', fontSize:15 },
+  successContainer:{ flexGrow:1, alignItems:'center', padding:24, paddingTop:40 },
+  successTitle:    { fontSize:28, fontWeight:'900', color:'#111827', marginTop:16 },
+  successSub:      { fontSize:15, color:'#6b7280', textAlign:'center', marginTop:8, marginBottom:20 },
+  resultCard:      { width:'100%', backgroundColor:'#f9fafb', borderRadius:16, padding:16, borderWidth:1, borderColor:'#e5e7eb', marginBottom:20 },
+  resetBtn:        { backgroundColor:'#6366f1', borderRadius:12, paddingHorizontal:24, paddingVertical:14 },
+  resetBtnText:    { color:'#fff', fontWeight:'700', fontSize:15 },
 });
