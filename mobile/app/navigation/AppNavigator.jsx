@@ -1,7 +1,7 @@
 /**
  * AppNavigator.jsx — Main Navigation Configuration
  *
- * Defines the entire navigation structure of the Ceylon3D mobile app
+ * Defines the entire navigation structure of the LayerForge 3D mobile app
  * using React Navigation (Native Stack + Bottom Tabs).
  *
  * Navigation architecture:
@@ -109,7 +109,7 @@ const MainTabs = () => {
         headerShadowVisible: false,
       })}
     >
-      <Tab.Screen name="Home"    component={HomeScreen}      options={{ title: 'Ceylon 3D', headerShown: false }} />
+      <Tab.Screen name="Home"    component={HomeScreen}      options={{ title: 'LayerForge 3D', headerShown: false }} />
       <Tab.Screen name="Browse"  component={BrowseScreen}    options={{ title: 'Browse', headerShown: false }} />
       <Tab.Screen name="Upload"  component={STLUploadScreen} options={{ title: 'Upload STL' }} />
       <Tab.Screen name="Cart"    component={CartScreen}      options={{ title: 'Cart', headerShown: false, tabBarBadge: totalItems > 0 ? totalItems : undefined, tabBarBadgeStyle: { backgroundColor: '#ef4444', fontSize: 10, fontWeight: '800' } }} />
