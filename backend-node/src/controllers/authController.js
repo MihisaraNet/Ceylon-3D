@@ -1,7 +1,7 @@
 /**
  * authController.js — Authentication Controller
  *
- * Handles user registration and login for the Ceylon3D platform.
+ * Handles user registration and login for the LayerForge 3D platform.
  *
  * Endpoints served (via routes/auth.js):
  *   POST /auth/register — Create a new user account
