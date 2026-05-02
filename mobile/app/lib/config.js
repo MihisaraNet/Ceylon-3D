@@ -15,7 +15,7 @@
  *
  * @module lib/config
  */
-export const API_BASE_URL = 'http://192.168.0.4:8080';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://threedink-studio.onrender.com';
 export const API_ROOT_URL = API_BASE_URL;
 
 export const getImageUri = (imagePath) => {
