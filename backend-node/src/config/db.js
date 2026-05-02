@@ -7,7 +7,7 @@
  *
  * Configuration:
  *   - Connection URI is read from the `MONGO_URI` environment variable.
- *   - Falls back to `mongodb://localhost:27017/ceylon3d` if `MONGO_URI` is not set.
+ *   - Falls back to `mongodb://localhost:27017/layerforge3d` if `MONGO_URI` is not set.
  *
  * Retry Logic:
  *   - Attempts to connect up to `retries` times (default: 5).
@@ -33,7 +33,7 @@ const connectDB = async (retries = 5, delay = 5000) => {
   for (let i = 1; i <= retries; i++) {
     try {
       // Attempt to connect using the URI from .env or the local default
-      await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ceylon3d');
+      await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/layerforge3d');
       console.log('MongoDB connected');
       return;
     } catch (err) {
