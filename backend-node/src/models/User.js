@@ -1,7 +1,7 @@
 /**
  * User.js — User Mongoose Model
  *
- * Represents a registered user of the Ceylon3D platform.
+ * Represents a registered user of the LayerForge 3D platform.
  *
  * Fields:
  *   - email     {String}   — User's email address (required, unique, stored lowercase).
