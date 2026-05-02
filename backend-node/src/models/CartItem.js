@@ -24,6 +24,9 @@ const cartItemSchema = new mongoose.Schema({
   
   // The number of units of this product the user wants to buy. Defaults to 1, cannot be less than 1.
   quantity:  { type: Number, default: 1, min: 1 },
+  
+  // Optional custom design or reference file attached to this cart item (e.g. personalisation request).
+  customFileUrl: { type: String, default: null },
 });
 
 module.exports = mongoose.model('CartItem', cartItemSchema);
