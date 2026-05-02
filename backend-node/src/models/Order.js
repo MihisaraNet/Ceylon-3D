@@ -61,9 +61,6 @@ const orderSchema = new mongoose.Schema({
   
   // An optional tracking number set by the admin once the order is shipped.
   trackingNumber:  { type: String, default: null },
-  
-  // Optional payment proof image path uploaded by the customer at checkout (e.g. bank transfer screenshot).
-  receiptPath:     { type: String, default: null },
 }, { 
   // Automatically track when the order was created. We do not need an updatedAt timestamp for orders.
   timestamps: { createdAt: 'createdAt', updatedAt: false } 

@@ -1,3 +1,18 @@
+/**
+ * LoginScreen.jsx — User Sign-In Screen
+ *
+ * Allows existing users to authenticate with email and password.
+ *
+ * Features:
+ *   - Client-side validation (email format, password required)
+ *   - Server-side error display (inline under fields + top banner)
+ *   - Password visibility toggle
+ *   - Auto-focus from email to password field
+ *   - Navigation link to RegisterScreen
+ *   - On success: calls AuthContext.login() to store token & navigate to MainTabs
+ *
+ * @module screens/auth/LoginScreen
+ */
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
@@ -36,28 +51,46 @@ export default function LoginScreen({ navigation }) {
   const [serverErr,setServerErr]= useState('');
   const pwRef = useRef(null);
 
-  /* ── Client-side validation ─────────────────────────── */
+  /* ── Client validation ──────────────────────────────── */
+  // Validate required fields before sending auth request.
   const validate = () => {
     const e = {};
     if (!email.trim())       e.email    = 'Email is required';
     else if (!isEmail(email))e.email    = 'Enter a valid email address';
+    
     if (!password)           e.password = 'Password is required';
+    
     setErrors(e);
+    // True means form is valid.
     return Object.keys(e).length === 0;
   };
 
   const handleLogin = async () => {
+    // Reset prior server error banner.
     setServerErr('');
+    
+    // Stop early on invalid input.
     if (!validate()) return;
+    
     setLoading(true);
+    
     try {
+      // Normalize email for case-insensitive matching.
       const { data } = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
+      
+      // Persist token/user via auth context.
       await login(data.token, data.user);
     } catch (err) {
       const res = err.response?.data;
+      
+      // Map backend field errors when available.
       if (res?.errors) setErrors(res.errors);
+      
+      // Show general auth error.
       setServerErr(res?.error || 'Login failed. Please try again.');
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));

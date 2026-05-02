@@ -1,3 +1,30 @@
+/**
+ * AppNavigator.jsx — Main Navigation Configuration
+ *
+ * Defines the entire navigation structure of the Ceylon3D mobile app
+ * using React Navigation (Native Stack + Bottom Tabs).
+ *
+ * Navigation architecture:
+ *   - If user is NOT logged in → AuthStack (Login, Register screens)
+ *   - If user IS logged in:
+ *       → MainTabs (bottom tab navigator):
+ *           Home     — Landing page with hero, services, stats
+ *           Browse   — Product catalogue with search and categories
+ *           Upload   — STL file upload wizard
+ *           Cart     — Shopping cart with checkout flow
+ *           Account  — User profile, order history, and STL orders
+ *       → ProductDetail (modal stack screen)
+ *       → AdminStack (admin-only screens):
+ *           AdminDashboard, ManageProducts, StlOrdersAdmin,
+ *           ShopOrdersAdmin, CostCalculator, AddEditProduct
+ *
+ * Features:
+ *   - Cart badge on the Cart tab showing item count
+ *   - Indigo (#6366f1) themed header and tab bar
+ *   - Loading state shows null while auth is being restored
+ *
+ * @module navigation/AppNavigator
+ */
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';

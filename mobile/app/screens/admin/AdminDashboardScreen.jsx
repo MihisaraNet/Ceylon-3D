@@ -1,5 +1,23 @@
+/**
+ * AdminDashboardScreen.jsx — Admin Management Console
+ *
+ * The main admin landing page showing key statistics and quick action links.
+ *
+ * Stats cards:
+ *   - STL Orders count (navigates to StlOrdersAdmin)
+ *   - Shop Orders count (navigates to ShopOrdersAdmin)
+ *   - Products count (navigates to ManageProducts)
+ *   - Pending Quotes count (navigates to StlOrdersAdmin)
+ *
+ * Quick actions:
+ *   - Add Product, Manage Products, STL Orders, Shop Orders, Cost Calculator
+ *
+ * Data is fetched in parallel from /stl-orders/admin, /orders/admin, and /api/products.
+ *
+ * @module screens/admin/AdminDashboardScreen
+ */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
@@ -16,19 +34,24 @@ export default function AdminDashboardScreen() {
   const nav = useNavigation();
   const [stats, setStats] = useState({ stlOrders:0, shopOrders:0, products:0, pendingQuotes:0 });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // Fetch all dashboard data in parallel to keep the screen responsive.
       const [stl, shop, prods] = await Promise.all([
         api.get('/stl-orders/admin'),
         api.get('/orders/admin'),
         api.get('/api/products'),
       ]);
+      
+      // Build summary metrics used by the top stat cards.
       setStats({
         stlOrders:     stl.data.length,
         shopOrders:    shop.data.length,
         products:      prods.data.length,
+        // Only count STL orders that are in the initial 'PENDING_QUOTE' phase
         pendingQuotes: stl.data.filter(o => o.status === 'PENDING_QUOTE').length,
       });
     } catch { }
@@ -37,8 +60,27 @@ export default function AdminDashboardScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
   return (
-    <ScrollView style={s.container}>
+    <ScrollView
+      style={s.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          colors={['#6366f1']}
+          tintColor="#6366f1"
+        />
+      }
+    >
       <View style={s.header}>
         <Text style={s.headerTitle}>Admin Dashboard</Text>
         <Text style={s.headerSub}>Ceylon 3D — Management Console</Text>
