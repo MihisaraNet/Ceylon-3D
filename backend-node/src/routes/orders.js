@@ -14,15 +14,18 @@
 const router = require('express').Router();
 const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
 const { validateOrder } = require('../middleware/validate');
-const { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking } = require('../controllers/orderController');
+const { uploadImage } = require('../middleware/upload');
+const { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking, deleteOrder } = require('../controllers/orderController');
 
 // User endpoints (require authentication)
-router.post('/',                  verifyToken, requireAuth,  validateOrder, placeOrder);   // Place order
+// Optional receipt image field 'receipt' accepted via multipart/form-data
+router.post('/',                  verifyToken, requireAuth,  uploadImage.single('receipt'), validateOrder, placeOrder);   // Place order
 router.get('/',                   verifyToken, requireAuth,  getMyOrders);                 // My orders
 
 // Admin endpoints (require admin role)
 router.get('/admin',              verifyToken, requireAdmin, getAllOrders);                 // All orders
 router.put('/admin/:id/status',   verifyToken, requireAdmin, updateOrderStatus);           // Update status
 router.put('/admin/:id/tracking', verifyToken, requireAdmin, updateTracking);              // Set tracking
+router.delete('/admin/:id',       verifyToken, requireAdmin, deleteOrder);                 // Delete order
 
 module.exports = router;
