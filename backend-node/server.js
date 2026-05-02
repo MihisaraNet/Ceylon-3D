@@ -1,8 +1,8 @@
 /**
- * server.js — Main Entry Point for the Ceylon3D Backend Server
+ * server.js — Main Entry Point for the LayerForge 3D Backend Server
  *
  * This file is the starting point of the Node.js/Express backend application
- * for the Ceylon 3D Printing Service. It performs the following:
+ * for the LayerForge 3D Printing Service. It performs the following:
  *
  * 1. Loads environment variables from the `.env` file using `dotenv`.
  * 2. Creates an Express application instance and configures middleware:
@@ -113,5 +113,5 @@ app.use((err, req, res, next) => {
 // 3. Start the Express server on the configured PORT.
 connectDB().then(async () => {
   await seedAdmin();
-  app.listen(PORT, () => console.log(`Ceylon3D backend running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`LayerForge 3D backend running on port ${PORT}`));
 });
