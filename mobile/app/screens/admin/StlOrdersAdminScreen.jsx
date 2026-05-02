@@ -27,6 +27,7 @@ const STATUS_OPTIONS = ['PENDING_QUOTE','QUOTED','CONFIRMED','PRINTING','READY',
 export default function StlOrdersAdminScreen() {
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState(null);
 
   const load = useCallback(async () => {
@@ -37,7 +38,16 @@ export default function StlOrdersAdminScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  // This function updates the order status (e.g., from 'QUOTED' to 'PRINTING')
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  // Update STL order status from admin panel.
   const updateStatus = async (id, status) => {
     try { 
       await api.put(`/stl-orders/admin/${id}/status`, { status }); 
@@ -47,7 +57,7 @@ export default function StlOrdersAdminScreen() {
     }
   };
 
-  // This function permanently deletes an STL order and its associated 3D file from the server
+  // Delete STL order and linked uploaded file.
   const deleteOrder = (id) => {
     Alert.alert('Delete', 'Delete this STL order and its file?', [
       { text:'Cancel', style:'cancel' },
@@ -117,6 +127,8 @@ export default function StlOrdersAdminScreen() {
       keyExtractor={i => i._id}
       renderItem={renderItem}
       contentContainerStyle={{ padding:12, gap:10 }}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
       ListEmptyComponent={<Text style={s.empty}>No STL orders</Text>}
     />
   );
