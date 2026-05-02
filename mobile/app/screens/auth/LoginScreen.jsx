@@ -1,200 +1,133 @@
 /**
- * LoginScreen.jsx — User Sign-In Screen
+ * LoginScreen.jsx — User Authentication
  *
- * Allows existing users to authenticate with email and password.
- *
- * Features:
- *   - Client-side validation (email format, password required)
- *   - Server-side error display (inline under fields + top banner)
- *   - Password visibility toggle
- *   - Auto-focus from email to password field
- *   - Navigation link to RegisterScreen
- *   - On success: calls AuthContext.login() to store token & navigate to MainTabs
- *
- * @module screens/auth/LoginScreen
+ * Modern, colorful and simple design.
  */
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, SafeAreaView, StatusBar,
+  ActivityIndicator, ScrollView, SafeAreaView, StatusBar, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-
-/* ── Inline helpers ─────────────────────────────────────── */
-const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-
-const Field = ({ label, icon, error, children }) => (
-  <View style={f.group}>
-    <Text style={f.label}>{label}</Text>
-    <View style={[f.row, error && f.rowErr]}> 
-      <Ionicons name={icon} size={17} color={error ? '#ef4444' : '#9ca3af'} style={f.icon} />
-      {children}
-    </View>
-    {!!error && (
-      <View style={f.errRow}>
-        <Ionicons name="alert-circle-outline" size={13} color="#ef4444" />
-        <Text style={f.errText}>{error}</Text>
-      </View>
-    )}
-  </View>
-);
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
-  const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
-  const [errors,   setErrors]   = useState({});
-  const [serverErr,setServerErr]= useState('');
-  const pwRef = useRef(null);
-
-  /* ── Client validation ──────────────────────────────── */
-  // Validate required fields before sending auth request.
-  const validate = () => {
-    const e = {};
-    if (!email.trim())       e.email    = 'Email is required';
-    else if (!isEmail(email))e.email    = 'Enter a valid email address';
-    
-    if (!password)           e.password = 'Password is required';
-    
-    setErrors(e);
-    // True means form is valid.
-    return Object.keys(e).length === 0;
-  };
+  const [error,    setError]    = useState('');
 
   const handleLogin = async () => {
-    // Reset prior server error banner.
-    setServerErr('');
-    
-    // Stop early on invalid input.
-    if (!validate()) return;
-    
+    if (!email || !password) return setError('Please fill all fields');
+    setError('');
     setLoading(true);
-    
     try {
-      // Normalize email for case-insensitive matching.
-      const { data } = await api.post('/auth/login', { email: email.trim().toLowerCase(), password });
-      
-      // Persist token/user via auth context.
-      await login(data.token, data.user);
+      await login(email, password);
     } catch (err) {
-      const res = err.response?.data;
-      
-      // Map backend field errors when available.
-      if (res?.errors) setErrors(res.errors);
-      
-      // Show general auth error.
-      setServerErr(res?.error || 'Login failed. Please try again.');
-    } finally { 
-      setLoading(false); 
+      setError(err.response?.data?.error || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));
-
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
-
-        {/* Brand */}
-        <View style={s.brand}>
-          <View style={s.logoBox}>
-            <Ionicons name="cube" size={36} color="#fff" />
+      <StatusBar barStyle="light-content" backgroundColor="#4f46e5" />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={s.scroll} bounces={false}>
+          
+          <View style={s.header}>
+            <View style={s.logoWrap}>
+              <Ionicons name="cube" size={40} color="#fff" />
+            </View>
+            <Text style={s.title}>Welcome Back</Text>
+            <Text style={s.sub}>Login to your LayerForge 3D account</Text>
           </View>
-          <Text style={s.logo}>LayerForge 3D</Text>
-          <Text style={s.tagline}>Sign in to your account</Text>
-        </View>
 
-        {/* Server error banner */}
-        {!!serverErr && (
-          <View style={s.serverErrBanner}>
-            <Ionicons name="warning-outline" size={16} color="#ef4444" />
-            <Text style={s.serverErrText}>{serverErr}</Text>
+          <View style={s.form}>
+            {!!error && (
+              <View style={s.errBanner}>
+                <Ionicons name="alert-circle" size={20} color="#ef4444" />
+                <Text style={s.errText}>{error}</Text>
+              </View>
+            )}
+
+            <View style={s.inputGroup}>
+              <Text style={s.label}>EMAIL ADDRESS</Text>
+              <View style={s.inputWrap}>
+                <Ionicons name="mail-outline" size={20} color="#94a3b8" style={s.inputIcon} />
+                <TextInput
+                  style={s.input}
+                  placeholder="name@example.com"
+                  placeholderTextColor="#94a3b8"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+            </View>
+
+            <View style={s.inputGroup}>
+              <Text style={s.label}>PASSWORD</Text>
+              <View style={s.inputWrap}>
+                <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" style={s.inputIcon} />
+                <TextInput
+                  style={s.input}
+                  placeholder="••••••••"
+                  placeholderTextColor="#94a3b8"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity style={s.loginBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.85}>
+              {loading ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <Text style={s.loginBtnText}>Sign In</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={s.footer}>
+              <Text style={s.footerText}>New here? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={s.linkText}>Create an account</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
-
-        {/* Fields */}
-        <Field label="Email address" icon="mail-outline" error={errors.email}>
-          <TextInput
-            style={f.input}
-            placeholder="you@example.com"
-            placeholderTextColor="#9ca3af"
-            value={email}
-            onChangeText={v => { setEmail(v); clearErr('email'); setServerErr(''); }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            returnKeyType="next"
-            onSubmitEditing={() => pwRef.current?.focus()}
-          />
-        </Field>
-
-        <Field label="Password" icon="lock-closed-outline" error={errors.password}>
-          <TextInput
-            ref={pwRef}
-            style={[f.input, { flex: 1 }]}
-            placeholder="Enter password"
-            placeholderTextColor="#9ca3af"
-            value={password}
-            onChangeText={v => { setPassword(v); clearErr('password'); setServerErr(''); }}
-            secureTextEntry={!showPw}
-            returnKeyType="done"
-            onSubmitEditing={handleLogin}
-          />
-          <TouchableOpacity onPress={() => setShowPw(p => !p)} style={{ padding: 12 }}>
-            <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9ca3af" />
-          </TouchableOpacity>
-        </Field>
-
-        {/* Submit */}
-        <TouchableOpacity style={s.btn} onPress={handleLogin} disabled={loading} activeOpacity={0.88}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={s.btnText}>Sign In</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-        {/* Register link */}
-        <TouchableOpacity style={s.link} onPress={() => navigation.navigate('Register')}>
-          <Text style={s.linkText}>Don't have an account? <Text style={s.linkBold}>Create one →</Text></Text>
-        </TouchableOpacity>
-
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-/* Shared field styles */
-const f = StyleSheet.create({
-  group:  { marginBottom: 14 },
-  label:  { fontSize: 13, fontWeight: '700', color: '#000', marginBottom: 6 },
-  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, overflow: 'hidden' },
-  rowErr: { borderColor: '#ef4444', backgroundColor: '#fff5f5' },
-  icon:   { paddingLeft: 13, paddingRight: 4 },
-  input:  { flex: 1, height: 50, fontSize: 15, color: '#000', paddingHorizontal: 8 },
-  errRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  errText:{ fontSize: 12, color: '#ef4444', fontWeight: '600' },
-});
-
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#ffffff' },
-  container:      { flexGrow: 1, padding: 24, justifyContent: 'center' },
-  brand:          { alignItems: 'center', marginBottom: 32 },
-  logoBox:        { width: 64, height: 64, borderRadius: 16, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  logo:           { fontSize: 28, fontWeight: '800', color: '#000', letterSpacing: -0.5 },
-  tagline:        { fontSize: 15, color: '#666', marginTop: 4 },
-  serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 8, padding: 12, marginBottom: 14 },
-  serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
-  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#000', borderRadius: 8, paddingVertical: 15, marginTop: 8 },
-  btnText:        { color: '#fff', fontSize: 15, fontWeight: '700' },
-  link:           { alignItems: 'center', marginTop: 22 },
-  linkText:       { color: '#666', fontSize: 14 },
-  linkBold:       { color: '#000', fontWeight: '700' },
+  safe:           { flex: 1, backgroundColor: '#4f46e5' },
+  scroll:         { flexGrow: 1 },
+  header:         { paddingHorizontal: 32, paddingTop: 60, paddingBottom: 40, alignItems: 'center' },
+  logoWrap:       { width: 80, height: 80, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  title:          { fontSize: 32, fontWeight: '900', color: '#fff', textAlign: 'center', letterSpacing: -1 },
+  sub:            { fontSize: 16, color: '#e0e7ff', textAlign: 'center', marginTop: 8, fontWeight: '600' },
+
+  form:           { flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 32, paddingTop: 48 },
+  errBanner:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 12, borderRadius: 16, marginBottom: 24, borderWidth: 1, borderColor: '#fee2e2' },
+  errText:        { color: '#ef4444', marginLeft: 8, fontWeight: '700', fontSize: 14 },
+
+  inputGroup:     { marginBottom: 20 },
+  label:           { fontSize: 11, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, marginBottom: 8 },
+  inputWrap:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9' },
+  inputIcon:      { marginLeft: 16 },
+  input:          { flex: 1, paddingVertical: 16, paddingHorizontal: 12, fontSize: 15, color: '#1e293b', fontWeight: '600' },
+
+  loginBtn:       { flexDirection: 'row', backgroundColor: '#4f46e5', borderRadius: 16, paddingVertical: 18, justifyContent: 'center', alignItems: 'center', marginTop: 12, shadowColor: '#4f46e5', shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
+  loginBtnText:   { color: '#fff', fontSize: 16, fontWeight: '800' },
+
+  footer:         { flexDirection: 'row', justifyContent: 'center', marginTop: 32 },
+  footerText:     { color: '#64748b', fontSize: 15, fontWeight: '600' },
+  linkText:       { color: '#4f46e5', fontSize: 15, fontWeight: '800' },
 });
