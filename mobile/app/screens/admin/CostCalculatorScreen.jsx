@@ -1,11 +1,25 @@
 /**
- * CostCalculatorScreen.jsx — High-End Algorithm Estimator
- * 
- * Attractive, modern design for cost estimation 
- * with premium input groups and clean breakdown layouts.
+ * CostCalculatorScreen.jsx — Admin 3D Printing Cost Calculator
+ *
+ * Allows admins to calculate detailed cost breakdowns for 3D print jobs.
+ *
+ * Input fields:
+ *   - Print Time (Hours + Minutes)
+ *   - Weight in grams
+ *   - Material selection (PLA, PLA+, ABS, ABS+)
+ *   - Support structures toggle (+LKR 100)
+ *
+ * Output (cost breakdown card):
+ *   - Material Cost, Machine Cost, Energy Cost, Labour Cost, Support Cost
+ *   - Total Cost
+ *   - Selling Price (Total × 1.5 markup)
+ *
+ * Calls POST /stl-orders/calculate-cost on the backend.
+ *
+ * @module screens/admin/CostCalculatorScreen
  */
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 
@@ -14,6 +28,7 @@ export default function CostCalculatorScreen() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // This function sends the entered dimensions and material to the backend pricing algorithm
   const handleCalc = async () => {
     setLoading(true);
     try {
@@ -24,9 +39,13 @@ export default function CostCalculatorScreen() {
         material:         form.material,
         supportStructures:form.supportStructures,
       });
+      // Save the resulting breakdown (energy, labor, material, etc.) to display on screen
       setResult(data);
-    } catch { Alert.alert('Error', 'Calculation protocol failed.'); }
-    finally { setLoading(false); }
+    } catch (err) { 
+      Alert.alert('Error', err.response?.data?.error || 'Calculation failed'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const Row = ({ label, val, bold }) => (
@@ -37,111 +56,81 @@ export default function CostCalculatorScreen() {
   );
 
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <View style={s.header}>
-        <Text style={s.title}>Estimator</Text>
-        <TouchableOpacity style={s.resetBtn} onPress={() => setResult(null)}>
-          <Ionicons name="trash-outline" size={20} color="#f43f5e" />
-        </TouchableOpacity>
+    <ScrollView style={s.container} contentContainerStyle={{ padding:20 }}>
+      <Text style={s.title}>Cost Calculator</Text>
+
+      {[
+        { key:'printTimeHours',   label:'Print Time (Hours)',   keyboard:'numeric' },
+        { key:'printTimeMinutes', label:'Print Time (Minutes)', keyboard:'numeric' },
+        { key:'weightGrams',      label:'Weight (grams)',       keyboard:'numeric' },
+      ].map(f => (
+        <View key={f.key} style={s.fieldGroup}>
+          <Text style={s.label}>{f.label}</Text>
+          <TextInput style={s.input} value={form[f.key]} onChangeText={v => setForm(p => ({...p,[f.key]:v}))} keyboardType={f.keyboard} placeholderTextColor="#9ca3af" />
+        </View>
+      ))}
+
+      <Text style={s.label}>Material</Text>
+      <View style={s.matRow}>
+        {['PLA','PLA+','ABS','ABS+'].map(m => (
+          <TouchableOpacity key={m} style={[s.matChip, form.material===m && s.matChipActive]} onPress={() => setForm(p => ({...p,material:m}))}>
+            <Text style={[s.matChipText, form.material===m && s.matChipTextActive]}>{m}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 28, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-        <View style={s.card}>
-          {[
-            { key:'printTimeHours',   label:'HOURS',   icon:'time-outline' },
-            { key:'printTimeMinutes', label:'MINUTES', icon:'timer-outline' },
-            { key:'weightGrams',      label:'WEIGHT (G)', icon:'scale-outline' },
-          ].map(f => (
-            <View key={f.key} style={s.field}>
-              <Text style={s.label}>{f.label}</Text>
-              <View style={s.fieldInput}>
-                <Ionicons name={f.icon} size={20} color="#94a3b8" style={{ marginLeft: 18 }} />
-                <TextInput style={s.input} value={form[f.key]} onChangeText={v => setForm(p => ({...p,[f.key]:v}))} keyboardType="numeric" />
-              </View>
-            </View>
-          ))}
+      <TouchableOpacity style={s.supportRow} onPress={() => setForm(p => ({...p, supportStructures:!p.supportStructures}))}>
+        <Ionicons name={form.supportStructures ? 'checkbox' : 'square-outline'} size={22} color="#6366f1" />
+        <Text style={s.supportLabel}> Support Structures (+LKR 100)</Text>
+      </TouchableOpacity>
 
-          <Text style={s.label}>MATERIAL SELECTION</Text>
-          <View style={s.matRow}>
-            {['PLA','PLA+','ABS','ABS+'].map(m => (
-              <TouchableOpacity key={m} style={[s.matChip, form.material===m && s.matChipOn]} onPress={() => setForm(p => ({...p,material:m}))}>
-                <Text style={[s.matChipText, form.material===m && { color:'#fff' }]}>{m}</Text>
-              </TouchableOpacity>
-            ))}
+      <TouchableOpacity style={s.calcBtn} onPress={handleCalc} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.calcBtnText}>Calculate Cost</Text>}
+      </TouchableOpacity>
+
+      {result && (
+        <View style={s.resultCard}>
+          <Text style={s.resultTitle}>Cost Breakdown</Text>
+          <Row label="Material Cost"  val={result.materialCost} />
+          <Row label="Machine Cost"   val={result.machineCost} />
+          <Row label="Energy Cost"    val={result.energyCost} />
+          <Row label="Labour Cost"    val={result.laborCost} />
+          <Row label="Support Cost"   val={result.supportCost} />
+          <View style={s.divider} />
+          <Row label="Total Cost"     val={result.totalCost} bold />
+          <View style={[s.sellingRow]}>
+            <Text style={s.sellingLabel}>Selling Price (×1.5)</Text>
+            <Text style={s.sellingVal}>LKR {result.sellingPrice?.toFixed(2)}</Text>
           </View>
-
-          <TouchableOpacity style={s.toggleRow} onPress={() => setForm(p => ({...p, supportStructures:!p.supportStructures}))}>
-            <View style={[s.checkbox, form.supportStructures && s.checkboxOn]}>
-              {form.supportStructures && <Ionicons name="checkmark" size={16} color="#fff" />}
-            </View>
-            <Text style={s.toggleLabel}>Support Structures (+LKR 100)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={s.calcBtn} onPress={handleCalc} disabled={loading} activeOpacity={0.9}>
-            {loading ? <ActivityIndicator color="#fff" /> : (
-              <>
-                <Text style={s.calcBtnText}>Generate Estimate</Text>
-                <Ionicons name="flash" size={18} color="#fff" style={{ marginLeft: 10 }} />
-              </>
-            )}
-          </TouchableOpacity>
         </View>
-
-        {result && (
-          <View style={s.resCard}>
-            <Text style={s.resHeader}>Breakdown</Text>
-            <Row label="Material Allocation"  val={result.materialCost} />
-            <Row label="Machine Runtime"      val={result.machineCost} />
-            <Row label="Energy Consumption"   val={result.energyCost} />
-            <Row label="Technical Labour"     val={result.laborCost} />
-            <Row label="Support Material"     val={result.supportCost} />
-            <View style={s.divider} />
-            <Row label="Manufacturing Cost"    val={result.totalCost} bold />
-            <View style={s.quoteBox}>
-              <Text style={s.quoteLabel}>SUGGESTED QUOTE</Text>
-              <Text style={s.quoteVal}>LKR {result.sellingPrice?.toFixed(2)}</Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+      )}
+    </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 28, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#f1f5f9' },
-  title: { fontSize: 32, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5 },
-  resetBtn: { backgroundColor: '#fef2f2', padding: 12, borderRadius: 16 },
-
-  card: { backgroundColor: '#fff', borderRadius: 32, padding: 28, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
-  field: { marginBottom: 20 },
-  label: { fontSize: 10, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1.5, marginBottom: 12 },
-  fieldInput: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 20, borderWidth: 1, borderColor: '#f1f5f9' },
-  input: { flex: 1, padding: 18, fontSize: 15, color: '#0f172a', fontWeight: '700' },
-  
-  matRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
-  matChip: { flex: 1, backgroundColor: '#f1f5f9', borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
-  matChipOn: { backgroundColor: '#6366f1' },
-  matChipText: { fontSize: 11, fontWeight: '900', color: '#94a3b8' },
-  
-  toggleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 32, gap: 14 },
-  checkbox: { width: 28, height: 28, borderRadius: 10, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
-  checkboxOn: { backgroundColor: '#10b981', borderColor: '#10b981' },
-  toggleLabel: { fontSize: 14, color: '#475569', fontWeight: '800' },
-  
-  calcBtn: { flexDirection: 'row', backgroundColor: '#0f172a', borderRadius: 24, height: 68, justifyContent: 'center', alignItems: 'center', shadowColor: '#0f172a', shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
-  calcBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-
-  resCard: { backgroundColor: '#fff', borderRadius: 32, padding: 28, marginTop: 32, borderWidth: 1, borderColor: '#f1f5f9' },
-  resHeader: { fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 20 },
-  resultRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  resultLabel: { fontSize: 13, color: '#94a3b8', fontWeight: '600' },
-  resultVal: { fontSize: 13, color: '#0f172a', fontWeight: '800' },
-  resultValBold: { color: '#0f172a', fontWeight: '900', fontSize: 16 },
-  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 },
-  quoteBox: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 24, marginTop: 16, borderWidth: 1, borderColor: '#f1f5f9' },
-  quoteLabel: { fontSize: 9, fontWeight: '900', color: '#cbd5e1', letterSpacing: 1.5, marginBottom: 4 },
-  quoteVal: { fontSize: 28, color: '#10b981', fontWeight: '900' },
+  container:      { flex:1, backgroundColor:'#f9fafb' },
+  title:          { fontSize:22, fontWeight:'800', color:'#111827', marginBottom:20 },
+  fieldGroup:     { marginBottom:14 },
+  label:          { fontSize:14, fontWeight:'700', color:'#374151', marginBottom:6 },
+  input:          { backgroundColor:'#fff', borderWidth:1, borderColor:'#e5e7eb', borderRadius:12, padding:13, fontSize:15, color:'#111827' },
+  matRow:         { flexDirection:'row', gap:10, marginBottom:16 },
+  matChip:        { flex:1, backgroundColor:'#f3f4f6', borderRadius:10, padding:10, alignItems:'center', borderWidth:2, borderColor:'transparent' },
+  matChipActive:  { backgroundColor:'#eef2ff', borderColor:'#6366f1' },
+  matChipText:    { fontSize:14, fontWeight:'700', color:'#374151' },
+  matChipTextActive:{ color:'#6366f1' },
+  supportRow:     { flexDirection:'row', alignItems:'center', marginBottom:20 },
+  supportLabel:   { fontSize:15, color:'#374151', fontWeight:'600' },
+  calcBtn:        { backgroundColor:'#6366f1', borderRadius:12, padding:16, alignItems:'center', marginBottom:20 },
+  calcBtnText:    { color:'#fff', fontSize:16, fontWeight:'700' },
+  resultCard:     { backgroundColor:'#fff', borderRadius:16, padding:20, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:8, elevation:3 },
+  resultTitle:    { fontSize:18, fontWeight:'800', color:'#111827', marginBottom:16 },
+  resultRow:      { flexDirection:'row', justifyContent:'space-between', marginBottom:8 },
+  resultLabel:    { fontSize:14, color:'#6b7280' },
+  resultVal:      { fontSize:14, color:'#374151', fontWeight:'600' },
+  resultValBold:  { color:'#111827', fontWeight:'800' },
+  divider:        { height:1, backgroundColor:'#e5e7eb', marginVertical:8 },
+  sellingRow:     { flexDirection:'row', justifyContent:'space-between', backgroundColor:'#eef2ff', borderRadius:10, padding:12, marginTop:8 },
+  sellingLabel:   { fontSize:15, color:'#6366f1', fontWeight:'700' },
+  sellingVal:     { fontSize:18, color:'#6366f1', fontWeight:'900' },
 });
