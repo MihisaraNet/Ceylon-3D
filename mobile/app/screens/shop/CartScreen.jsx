@@ -2,22 +2,7 @@
  * CartScreen.jsx — Shopping Cart & Checkout Flow
  *
  * Displays the user's cart items with full checkout functionality.
- *
- * States:
- *   - Empty cart → Friendly empty state with "Browse Products" CTA
- *   - Loading    → Spinner while cart data is being fetched
- *   - Cart view  → List of items with quantity controls
- *   - Checkout   → Delivery details form (name, phone, address, city)
- *   - Success    → Order confirmation screen with "Continue Shopping" button
- *
- * Features:
- *   - Quantity adjustment (+/-) with server-side stock validation
- *   - Inline error messages per item when stock limits are exceeded
- *   - Remove individual items or clear entire cart
- *   - Order summary with subtotal, free delivery badge, and total
- *   - Cash on Delivery (COD) payment notice
- *   - Delivery form with client-side validation (phone format, required fields)
- *   - Color-coded accent bars on each cart item card
+ * Minimalist, modern layout with simple colors.
  *
  * @module screens/shop/CartScreen
  */
@@ -34,10 +19,6 @@ import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
-/* ── Accent colours per card row ───────────────────────────── */
-const ACCENTS = ['#f97316','#22c55e','#3b82f6','#a855f7','#f59e0b'];
-const accent  = (i) => ACCENTS[i % ACCENTS.length];
-
 export default function CartScreen() {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice, loading, reloadCart } = useCart();
   const { user } = useAuth();
@@ -51,12 +32,9 @@ export default function CartScreen() {
   });
   const [placing, setPlacing]   = useState(false);
   const [done,    setDone]       = useState(false);
-  const [qtyErr,  setQtyErr]     = useState({}); // { [cartItemId]: 'error string' }
-  // Optional payment proof image selected by the user at checkout
+  const [qtyErr,  setQtyErr]     = useState({});
   const [receipt, setReceipt]   = useState(null);
-  // Per-item custom design files: { [cartItemId]: { uri, type, name } | null }
   const [itemFiles, setItemFiles] = useState({});
-  // Uploading state per item
   const [uploadingFile, setUploadingFile] = useState({});
   const [refreshing, setRefreshing] = useState(false);
 
@@ -69,8 +47,6 @@ export default function CartScreen() {
     }
   }, [reloadCart]);
 
-  /* ── Receipt image picker ────────────────────────────── */
-  // Pick optional payment proof image for checkout.
   const pickReceipt = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -86,8 +62,6 @@ export default function CartScreen() {
     }
   };
 
-  /* ── Per-item design file picker ────────────────────────── */
-  // This lets the user attach or replace a custom design/personalisation image for a specific cart item
   const pickItemFile = async (cartItemId) => {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -100,14 +74,11 @@ export default function CartScreen() {
       type: asset.mimeType || 'image/jpeg',
       name: asset.fileName || 'design.jpg',
     };
-    // Optimistically show the file in the UI immediately
     setItemFiles(prev => ({ ...prev, [cartItemId]: fileObj }));
-    // Upload the file to the backend to attach it to this cart item
     setUploadingFile(prev => ({ ...prev, [cartItemId]: true }));
     try {
       const fd = new FormData();
       fd.append('customFile', fileObj);
-      // PUT /cart/:id with multipart to update the customFileUrl on this cart item
       await api.put(`/cart/${cartItemId}/file`, fd,
         { headers: { 'Content-Type': 'multipart/form-data' } });
     } catch (err) {
@@ -118,67 +89,47 @@ export default function CartScreen() {
     }
   };
 
-  // Remove attached custom file for one cart row.
   const removeItemFile = async (cartItemId) => {
     setItemFiles(prev => ({ ...prev, [cartItemId]: null }));
     try {
       await api.put(`/cart/${cartItemId}/file`, { removeFile: true });
-    } catch (_) { /* silent */ }
+    } catch (_) { }
   };
 
-  /* ── Quantity update with inline stock error display ─── */
-  // Handles + / - taps, and keeps server-side stock errors scoped to the changed item
   const handleQtyChange = async (cartItemId, newQty) => {
-    // Prevent the quantity from dropping below 1
     if (newQty < 1) return;
-    
-    // Clear any previous error messages for this specific item before trying
     setQtyErr(e => ({ ...e, [cartItemId]: null }));
-    
     try {
-      // Send the update to the server
       await updateQuantity(cartItemId, newQty);
     } catch (err) {
-      // If the server rejects the update (e.g., "Not enough stock"), display the exact error message
       const msg = err.response?.data?.error || err.message || 'Could not update quantity';
       setQtyErr(e => ({ ...e, [cartItemId]: msg }));
     }
   };
 
-  /* ── Place order ─────────────────────────────────────── */
-  // Validate inputs and submit final order payload.
   const handlePlaceOrder = async () => {
     const { fullName, phone, address, city } = form;
-    
-    // Required delivery fields.
     if (!fullName.trim()) return Alert.alert('Missing Info', 'Please enter your full name');
     if (!phone.trim())    return Alert.alert('Missing Info', 'Please enter your phone number');
     if (!address.trim())  return Alert.alert('Missing Info', 'Please enter your delivery address');
     if (!city.trim())     return Alert.alert('Missing Info', 'Please enter your city');
-    
-    // Basic phone number sanity check.
     if (!/^\d{7,15}$/.test(phone.replace(/\s/g, '')))
       return Alert.alert('Invalid Phone', 'Enter a valid phone number (7-15 digits)');
 
     setPlacing(true);
     try {
-      // Combine the delivery form fields into a single shipping address string
       const shipping   = `${fullName}\n${phone}\n${address}\n${city}`;
-      // Map the current cart items into the format required by the orders API
       const orderItems = items.map(i => ({ productName: i.title, quantity: i.quantity, unitPrice: i.price }));
 
       if (receipt) {
-        // If a receipt image was attached, send as multipart/form-data
         const fd = new FormData();
         fd.append('shippingAddress', shipping);
         fd.append('items',           JSON.stringify(orderItems));
         fd.append('receipt', receipt);
         await api.post('/orders', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       } else {
-        // No receipt — send as regular JSON
         await api.post('/orders', { shippingAddress: shipping, items: orderItems });
       }
-      // On success, clear the local cart and show the confirmation screen
       await clearCart();
       setDone(true);
       setCheckout(false);
@@ -189,69 +140,62 @@ export default function CartScreen() {
     }
   };
 
-  /* ─── Success screen ─── */
   if (done) return (
     <SafeAreaView style={s.safe}>
       <View style={s.successScreen}>
         <View style={s.successCircle}>
-          <Ionicons name="checkmark-sharp" size={56} color="#fff" />
+          <Ionicons name="checkmark-sharp" size={48} color="#fff" />
         </View>
-        <Text style={s.successTitle}>Order Placed! 🎉</Text>
+        <Text style={s.successTitle}>Order Placed</Text>
         <Text style={s.successSub}>
-          Thank you! Your order has been received.{'\n'}We'll be in touch soon.
+          Thank you. Your order has been received.{'\n'}We'll be in touch soon.
         </Text>
         <TouchableOpacity
           style={s.continuBtn}
           onPress={() => { setDone(false); nav.navigate('Browse'); }}
           activeOpacity={0.88}
         >
-          <Ionicons name="storefront-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
           <Text style={s.continueText}>Continue Shopping</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 
-  /* ─── Loading ─── */
   if (loading) return (
     <SafeAreaView style={s.safe}>
       <View style={s.centred}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#000" />
         <Text style={s.loadText}>Loading cart…</Text>
       </View>
     </SafeAreaView>
   );
 
-  /* ─── Empty cart ─── */
   if (items.length === 0) return (
     <SafeAreaView style={s.safe}>
       <View style={s.topBar}>
-        <Text style={s.pageTitle}>My Cart</Text>
+        <Text style={s.pageTitle}>Cart</Text>
       </View>
       <View style={s.centred}>
         <View style={s.emptyIconBox}>
-          <Ionicons name="cart-outline" size={56} color="#6366f1" />
+          <Ionicons name="cart-outline" size={48} color="#000" />
         </View>
         <Text style={s.emptyTitle}>Your cart is empty</Text>
-        <Text style={s.emptySub}>Browse products and add something you like!</Text>
+        <Text style={s.emptySub}>Browse products and add something you like.</Text>
         <TouchableOpacity style={s.browseBtn} onPress={() => nav.navigate('Browse')} activeOpacity={0.88}>
-          <Ionicons name="grid-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
           <Text style={s.browseBtnText}>Browse Products</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 
-  /* ─── Main cart view ─── */
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-      {/* Header */}
       <View style={s.topBar}>
-        <Text style={s.pageTitle}>My Cart</Text>
+        <Text style={s.pageTitle}>Cart</Text>
         <View style={s.itemCountBubble}>
-          <Text style={s.itemCountText}>{items.length} item{items.length !== 1 ? 's' : ''}</Text>
+          <Text style={s.itemCountText}>{items.length}</Text>
         </View>
       </View>
 
@@ -259,166 +203,123 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#6366f1']}
-            tintColor="#6366f1"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#000" />
         }
       >
-
-        {/* ── Cart Items ── */}
         <View style={{ paddingHorizontal: 16, gap: 12, paddingTop: 8 }}>
           {items.map((item, idx) => (
-            <View key={item.cartItemId?.toString()} style={[s.itemCard, { backgroundColor: '#ffffff' }]}>
-              {/* Left accent bar */}
-              <View style={[s.accentBar, { backgroundColor: accent(idx) }]} />
-
-              {/* Image */}
+            <View key={item.cartItemId?.toString()} style={s.itemCard}>
+              <View style={s.accentBar} />
               {item.image ? (
                 <Image source={{ uri: item.image }} style={s.itemImg} resizeMode="cover" />
               ) : (
-                <View style={[s.itemImg, s.imgPH, { backgroundColor: accent(idx) + '22' }]}>
-                  <Ionicons name="cube-outline" size={28} color={accent(idx)} />
+                <View style={[s.itemImg, s.imgPH]}>
+                  <Ionicons name="cube-outline" size={24} color="#666" />
                 </View>
               )}
 
-              {/* Info */}
               <View style={s.itemBody}>
                 <Text style={s.itemName} numberOfLines={2}>{item.title}</Text>
                 <Text style={s.itemPrice}>LKR {item.price?.toFixed(2)}</Text>
 
-                {/* Qty row */}
                 <View style={s.qtyRow}>
                   <TouchableOpacity
-                    style={[s.qtyBtn, { borderColor: accent(idx) }]}
+                    style={s.qtyBtn}
                     onPress={() => handleQtyChange(item.cartItemId, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                   >
-                    <Ionicons name="remove" size={16} color={item.quantity <= 1 ? '#d1d5db' : accent(idx)} />
+                    <Ionicons name="remove" size={14} color={item.quantity <= 1 ? '#ccc' : '#000'} />
                   </TouchableOpacity>
                   <Text style={s.qtyVal}>{item.quantity}</Text>
                   <TouchableOpacity
-                    style={[s.qtyBtn, { borderColor: accent(idx) }]}
+                    style={s.qtyBtn}
                     onPress={() => handleQtyChange(item.cartItemId, item.quantity + 1)}
                   >
-                    <Ionicons name="add" size={16} color={accent(idx)} />
+                    <Ionicons name="add" size={14} color="#000" />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={s.removeBtn}
-                    onPress={() => removeFromCart(item.cartItemId)}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  <TouchableOpacity style={s.removeBtn} onPress={() => removeFromCart(item.cartItemId)}>
+                    <Text style={s.removeBtnText}>Remove</Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* Qty error from server */}
                 {qtyErr[item.cartItemId] && (
-                  <Text style={s.qtyErrText}>⚠ {qtyErr[item.cartItemId]}</Text>
+                  <Text style={s.qtyErrText}>{qtyErr[item.cartItemId]}</Text>
                 )}
 
-                {/* ── Design / Personalisation File Picker ── */}
                 <TouchableOpacity
-                  style={[
-                    s.itemFileBtn,
-                    itemFiles[item.cartItemId] && s.itemFileBtnDone,
-                  ]}
+                  style={[s.itemFileBtn, itemFiles[item.cartItemId] && s.itemFileBtnDone]}
                   onPress={() => pickItemFile(item.cartItemId)}
                   activeOpacity={0.8}
                 >
                   {uploadingFile[item.cartItemId] ? (
-                    <ActivityIndicator size={12} color="#6366f1" />
+                    <ActivityIndicator size={12} color="#000" />
                   ) : (
                     <Ionicons
-                      name={itemFiles[item.cartItemId] ? 'image' : 'attach-outline'}
-                      size={13}
-                      color={itemFiles[item.cartItemId] ? '#22c55e' : accent(idx)}
+                      name={itemFiles[item.cartItemId] ? 'checkmark' : 'attach'}
+                      size={14}
+                      color={itemFiles[item.cartItemId] ? '#000' : '#666'}
                     />
                   )}
-                  <Text
-                    style={[
-                      s.itemFileBtnText,
-                      { color: itemFiles[item.cartItemId] ? '#22c55e' : accent(idx) },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {uploadingFile[item.cartItemId]
-                      ? 'Uploading…'
-                      : itemFiles[item.cartItemId]
-                        ? itemFiles[item.cartItemId].name
-                        : 'Attach design file'}
+                  <Text style={[s.itemFileBtnText, { color: itemFiles[item.cartItemId] ? '#000' : '#666' }]} numberOfLines={1}>
+                    {uploadingFile[item.cartItemId] ? 'Uploading…' : itemFiles[item.cartItemId] ? itemFiles[item.cartItemId].name : 'Attach design file'}
                   </Text>
                   {itemFiles[item.cartItemId] && !uploadingFile[item.cartItemId] && (
-                    <TouchableOpacity
-                      onPress={() => removeItemFile(item.cartItemId)}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                    >
-                      <Ionicons name="close-circle" size={14} color="#9ca3af" />
+                    <TouchableOpacity onPress={() => removeItemFile(item.cartItemId)} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
+                      <Ionicons name="close" size={14} color="#666" />
                     </TouchableOpacity>
                   )}
                 </TouchableOpacity>
               </View>
 
-              {/* Line total */}
-              <Text style={[s.lineTotal, { color: accent(idx) }]}>
+              <Text style={s.lineTotal}>
                 LKR{'\n'}{(item.price * item.quantity).toFixed(2)}
               </Text>
             </View>
           ))}
         </View>
 
-        {/* ── Order Summary ── */}
         <View style={s.summaryCard}>
-          <Text style={s.summaryTitle}>Order Summary</Text>
+          <Text style={s.summaryTitle}>Summary</Text>
           <View style={s.sumRow}>
             <Text style={s.sumLabel}>Subtotal</Text>
             <Text style={s.sumVal}>LKR {totalPrice.toFixed(2)}</Text>
           </View>
           <View style={s.sumRow}>
             <Text style={s.sumLabel}>Delivery</Text>
-            <Text style={[s.sumVal, { color: '#22c55e', fontWeight: '800' }]}>FREE </Text>
+            <Text style={[s.sumVal, { fontWeight: '700' }]}>FREE</Text>
           </View>
           <View style={s.sumDivider} />
           <View style={s.sumRow}>
-            <Text style={s.totalLabel}>Total to Pay</Text>
+            <Text style={s.totalLabel}>Total</Text>
             <Text style={s.totalVal}>LKR {totalPrice.toFixed(2)}</Text>
           </View>
         </View>
 
-        {/* ── COD Notice ── */}
         <View style={s.codBanner}>
-          <Text style={s.codIcon}>💵</Text>
           <View>
             <Text style={s.codTitle}>Cash on Delivery</Text>
             <Text style={s.codSub}>Pay when your order arrives</Text>
           </View>
         </View>
 
-        {/* ── Checkout toggle ── */}
         {!checkout ? (
           <TouchableOpacity style={s.checkoutBtn} onPress={() => setCheckout(true)} activeOpacity={0.88}>
-            <Ionicons name="bag-check-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={s.checkoutBtnText}>Proceed to Checkout</Text>
+            <Text style={s.checkoutBtnText}>Checkout</Text>
           </TouchableOpacity>
         ) : (
           <View style={s.formCard}>
-            <Text style={s.formTitle}>📦 Delivery Details</Text>
-
+            <Text style={s.formTitle}>Delivery Details</Text>
             {[
-              { key: 'fullName', label: 'Full Name',        icon: 'person-outline',   keyboard: 'default' },
-              { key: 'phone',    label: 'Phone Number',     icon: 'call-outline',     keyboard: 'phone-pad' },
-              { key: 'address',  label: 'Delivery Address', icon: 'map-outline',      keyboard: 'default', multi: true },
-              { key: 'city',     label: 'City',             icon: 'location-outline', keyboard: 'default' },
-            ].map(({ key, label, icon, keyboard, multi }) => (
+              { key: 'fullName', label: 'Full Name', keyboard: 'default' },
+              { key: 'phone',    label: 'Phone Number', keyboard: 'phone-pad' },
+              { key: 'address',  label: 'Delivery Address', keyboard: 'default', multi: true },
+              { key: 'city',     label: 'City', keyboard: 'default' },
+            ].map(({ key, label, keyboard, multi }) => (
               <View key={key} style={s.fieldRow}>
-                <View style={s.fieldIcon}>
-                  <Ionicons name={icon} size={16} color="#6366f1" />
-                </View>
                 <TextInput
-                  style={[s.fieldInput, multi && { minHeight: 68, textAlignVertical: 'top', paddingTop: 12 }]}
+                  style={[s.fieldInput, multi && { minHeight: 60, textAlignVertical: 'top' }]}
                   placeholder={label}
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#999"
                   value={form[key]}
                   onChangeText={v => setForm(f => ({ ...f, [key]: v }))}
                   keyboardType={keyboard}
@@ -427,45 +328,23 @@ export default function CartScreen() {
               </View>
             ))}
 
-            {/* ── Optional Payment Proof Image ── */}
-            <TouchableOpacity
-              style={[s.receiptBtn, receipt && s.receiptBtnDone]}
-              onPress={pickReceipt}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name={receipt ? 'image' : 'camera-outline'}
-                size={18}
-                color={receipt ? '#22c55e' : '#6366f1'}
-              />
-              <Text style={[s.receiptBtnText, receipt && { color:'#22c55e' }]}>
-                {receipt ? `✔ Receipt attached: ${receipt.name}` : 'Attach Payment Proof (optional)'}
+            <TouchableOpacity style={[s.receiptBtn, receipt && s.receiptBtnDone]} onPress={pickReceipt} activeOpacity={0.85}>
+              <Text style={s.receiptBtnText}>
+                {receipt ? `Receipt: ${receipt.name}` : 'Attach Payment Proof (optional)'}
               </Text>
               {receipt && (
                 <TouchableOpacity onPress={() => setReceipt(null)} hitSlop={{ top:8, bottom:8, left:8, right:8 }}>
-                  <Ionicons name="close-circle" size={16} color="#9ca3af" />
+                  <Ionicons name="close" size={16} color="#666" />
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[s.placeBtn, placing && { opacity: 0.7 }]}
-              onPress={handlePlaceOrder}
-              disabled={placing}
-              activeOpacity={0.88}
-            >
-              {placing ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                  <Text style={s.placeBtnText}>Place Order</Text>
-                </>
-              )}
+            <TouchableOpacity style={[s.placeBtn, placing && { opacity: 0.7 }]} onPress={handlePlaceOrder} disabled={placing} activeOpacity={0.88}>
+              {placing ? <ActivityIndicator color="#fff" /> : <Text style={s.placeBtnText}>Place Order</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity style={s.cancelBtn} onPress={() => setCheckout(false)}>
-              <Text style={s.cancelText}>← Back to Cart</Text>
+              <Text style={s.cancelText}>Back to Cart</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -475,80 +354,71 @@ export default function CartScreen() {
 }
 
 const s = StyleSheet.create({
-  safe:            { flex: 1, backgroundColor: '#f8f7ff' },
+  safe:            { flex: 1, backgroundColor: '#ffffff' },
 
-  /* Header */
-  topBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 14 : 4, paddingBottom: 8 },
-  pageTitle:       { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  itemCountBubble: { backgroundColor: '#eef2ff', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1.5, borderColor: '#c7d2fe' },
-  itemCountText:   { color: '#4f46e5', fontSize: 13, fontWeight: '800' },
+  topBar:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 14 : 4, paddingBottom: 16 },
+  pageTitle:       { fontSize: 24, fontWeight: '800', color: '#000', letterSpacing: -0.5 },
+  itemCountBubble: { backgroundColor: '#f5f5f5', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: '#eee' },
+  itemCountText:   { color: '#000', fontSize: 13, fontWeight: '700' },
 
-  /* States */
   centred:         { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, paddingHorizontal: 24 },
-  loadText:        { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
-  emptyIconBox:    { backgroundColor: '#eef2ff', borderRadius: 28, padding: 24, marginBottom: 8 },
-  emptyTitle:      { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
-  emptySub:        { fontSize: 14, color: '#9ca3af', textAlign: 'center' },
-  browseBtn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingHorizontal: 24, paddingVertical: 13, marginTop: 6 },
-  browseBtnText:   { color: '#fff', fontWeight: '800', fontSize: 15 },
+  loadText:        { color: '#666', fontSize: 14, fontWeight: '500' },
+  emptyIconBox:    { backgroundColor: '#f9f9f9', borderRadius: 24, padding: 24, marginBottom: 8, borderWidth: 1, borderColor: '#eee' },
+  emptyTitle:      { fontSize: 20, fontWeight: '800', color: '#000' },
+  emptySub:        { fontSize: 14, color: '#666', textAlign: 'center' },
+  browseBtn:       { backgroundColor: '#000', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 14, marginTop: 12 },
+  browseBtnText:   { color: '#fff', fontWeight: '700', fontSize: 14 },
 
-  /* Item card */
-  itemCard:        { flexDirection: 'row', borderRadius: 18, overflow: 'hidden', padding: 12, alignItems: 'flex-start', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' },
-  accentBar:       { width: 4, borderRadius: 99, marginRight: 10, alignSelf: 'stretch' },
-  itemImg:         { width: 72, height: 72, borderRadius: 12, marginRight: 10 },
-  imgPH:           { justifyContent: 'center', alignItems: 'center' },
-  itemBody:        { flex: 1, gap: 3 },
-  itemName:        { fontSize: 14, fontWeight: '800', color: '#1e1b4b', lineHeight: 19 },
-  itemPrice:       { fontSize: 12, color: '#6b7280', fontWeight: '600' },
-  qtyRow:          { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  qtyBtn:          { width: 30, height: 30, borderRadius: 8, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center' },
-  qtyVal:          { fontSize: 16, fontWeight: '900', color: '#1e1b4b', minWidth: 22, textAlign: 'center' },
-  removeBtn:       { marginLeft: 4, padding: 4 },
-  qtyErrText:      { fontSize: 11, color: '#ef4444', fontWeight: '600', marginTop: 2 },
-  itemFileBtn:     { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,0.6)' },
-  itemFileBtnDone: { borderColor: '#22c55e', backgroundColor: 'rgba(240,253,244,0.8)' },
-  itemFileBtnText: { fontSize: 11, fontWeight: '700', flex: 1 },
-  lineTotal:       { fontSize: 12, fontWeight: '900', textAlign: 'right', lineHeight: 18, minWidth: 64 },
+  itemCard:        { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 12, padding: 12, alignItems: 'flex-start', borderWidth: 1, borderColor: '#eaeaea' },
+  accentBar:       { width: 4, borderRadius: 4, marginRight: 12, alignSelf: 'stretch', backgroundColor: '#000' },
+  itemImg:         { width: 64, height: 64, borderRadius: 8, marginRight: 12, backgroundColor: '#f9f9f9' },
+  imgPH:           { justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#eee' },
+  itemBody:        { flex: 1, gap: 4 },
+  itemName:        { fontSize: 14, fontWeight: '700', color: '#000' },
+  itemPrice:       { fontSize: 13, color: '#555', fontWeight: '600' },
+  qtyRow:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 },
+  qtyBtn:          { width: 28, height: 28, borderRadius: 6, borderWidth: 1, borderColor: '#ddd', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fafafa' },
+  qtyVal:          { fontSize: 14, fontWeight: '700', color: '#000', minWidth: 20, textAlign: 'center' },
+  removeBtn:       { marginLeft: 8 },
+  removeBtnText:   { fontSize: 12, color: '#999', fontWeight: '600', textDecorationLine: 'underline' },
+  qtyErrText:      { fontSize: 11, color: '#000', fontWeight: '500', marginTop: 2 },
+  itemFileBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, borderWidth: 1, borderColor: '#eee', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: '#f9f9f9' },
+  itemFileBtnDone: { borderColor: '#000', backgroundColor: '#f5f5f5' },
+  itemFileBtnText: { fontSize: 11, fontWeight: '600', flex: 1 },
+  lineTotal:       { fontSize: 12, fontWeight: '800', textAlign: 'right', minWidth: 60, color: '#000' },
 
-  /* Summary */
-  summaryCard:     { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, borderRadius: 20, padding: 18, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
-  summaryTitle:    { fontSize: 16, fontWeight: '900', color: '#1e1b4b', marginBottom: 14 },
-  sumRow:          { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  sumLabel:        { fontSize: 14, color: '#6b7280' },
-  sumVal:          { fontSize: 14, fontWeight: '700', color: '#1e1b4b' },
-  sumDivider:      { height: 1, backgroundColor: '#f3f4f6', marginVertical: 10 },
-  totalLabel:      { fontSize: 17, fontWeight: '900', color: '#1e1b4b' },
-  totalVal:        { fontSize: 20, fontWeight: '900', color: '#6366f1' },
+  summaryCard:     { backgroundColor: '#fafafa', marginHorizontal: 16, marginTop: 16, borderRadius: 12, padding: 20, borderWidth: 1, borderColor: '#eee' },
+  summaryTitle:    { fontSize: 16, fontWeight: '800', color: '#000', marginBottom: 16 },
+  sumRow:          { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  sumLabel:        { fontSize: 14, color: '#555' },
+  sumVal:          { fontSize: 14, fontWeight: '600', color: '#000' },
+  sumDivider:      { height: 1, backgroundColor: '#ddd', marginVertical: 12 },
+  totalLabel:      { fontSize: 16, fontWeight: '800', color: '#000' },
+  totalVal:        { fontSize: 18, fontWeight: '800', color: '#000' },
 
-  /* COD */
-  codBanner:       { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#fffbeb', marginHorizontal: 16, marginTop: 14, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#fde68a' },
-  codIcon:         { fontSize: 28 },
-  codTitle:        { fontSize: 14, fontWeight: '800', color: '#92400e' },
-  codSub:          { fontSize: 12, color: '#b45309', marginTop: 2 },
+  codBanner:       { marginHorizontal: 16, marginTop: 16, borderRadius: 8, padding: 16, backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#eee' },
+  codTitle:        { fontSize: 14, fontWeight: '700', color: '#000' },
+  codSub:          { fontSize: 13, color: '#666', marginTop: 4 },
 
-  /* Checkout button */
-  checkoutBtn:     { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', marginHorizontal: 16, marginTop: 14, borderRadius: 16, paddingVertical: 16, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 },
-  checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  checkoutBtn:     { backgroundColor: '#000', marginHorizontal: 16, marginTop: 24, borderRadius: 8, paddingVertical: 16, alignItems: 'center' },
+  checkoutBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 
-  /* Form */
-  formCard:        { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 14, borderRadius: 20, padding: 18, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
-  formTitle:       { fontSize: 18, fontWeight: '900', color: '#1e1b4b', marginBottom: 16 },
-  fieldRow:        { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#f8f7ff', borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', marginBottom: 10, overflow: 'hidden' },
-  fieldIcon:       { paddingHorizontal: 14, paddingTop: 14 },
-  fieldInput:      { flex: 1, paddingVertical: 12, paddingRight: 14, fontSize: 15, color: '#1e1b4b' },
-  receiptBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#6366f1', borderRadius: 12, padding: 13, backgroundColor: '#eef2ff', marginBottom: 12 },
-  receiptBtnDone:  { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
-  receiptBtnText:  { flex: 1, fontSize: 14, fontWeight: '700', color: '#6366f1' },
-  placeBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 15, marginTop: 6, shadowColor: '#22c55e', shadowOpacity: 0.35, shadowRadius: 10, elevation: 5 },
-  placeBtnText:    { color: '#fff', fontSize: 16, fontWeight: '900' },
-  cancelBtn:       { alignItems: 'center', padding: 14 },
-  cancelText:      { color: '#6b7280', fontSize: 14, fontWeight: '700' },
+  formCard:        { backgroundColor: '#fafafa', marginHorizontal: 16, marginTop: 24, borderRadius: 12, padding: 20, borderWidth: 1, borderColor: '#eee' },
+  formTitle:       { fontSize: 16, fontWeight: '800', color: '#000', marginBottom: 16 },
+  fieldRow:        { backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 12, paddingHorizontal: 12 },
+  fieldInput:      { paddingVertical: 12, fontSize: 14, color: '#000' },
+  receiptBtn:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 14, backgroundColor: '#fff', marginBottom: 16 },
+  receiptBtnDone:  { borderColor: '#000' },
+  receiptBtnText:  { fontSize: 13, fontWeight: '600', color: '#333' },
+  placeBtn:        { backgroundColor: '#000', borderRadius: 8, paddingVertical: 16, alignItems: 'center', marginTop: 8 },
+  placeBtnText:    { color: '#fff', fontSize: 15, fontWeight: '700' },
+  cancelBtn:       { alignItems: 'center', padding: 16, marginTop: 8 },
+  cancelText:      { color: '#666', fontSize: 14, fontWeight: '600' },
 
-  /* Success */
-  successScreen:   { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 28, gap: 14, backgroundColor: '#f8f7ff' },
-  successCircle:   { width: 110, height: 110, borderRadius: 55, backgroundColor: '#22c55e', justifyContent: 'center', alignItems: 'center', shadowColor: '#22c55e', shadowOpacity: 0.4, shadowRadius: 24, elevation: 10, marginBottom: 8 },
-  successTitle:    { fontSize: 30, fontWeight: '900', color: '#1e1b4b', textAlign: 'center' },
-  successSub:      { fontSize: 15, color: '#6b7280', textAlign: 'center', lineHeight: 22 },
-  continuBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 16, paddingHorizontal: 30, paddingVertical: 14, marginTop: 8 },
-  continueText:    { color: '#fff', fontWeight: '900', fontSize: 15 },
+  successScreen:   { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#ffffff' },
+  successCircle:   { width: 80, height: 80, borderRadius: 40, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  successTitle:    { fontSize: 24, fontWeight: '800', color: '#000', marginBottom: 12 },
+  successSub:      { fontSize: 15, color: '#555', textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+  continuBtn:      { backgroundColor: '#f5f5f5', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 14 },
+  continueText:    { color: '#000', fontWeight: '700', fontSize: 14 },
 });
