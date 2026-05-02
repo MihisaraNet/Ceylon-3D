@@ -23,8 +23,16 @@
  * @requires ../models/Product
  */
 
+const path    = require('path');
+const fs      = require('fs');
 const CartItem = require('../models/CartItem');
 const Product  = require('../models/Product');
+
+const deleteLocalDesignFile = (customFileUrl) => {
+  if (!customFileUrl?.startsWith('/api/products/images/')) return;
+  const filePath = path.join(__dirname, '../../uploads/product-images', path.basename(customFileUrl));
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+};
 
 /* ── GET /cart ────────────────────────────────────────────── */
 /**
@@ -45,14 +53,15 @@ const getCart = async (req, res) => {
       items
         .filter(i => i.productId) // Skip orphans whose product was deleted
         .map(i => ({
-          cartItemId: i._id,            // Cart item's own ID (used for update/delete)
-          id:         i.productId._id,  // Product ID
-          title:      i.productId.name, // Product display name
-          price:      i.productId.price,
-          image:      i.productId.imagePath,
-          seller:     'Ceylon3D',        // Hardcoded seller name
-          quantity:   i.quantity,
-          stock:      i.productId.stock,
+          cartItemId:    i._id,            // Cart item's own ID (used for update/delete)
+          id:            i.productId._id,  // Product ID
+          title:         i.productId.name, // Product display name
+          price:         i.productId.price,
+          image:         i.productId.imagePath,
+          seller:        'Ceylon3D',        // Hardcoded seller name
+          quantity:      i.quantity,
+          stock:         i.productId.stock,
+          customFileUrl: i.customFileUrl || null, // Optional attached design file
         }))
     );
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -105,13 +114,23 @@ const addToCart = async (req, res) => {
         });
     }
 
+    // If a custom design/reference file was uploaded, store its path
+    const customFileUrl = req.file
+      ? `/api/products/images/${req.file.filename}`  // reuse image serving route
+      : null;
+
     // ── Upsert: update existing or create new cart item ──
     if (existingItem) {
       existingItem.quantity = newTotal;
+      // Update customFileUrl only if a new file was uploaded
+      if (customFileUrl) {
+        deleteLocalDesignFile(existingItem.customFileUrl);
+        existingItem.customFileUrl = customFileUrl;
+      }
       await existingItem.save();
       return res.json(existingItem);
     }
-    const item = await CartItem.create({ userId: req.user._id, productId, quantity: qty });
+    const item = await CartItem.create({ userId: req.user._id, productId, quantity: qty, customFileUrl });
     res.status(201).json(item);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
@@ -173,6 +192,7 @@ const removeCartItem = async (req, res) => {
   try {
     const deleted = await CartItem.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!deleted) return res.status(404).json({ error: 'Cart item not found' });
+    deleteLocalDesignFile(deleted.customFileUrl);
     res.json({ message: 'Item removed' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
@@ -186,9 +206,43 @@ const removeCartItem = async (req, res) => {
  */
 const clearCart = async (req, res) => {
   try {
+    const existingItems = await CartItem.find({ userId: req.user._id }, { customFileUrl: 1 });
+    for (const item of existingItems) deleteLocalDesignFile(item.customFileUrl);
     await CartItem.deleteMany({ userId: req.user._id });
     res.json({ message: 'Cart cleared' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
-module.exports = { getCart, addToCart, updateCartItem, removeCartItem, clearCart };
+/* ── PUT /cart/:id/file ─────────────────────────────────── */
+/**
+ * Attach or remove a custom design / personalisation image for an existing cart item.
+ *
+ * - If req.file is present: saves the new file, deletes the old one from disk.
+ * - If req.body.removeFile === 'true': clears customFileUrl and deletes the file from disk.
+ *
+ * @param {import('express').Request}  req
+ * @param {import('express').Response} res
+ */
+const updateCartItemFile = async (req, res) => {
+  try {
+    const item = await CartItem.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!item) return res.status(404).json({ error: 'Cart item not found' });
+
+    if (req.body.removeFile === 'true' || req.body.removeFile === true) {
+      // Remove the existing design file
+      deleteLocalDesignFile(item.customFileUrl);
+      item.customFileUrl = null;
+    } else if (req.file) {
+      // Replace with newly uploaded file
+      deleteLocalDesignFile(item.customFileUrl);
+      item.customFileUrl = `/api/products/images/${req.file.filename}`;
+    } else {
+      return res.status(400).json({ error: 'No file uploaded and removeFile not set' });
+    }
+
+    await item.save();
+    res.json({ message: 'Design file updated', customFileUrl: item.customFileUrl });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+module.exports = { getCart, addToCart, updateCartItem, removeCartItem, clearCart, updateCartItemFile };
