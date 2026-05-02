@@ -1,6 +1,6 @@
-# Ceylon 3D — Full Stack Monorepo
+# LayerForge 3D — Full Stack Monorepo
 
-Welcome to the **Ceylon 3D** project repository. This is a full-stack, end-to-end e-commerce and 3D printing service platform built with the MERN stack (MongoDB, Express, React Native, Node.js). 
+Welcome to the **LayerForge 3D** project repository. This is a full-stack, end-to-end e-commerce and 3D printing service platform built with the MERN stack (MongoDB, Express, React Native, Node.js). 
 
 ## Key Features
 
@@ -27,7 +27,7 @@ Welcome to the **Ceylon 3D** project repository. This is a full-stack, end-to-en
 ## Repository Structure
 
 ```text
-Ceylon-3D_WMT/
+LayerForge-3D_WMT/
   ├── backend-node/   ← REST API (Node.js/Express) running on port 8080
   │   ├── src/models/       (Mongoose schemas with business logic documentation)
   │   ├── src/routes/       (API route definitions)
@@ -57,7 +57,7 @@ npm install
 npm run dev
 ```
 * The backend will be available at: `http://localhost:8080`
-* **Default Admin Account:** `admin@ceylon3d.com` / `admin123`
+* **Default Admin Account:** `admin@layerforge3d.com` / `admin123`
 
 ### 3. Start Mobile Application
 ```bash
