@@ -20,12 +20,27 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+  // The display name of the product. Required and whitespace-trimmed.
   name:        { type: String, required: true, trim: true },
+  
+  // Detailed information about the product. Defaults to an empty string if not provided.
   description: { type: String, default: '' },
+  
+  // The selling price of the product. Must be a non-negative number.
   price:       { type: Number, required: true, min: 0 },
+  
+  // Current available inventory for this product. Defaults to 0, cannot be negative.
   stock:       { type: Number, default: 0, min: 0 },
+  
+  // URL or file path pointing to the product's image. Null if no image is uploaded.
   imagePath:   { type: String, default: null },
+  
+  // Grouping category for the product (e.g., 'miniatures', 'custom'). Defaults to 'custom'.
   category:    { type: String, default: 'custom', trim: true },
-}, { timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } });
+}, { 
+  // Automatically manage 'createdAt' and 'updatedAt' timestamps for each product document.
+  timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' } 
+});
 
+// Export the Mongoose model to interact with the 'products' collection in the database
 module.exports = mongoose.model('Product', productSchema);
