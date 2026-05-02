@@ -1,18 +1,21 @@
 /**
- * BrowseScreen.jsx — Product Discovery & Catalog
- *
- * Modern, colorful and simple design.
+ * BrowseScreen.jsx — Premium Catalog Discovery
+ * 
+ * Attractive, modern design with a focused, 
+ * clean layout and premium interaction feel.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Image, StyleSheet,
-  ActivityIndicator, TextInput, SafeAreaView, StatusBar,
+  ActivityIndicator, TextInput, SafeAreaView, StatusBar, Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { getImageUri } from '../../lib/config';
 import { CATEGORIES } from '../../data/categories';
 import { useNavigation } from '@react-navigation/native';
+
+const { width } = Dimensions.get('window');
 
 export default function BrowseScreen() {
   const nav = useNavigation();
@@ -45,29 +48,27 @@ export default function BrowseScreen() {
         onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
         activeOpacity={0.9}
       >
-        <View style={s.imgWrap}>
+        <View style={s.imgContainer}>
           {imgUri ? (
-            <Image source={{ uri: imgUri }} style={s.cardImg} />
+            <Image source={{ uri: imgUri }} style={s.img} />
           ) : (
-            <View style={s.placeholderImg}>
-              <Ionicons name="cube-outline" size={40} color="#cbd5e1" />
-            </View>
+            <View style={s.imgPH}><Ionicons name="cube-outline" size={32} color="#cbd5e1" /></View>
           )}
-          <View style={s.priceBadge}>
-            <Text style={s.priceBadgeText}>LKR {item.price?.toFixed(0)}</Text>
+          <View style={s.floatingBadge}>
+            <Text style={s.priceText}>LKR {item.price?.toFixed(0)}</Text>
           </View>
         </View>
-        <View style={s.cardBody}>
-          <Text style={s.cardCat}>{item.category?.toUpperCase()}</Text>
-          <Text style={s.cardTitle} numberOfLines={1}>{item.name}</Text>
-          <View style={s.cardFooter}>
-            <View style={s.stockWrap}>
-              <View style={[s.stockDot, { backgroundColor: item.stock > 0 ? '#10b981' : '#ef4444' }]} />
-              <Text style={s.stockText}>{item.stock > 0 ? 'In Stock' : 'Out of Stock'}</Text>
+        <View style={s.cardContent}>
+          <Text style={s.catLabel}>{item.category?.toUpperCase()}</Text>
+          <Text style={s.prodName} numberOfLines={1}>{item.name}</Text>
+          <View style={s.cardBottom}>
+            <View style={s.stockInfo}>
+              <View style={[s.stockDot, { backgroundColor: item.stock > 0 ? '#10b981' : '#f43f5e' }]} />
+              <Text style={s.stockLabel}>{item.stock > 0 ? 'READY' : 'OUT'}</Text>
             </View>
-            <TouchableOpacity style={s.addIconBtn}>
-              <Ionicons name="add" size={20} color="#fff" />
-            </TouchableOpacity>
+            <View style={s.plusBtn}>
+              <Ionicons name="chevron-forward" size={16} color="#fff" />
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -79,22 +80,22 @@ export default function BrowseScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       
       {/* ─── Header ─── */}
-      <View style={s.header}>
-        <View style={s.headerTextWrap}>
-          <Text style={s.headerTitle}>Discovery</Text>
-          <Text style={s.headerSub}>{filtered.length} Products Found</Text>
+      <View style={s.topRow}>
+        <View>
+          <Text style={s.title}>Browse</Text>
+          <Text style={s.subtitle}>Discover the collection</Text>
         </View>
         <TouchableOpacity style={s.refreshBtn} onPress={load}>
-          <Ionicons name="reload-outline" size={20} color="#64748b" />
+          <Ionicons name="sync" size={20} color="#1e293b" />
         </TouchableOpacity>
       </View>
 
-      {/* ─── Search ─── */}
-      <View style={s.searchWrap}>
-        <Ionicons name="search-outline" size={20} color="#94a3b8" style={s.searchIcon} />
+      {/* ─── Search Bar ─── */}
+      <View style={s.searchBar}>
+        <Ionicons name="search" size={18} color="#94a3b8" />
         <TextInput
-          style={s.searchInput}
-          placeholder="Find something unique..."
+          style={s.input}
+          placeholder="Search items..."
           placeholderTextColor="#94a3b8"
           value={search}
           onChangeText={setSearch}
@@ -102,21 +103,21 @@ export default function BrowseScreen() {
       </View>
 
       {/* ─── Categories ─── */}
-      <View style={{ height: 50, marginBottom: 16 }}>
+      <View style={{ marginBottom: 20 }}>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={[{ id: 'all', name: 'All Items', icon: 'apps' }, ...CATEGORIES]}
+          data={[{ id: 'all', name: 'All', icon: 'apps' }, ...CATEGORIES]}
           keyExtractor={c => c.id}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
+          contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}
           renderItem={({ item }) => {
             const isActive = activeCat === item.id;
             return (
               <TouchableOpacity
-                style={[s.catBtn, isActive && s.catBtnActive]}
+                style={[s.catChip, isActive && s.catChipActive]}
                 onPress={() => setActiveCat(item.id)}
               >
-                <Text style={[s.catBtnText, isActive && s.catBtnTextActive]}>
+                <Text style={[s.catChipText, isActive && s.catChipTextActive]}>
                   {item.name}
                 </Text>
               </TouchableOpacity>
@@ -126,22 +127,19 @@ export default function BrowseScreen() {
       </View>
 
       {loading ? (
-        <View style={s.center}>
-          <ActivityIndicator color="#6366f1" size="large" />
-        </View>
+        <View style={s.loaderWrap}><ActivityIndicator color="#6366f1" size="large" /></View>
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={p => p._id}
           renderItem={renderProduct}
           numColumns={2}
-          contentContainerStyle={s.listContent}
-          columnWrapperStyle={s.columnWrapper}
+          contentContainerStyle={s.list}
+          columnWrapperStyle={s.column}
           ListEmptyComponent={
-            <View style={s.empty}>
-              <Ionicons name="search-outline" size={60} color="#e2e8f0" />
-              <Text style={s.emptyTitle}>No products found</Text>
-              <Text style={s.emptySub}>Try searching for something else</Text>
+            <View style={s.emptyState}>
+              <Ionicons name="search-outline" size={48} color="#e2e8f0" />
+              <Text style={s.emptyText}>No matches found</Text>
             </View>
           }
         />
@@ -151,41 +149,40 @@ export default function BrowseScreen() {
 }
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8fafc' },
-  header:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 20 },
-  headerTitle:    { fontSize: 32, fontWeight: '900', color: '#1e293b', letterSpacing: -1 },
-  headerSub:      { fontSize: 14, color: '#64748b', fontWeight: '600', marginTop: 2 },
-  refreshBtn:     { backgroundColor: '#fff', padding: 10, borderRadius: 12, borderWidth: 1, borderColor: '#f1f5f9' },
+  safe: { flex: 1, backgroundColor: '#fff' },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 24, paddingVertical: 20 },
+  title: { fontSize: 36, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5 },
+  subtitle: { fontSize: 14, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  refreshBtn: { backgroundColor: '#f8fafc', padding: 12, borderRadius: 14, borderWidth: 1, borderColor: '#f1f5f9' },
   
-  searchWrap:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 24, marginBottom: 20, borderRadius: 16, paddingHorizontal: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
-  searchIcon:     { marginRight: 12 },
-  searchInput:    { flex: 1, height: 50, fontSize: 15, color: '#1e293b', fontWeight: '600' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', marginHorizontal: 24, marginBottom: 24, borderRadius: 18, paddingHorizontal: 16, height: 56, borderWidth: 1, borderColor: '#f1f5f9' },
+  input: { flex: 1, marginLeft: 12, fontSize: 15, color: '#1e293b', fontWeight: '600' },
 
-  catBtn:         { paddingHorizontal: 20, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
-  catBtnActive:   { backgroundColor: '#6366f1', borderColor: '#6366f1' },
-  catBtnText:     { fontSize: 14, fontWeight: '700', color: '#64748b' },
-  catBtnTextActive:{ color: '#fff' },
+  catChip: { paddingHorizontal: 22, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', justifyContent: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+  catChipActive: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
+  catChipText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  catChipTextActive: { color: '#fff' },
 
-  listContent:    { paddingHorizontal: 18, paddingBottom: 40 },
-  columnWrapper:  { justifyContent: 'space-between', gap: 12 },
-  card:           { width: '48%', backgroundColor: '#fff', borderRadius: 24, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
-  imgWrap:        { height: 160, position: 'relative', backgroundColor: '#f1f5f9' },
-  cardImg:        { width: '100%', height: '100%' },
-  placeholderImg: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
-  priceBadge:     { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
-  priceBadgeText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  list: { paddingHorizontal: 20, paddingBottom: 40 },
+  column: { justifyContent: 'space-between' },
   
-  cardBody:       { padding: 16 },
-  cardCat:        { fontSize: 10, fontWeight: '800', color: '#6366f1', letterSpacing: 1, marginBottom: 4 },
-  cardTitle:      { fontSize: 15, fontWeight: '800', color: '#1e293b' },
-  cardFooter:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  stockWrap:      { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stockDot:       { width: 6, height: 6, borderRadius: 3 },
-  stockText:      { fontSize: 11, color: '#64748b', fontWeight: '600' },
-  addIconBtn:     { backgroundColor: '#6366f1', padding: 6, borderRadius: 10 },
+  card: { width: (width - 52) / 2, backgroundColor: '#fff', borderRadius: 28, marginBottom: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
+  imgContainer: { height: 180, backgroundColor: '#f8fafc', position: 'relative' },
+  img: { width: '100%', height: '100%', resizeMode: 'cover' },
+  imgPH: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  floatingBadge: { position: 'absolute', bottom: 12, left: 12, backgroundColor: 'rgba(15, 23, 42, 0.8)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
+  priceText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  
+  cardContent: { padding: 16 },
+  catLabel: { fontSize: 9, fontWeight: '900', color: '#6366f1', letterSpacing: 1, marginBottom: 4 },
+  prodName: { fontSize: 15, fontWeight: '800', color: '#1e293b' },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
+  stockInfo: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  stockDot: { width: 5, height: 5, borderRadius: 2.5 },
+  stockLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '800' },
+  plusBtn: { backgroundColor: '#0f172a', width: 28, height: 28, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
 
-  center:         { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  empty:          { alignItems: 'center', marginTop: 60 },
-  emptyTitle:     { fontSize: 18, fontWeight: '800', color: '#1e293b', marginTop: 20 },
-  emptySub:       { fontSize: 14, color: '#94a3b8', marginTop: 8 },
+  loaderWrap: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyState: { alignItems: 'center', marginTop: 80 },
+  emptyText: { fontSize: 16, fontWeight: '700', color: '#94a3b8', marginTop: 16 },
 });
