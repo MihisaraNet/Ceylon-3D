@@ -1,7 +1,8 @@
 /**
- * StlOrdersAdminScreen.jsx — Admin STL / 3D Print Order Management
- *
- * Modern, colorful and simple design.
+ * StlOrdersAdminScreen.jsx — High-End 3D Project Triage
+ * 
+ * Attractive, focused design for managing STL requests 
+ * with premium card interactions and deep triage controls.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, TextInput, SafeAreaView, StatusBar } from 'react-native';
@@ -9,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { STL_STATUSES } from '../../data/categories';
 
-const STATUS_OPTIONS = ['PENDING_QUOTE','QUOTED','CONFIRMED','PRINTING','READY','DELIVERED','CANCELLED'];
+const STATUS_OPTS = ['PENDING_QUOTE','QUOTED','CONFIRMED','PRINTING','READY','DELIVERED','CANCELLED'];
 
 export default function StlOrdersAdminScreen() {
   const [orders, setOrders]   = useState([]);
@@ -28,21 +29,14 @@ export default function StlOrdersAdminScreen() {
     try { 
       await api.put(`/stl-orders/admin/${id}/status`, { status }); 
       load(); 
-    } catch (err) { 
-      Alert.alert('Error', 'Update failed'); 
-    }
+    } catch { Alert.alert('Error', 'Update failed'); }
   };
 
   const deleteOrder = (id) => {
-    Alert.alert('Delete', 'Delete this STL order permanently?', [
+    Alert.alert('Delete Permanent', 'Wipe this project record?', [
       { text:'Cancel', style:'cancel' },
-      { text:'Delete', style:'destructive', onPress: async () => {
-        try { 
-          await api.delete(`/stl-orders/admin/${id}`); 
-          load(); 
-        } catch (err) { 
-          Alert.alert('Error', 'Delete failed'); 
-        }
+      { text:'Wipe', style:'destructive', onPress: async () => {
+        try { await api.delete(`/stl-orders/admin/${id}`); load(); } catch { }
       }},
     ]);
   };
@@ -51,48 +45,47 @@ export default function StlOrdersAdminScreen() {
     const cfg = STL_STATUSES[item.status] || { label:item.status, color:'#64748b' };
     const isOpen = expanded === item._id;
     return (
-      <TouchableOpacity style={s.card} onPress={() => setExpanded(isOpen ? null : item._id)} activeOpacity={0.9}>
-        <View style={s.cardHeader}>
+      <TouchableOpacity style={s.card} onPress={() => setExpanded(isOpen ? null : item._id)} activeOpacity={0.95}>
+        <View style={s.cardTop}>
           <View>
-            <Text style={s.orderId}>STL ORDER #{item._id.slice(-6).toUpperCase()}</Text>
-            <Text style={s.customerName}>{item.customerName}</Text>
-            <Text style={s.customerEmail}>{item.customerEmail}</Text>
+            <Text style={s.orderRef}>3D: #{item._id.slice(-6).toUpperCase()}</Text>
+            <Text style={s.customer}>{item.customerName}</Text>
           </View>
-          <View style={s.right}>
+          <View style={s.topRight}>
             {item.estimatedPrice && <Text style={s.price}>LKR {item.estimatedPrice?.toFixed(0)}</Text>}
-            <View style={[s.badge, { backgroundColor: cfg.color + '15', borderColor: cfg.color + '30' }]}>
-              <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
+            <View style={[s.pill, { backgroundColor: cfg.color + '10', borderColor: cfg.color + '20' }]}>
+              <Text style={[s.pillText, { color: cfg.color }]}>{cfg.label}</Text>
             </View>
           </View>
         </View>
 
         {isOpen && (
-          <View style={s.details}>
-            <Info label="File"     value={item.fileName?.replace(/^[0-9a-f-]+-/i,'')} />
-            <Info label="Material" value={item.material} />
-            <Info label="Qty"      value={String(item.quantity)} />
-            <Info label="Phone"    value={item.phone || '-'} />
-            <Info label="Address"  value={item.address || '-'} />
+          <View style={s.expanded}>
+            <View style={s.specGrid}>
+              <Spec label="Asset"   value={item.fileName?.replace(/^[0-9a-f-]+-/i,'')} />
+              <Spec label="Material" value={item.material} />
+              <Spec label="Batch"    value={String(item.quantity)} />
+            </View>
             
             {item.note && (
               <View style={s.noteBox}>
-                <Ionicons name="chatbubble-outline" size={16} color="#f59e0b" />
+                <Ionicons name="chatbubble-ellipses" size={18} color="#f59e0b" />
                 <Text style={s.noteText}>{item.note}</Text>
               </View>
             )}
 
-            <Text style={s.detailsTitle}>Update Status</Text>
-            <View style={s.statusChips}>
-              {STATUS_OPTIONS.map(st => (
-                <TouchableOpacity key={st} style={[s.statusChip, item.status===st && s.statusChipActive]} onPress={() => updateStatus(item._id, st)}>
-                  <Text style={[s.statusChipText, item.status===st && { color:'#fff' }]}>{st.replace('_',' ')}</Text>
+            <Text style={s.label}>LIFECYCLE TRIAGE</Text>
+            <View style={s.chips}>
+              {STATUS_OPTS.map(st => (
+                <TouchableOpacity key={st} style={[s.chip, item.status===st && s.chipOn]} onPress={() => updateStatus(item._id, st)}>
+                  <Text style={[s.chipText, item.status===st && { color:'#fff' }]}>{st.replace('_',' ')}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             
             <TouchableOpacity style={s.deleteBtn} onPress={() => deleteOrder(item._id)}>
-              <Ionicons name="trash" size={16} color="#ef4444" />
-              <Text style={s.deleteBtnText}>Delete Permanently</Text>
+              <Ionicons name="trash-outline" size={16} color="#f43f5e" />
+              <Text style={s.deleteBtnText}>Purge Project</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -104,64 +97,65 @@ export default function StlOrdersAdminScreen() {
     <SafeAreaView style={s.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <View style={s.header}>
-        <Text style={s.headerTitle}>STL Orders</Text>
+        <Text style={s.title}>3D Pipeline</Text>
         <TouchableOpacity style={s.refreshBtn} onPress={load}>
-          <Ionicons name="refresh" size={20} color="#6366f1" />
+          <Ionicons name="sync" size={20} color="#6366f1" />
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <ActivityIndicator color="#6366f1" size="large" style={{ marginTop: 60 }} />
+        <ActivityIndicator color="#6366f1" size="large" style={{ marginTop: 80 }} />
       ) : (
         <FlatList
           data={orders}
           keyExtractor={i => i._id}
           renderItem={renderItem}
-          contentContainerStyle={{ padding: 20, gap: 12 }}
-          ListEmptyComponent={<Text style={s.empty}>No STL orders found</Text>}
+          contentContainerStyle={{ padding: 24, gap: 16 }}
+          ListEmptyComponent={<Text style={s.empty}>No projects in pipeline.</Text>}
         />
       )}
     </SafeAreaView>
   );
 }
 
-const Info = ({ label, value }) => (
-  <View style={s.infoRow}>
-    <Text style={s.infoLabel}>{label}:</Text>
-    <Text style={s.infoVal}>{value}</Text>
+const Spec = ({ label, value }) => (
+  <View style={s.specItem}>
+    <Text style={s.specL}>{label}</Text>
+    <Text style={s.specV} numberOfLines={1}>{value}</Text>
   </View>
 );
 
 const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8fafc' },
-  header:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#f1f5f9' },
-  headerTitle:    { fontSize: 28, fontWeight: '900', color: '#1e293b' },
-  refreshBtn:     { backgroundColor: '#f5f3ff', padding: 10, borderRadius: 12 },
+  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 28, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: '#f1f5f9' },
+  title: { fontSize: 32, fontWeight: '900', color: '#0f172a', letterSpacing: -1.5 },
+  refreshBtn: { backgroundColor: '#f1f5f9', padding: 12, borderRadius: 16 },
 
-  card:           { backgroundColor:'#fff', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
-  cardHeader:     { flexDirection:'row', justifyContent:'space-between' },
-  orderId:        { fontSize:11, fontWeight:'900', color:'#94a3b8', letterSpacing: 1 },
-  customerName:   { fontSize:16, fontWeight:'800', color:'#1e293b', marginTop:2 },
-  customerEmail:  { fontSize:13, color:'#64748b', fontWeight: '600' },
-  right:          { alignItems:'flex-end', gap:8 },
-  price:          { fontSize:18, fontWeight:'900', color:'#6366f1' },
-  badge:          { borderRadius:10, paddingHorizontal:10, paddingVertical:6, borderWidth: 1 },
-  badgeText:      { fontSize:10, fontWeight:'800', textTransform: 'uppercase' },
+  card: { backgroundColor:'#fff', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOpacity: 0.02, shadowRadius: 10 },
+  cardTop: { flexDirection:'row', justifyContent:'space-between', alignItems: 'center' },
+  orderRef: { fontSize:10, fontWeight:'900', color:'#cbd5e1', letterSpacing: 1.5 },
+  customer: { fontSize:18, fontWeight:'800', color:'#0f172a', marginTop:2 },
+  topRight: { alignItems:'flex-end', gap:8 },
+  price: { fontSize:20, fontWeight:'900', color:'#6366f1' },
+  pill: { borderRadius:10, paddingHorizontal:10, paddingVertical:6, borderWidth: 1 },
+  pillText: { fontSize:10, fontWeight:'900' },
   
-  details:        { borderTopWidth:1, borderTopColor:'#f1f5f9', marginTop:16, paddingTop:16 },
-  infoRow:        { flexDirection: 'row', marginBottom: 6 },
-  infoLabel:      { width: 80, fontSize: 13, color: '#94a3b8', fontWeight: '700' },
-  infoVal:        { flex: 1, fontSize: 13, color: '#475569', fontWeight: '800' },
-  noteBox:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fffbeb', padding: 12, borderRadius: 12, marginTop: 12, gap: 10, borderWidth: 1, borderColor: '#fef3c7' },
-  noteText:       { flex: 1, fontSize: 13, color: '#92400e', fontWeight: '700' },
+  expanded: { borderTopWidth:1, borderTopColor:'#f1f5f9', marginTop:20, paddingTop:20 },
+  specGrid: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  specItem: { flex: 1, backgroundColor: '#f8fafc', padding: 12, borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9' },
+  specL: { fontSize: 9, fontWeight: '900', color: '#94a3b8', letterSpacing: 1, marginBottom: 4 },
+  specV: { fontSize: 13, fontWeight: '800', color: '#0f172a' },
+  
+  noteBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fffbeb', padding: 16, borderRadius: 20, marginTop: 4, gap: 12, borderWidth: 1, borderColor: '#fef3c7' },
+  noteText: { flex: 1, fontSize: 13, color: '#92400e', fontWeight: '700' },
 
-  detailsTitle:   { fontSize:11, fontWeight:'900', color:'#94a3b8', letterSpacing: 1, marginTop:20, marginBottom:12, textTransform: 'uppercase' },
-  statusChips:    { flexDirection:'row', flexWrap:'wrap', gap:8, marginBottom: 20 },
-  statusChip:     { backgroundColor:'#f1f5f9', borderRadius:12, paddingHorizontal:12, paddingVertical:10 },
-  statusChipActive:{ backgroundColor:'#6366f1' },
-  statusChipText: { fontSize:12, fontWeight:'700', color:'#64748b' },
+  label: { fontSize:10, fontWeight:'900', color:'#cbd5e1', letterSpacing: 1.5, marginTop:24, marginBottom:12 },
+  chips: { flexDirection:'row', flexWrap:'wrap', gap:8 },
+  chip: { backgroundColor:'#f1f5f9', borderRadius:14, paddingHorizontal:14, paddingVertical:10 },
+  chipOn: { backgroundColor:'#6366f1' },
+  chipText: { fontSize:11, fontWeight:'800', color:'#94a3b8' },
   
-  deleteBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 16, borderRadius: 16, gap: 10, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#fee2e2' },
-  deleteBtnText:  { color: '#ef4444', fontWeight: '800', fontSize: 14 },
-  empty:          { textAlign:'center', color:'#94a3b8', marginTop:60, fontWeight: '700' },
+  deleteBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 16, borderRadius: 18, gap: 10, alignSelf: 'flex-start', marginTop: 24, borderWidth: 1, borderColor: '#fee2e2' },
+  deleteBtnText: { color: '#f43f5e', fontWeight: '800', fontSize: 13 },
+  empty: { textAlign:'center', color:'#cbd5e1', marginTop:100, fontWeight: '800', letterSpacing: 1 },
 });
