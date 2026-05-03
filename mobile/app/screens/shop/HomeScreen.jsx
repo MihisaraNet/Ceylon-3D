@@ -177,8 +177,8 @@ const s = StyleSheet.create({
   heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   heroTag:          { color: '#a5b4fc', fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
   heroBadge:        { color: 'rgba(165,180,252,0.7)', fontSize: 11, marginTop: 2 },
-  heroTitle:        { color: '#fff', fontSize: 38, fontWeight: '900', lineHeight: 46, marginBottom: 14, letterSpacing: -1 },
-  heroSub:          { color: '#c7d2fe', fontSize: 14, lineHeight: 22, marginBottom: 26 },
+  heroTitle:        { color: '#fff', fontSize: Platform.OS === 'web' ? 32 : 38, fontWeight: '900', lineHeight: Platform.OS === 'web' ? 40 : 46, marginBottom: 14, letterSpacing: -1 },
+  heroSub:          { color: '#c7d2fe', fontSize: 13, lineHeight: 20, marginBottom: 26 },
   heroButtons:      { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   btnPrimary:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
   btnPrimaryText:   { color: '#4f46e5', fontWeight: '800', fontSize: 14 },
@@ -202,8 +202,8 @@ const s = StyleSheet.create({
   sectionSub:       { fontSize: 13, color: '#9ca3af', marginTop: 2 },
 
   /* Services */
-  servicesGrid:     { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 12, marginBottom: 8 },
-  serviceCard:      { width: '47%', backgroundColor: '#fff', borderRadius: 18, padding: 16, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, gap: 6 },
+  servicesGrid:     { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 10, marginBottom: 8 },
+  serviceCard:      { width: Platform.OS === 'web' ? '46%' : '47%', backgroundColor: '#fff', borderRadius: 18, padding: 14, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, gap: 6 },
   serviceIconWrap:  { borderRadius: 12, padding: 10, alignSelf: 'flex-start' },
   serviceTitle:     { fontSize: 13, fontWeight: '800', color: '#1e1b4b' },
   serviceDesc:      { fontSize: 11, color: '#9ca3af', lineHeight: 16 },

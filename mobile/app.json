@@ -23,7 +23,11 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "description": "LayerForge 3D - Premier 3D Printing Service in Sri Lanka",
+      "splash": {
+        "backgroundColor": "#0f0f1a"
+      }
     },
     "plugins": [
       "expo-font"
