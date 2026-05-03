@@ -20,7 +20,7 @@
 import React from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  StatusBar, Platform, Animated, SafeAreaView,
+  StatusBar, Platform, Animated, SafeAreaView, useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
@@ -61,43 +61,45 @@ export default function HomeScreen() {
           end={{ x: 1, y: 1 }}
           style={s.hero}
         >
-          {/* Top row */}
-          <View style={s.heroTopRow}>
-            <View>
-              <Text style={s.heroTag}>🖨️  LayerForge 3D Printing</Text>
-              <Text style={s.heroBadge}>Sri Lanka's Premier Service</Text>
+          <View style={s.heroInner}>
+            {/* Top row */}
+            <View style={s.heroTopRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.heroTag}>🖨️  LayerForge 3D Printing</Text>
+                <Text style={s.heroBadge}>Sri Lanka's Premier Service</Text>
+              </View>
+              {totalItems > 0 && (
+                <TouchableOpacity style={s.cartPill} onPress={() => nav.navigate('Cart')} activeOpacity={0.8}>
+                  <Ionicons name="cart" size={18} color="#fff" />
+                  <Text style={s.cartPillText}>{totalItems}</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            {totalItems > 0 && (
-              <TouchableOpacity style={s.cartPill} onPress={() => nav.navigate('Cart')} activeOpacity={0.8}>
-                <Ionicons name="cart" size={18} color="#fff" />
-                <Text style={s.cartPillText}>{totalItems}</Text>
+
+            <Text style={s.heroTitle}>Where ideas{'\n'}become{'\n'}tangible.</Text>
+            <Text style={s.heroSub}>
+              Custom parts, prototypes & unique creations — delivered to your door.
+            </Text>
+
+            <View style={s.heroButtons}>
+              <TouchableOpacity style={s.btnPrimary} onPress={() => nav.navigate('Upload')} activeOpacity={0.85}>
+                <Ionicons name="cloud-upload-outline" size={18} color="#4f46e5" style={{ marginRight: 6 }} />
+                <Text style={s.btnPrimaryText}>Upload STL</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.btnSecondary} onPress={() => nav.navigate('Browse')} activeOpacity={0.85}>
+                <Ionicons name="grid-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
+                <Text style={s.btnSecondaryText}>Browse Shop</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isAdmin && (
+              <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')} activeOpacity={0.85}>
+                <Ionicons name="shield-checkmark" size={16} color="#fbbf24" style={{ marginRight: 6 }} />
+                <Text style={s.adminBtnText}>Admin Dashboard</Text>
+                <Ionicons name="chevron-forward" size={14} color="#fbbf24" style={{ marginLeft: 4 }} />
               </TouchableOpacity>
             )}
           </View>
-
-          <Text style={s.heroTitle}>Where ideas{'\n'}become{'\n'}tangible.</Text>
-          <Text style={s.heroSub}>
-            Custom parts, prototypes & unique creations — delivered to your door.
-          </Text>
-
-          <View style={s.heroButtons}>
-            <TouchableOpacity style={s.btnPrimary} onPress={() => nav.navigate('Upload')} activeOpacity={0.85}>
-              <Ionicons name="cloud-upload-outline" size={18} color="#4f46e5" style={{ marginRight: 6 }} />
-              <Text style={s.btnPrimaryText}>Upload STL</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.btnSecondary} onPress={() => nav.navigate('Browse')} activeOpacity={0.85}>
-              <Ionicons name="grid-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={s.btnSecondaryText}>Browse Shop</Text>
-            </TouchableOpacity>
-          </View>
-
-          {isAdmin && (
-            <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')} activeOpacity={0.85}>
-              <Ionicons name="shield-checkmark" size={16} color="#fbbf24" style={{ marginRight: 6 }} />
-              <Text style={s.adminBtnText}>Admin Dashboard</Text>
-              <Ionicons name="chevron-forward" size={14} color="#fbbf24" style={{ marginLeft: 4 }} />
-            </TouchableOpacity>
-          )}
         </LinearGradient>
 
         {/* ─── Stats ─── */}
@@ -173,13 +175,14 @@ const s = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#f5f5ff' },
 
   /* Hero */
-  hero:             { paddingTop: Platform.OS === 'android' ? 20 : 8, paddingBottom: 32, paddingHorizontal: 22 },
-  heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-  heroTag:          { color: '#a5b4fc', fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
-  heroBadge:        { color: 'rgba(165,180,252,0.7)', fontSize: 11, marginTop: 2 },
-  heroTitle:        { color: '#fff', fontSize: Platform.OS === 'web' ? 32 : 38, fontWeight: '900', lineHeight: Platform.OS === 'web' ? 40 : 46, marginBottom: 14, letterSpacing: -1 },
-  heroSub:          { color: '#c7d2fe', fontSize: 13, lineHeight: 20, marginBottom: 26 },
-  heroButtons:      { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
+  hero:             { paddingTop: Platform.OS === 'android' ? 20 : 8, paddingBottom: 32, width: '100%' },
+  heroInner:        { paddingHorizontal: 22, width: '100%' },
+  heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, width: '100%' },
+  heroTag:          { color: '#a5b4fc', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  heroBadge:        { color: 'rgba(165,180,252,0.7)', fontSize: 10, marginTop: 2 },
+  heroTitle:        { color: '#fff', fontSize: Platform.OS === 'web' ? 26 : 34, fontWeight: '900', lineHeight: Platform.OS === 'web' ? 32 : 42, marginBottom: 14, letterSpacing: -1, width: '100%' },
+  heroSub:          { color: '#c7d2fe', fontSize: 12, lineHeight: 18, marginBottom: 26, width: '100%', flexShrink: 1 },
+  heroButtons:      { flexDirection: 'row', gap: 10, flexWrap: 'wrap', width: '100%' },
   btnPrimary:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
   btnPrimaryText:   { color: '#4f46e5', fontWeight: '800', fontSize: 14 },
   btnSecondary:     { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
