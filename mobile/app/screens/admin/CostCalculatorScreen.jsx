@@ -6,6 +6,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 
+/**
+ * CostCalculatorScreen.jsx — Admin Tool for Price Estimation
+ * 
+ * This screen allows administrators to calculate a detailed cost breakdown
+ * for a 3D print job based on physical parameters (time, weight, material).
+ * It communicates with the backend /calculate-cost endpoint to get the math.
+ */
+
 /* ── Inline Helper: Field Component ──────────────────────── */
 const Field = ({ label, icon, children }) => (
   <View style={s.fieldGroup}>
@@ -28,6 +36,10 @@ export default function CostCalculatorScreen() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * handleCalc — Submits the form data to the backend to get a cost breakdown.
+   * Performs basic validation before making the API request.
+   */
   const handleCalc = async () => {
     // Basic validation
     if (isNaN(form.printTimeHours) || isNaN(form.printTimeMinutes) || isNaN(form.weightGrams)) {
@@ -56,6 +68,10 @@ export default function CostCalculatorScreen() {
     setResult(null);
   };
 
+  /**
+   * ResultRow — Subcomponent to display a single line in the breakdown.
+   * Includes an information icon that shows a descriptive tooltip on press.
+   */
   const ResultRow = ({ label, val, bold, color, info }) => (
     <View style={s.resultRow}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -67,7 +83,7 @@ export default function CostCalculatorScreen() {
         )}
       </View>
       <Text style={[s.resultVal, bold && s.resultValBold, color && { color }]}>
-        LKR {val?.toFixed(2)}
+        LKR {(val || 0).toFixed(2)}
       </Text>
     </View>
   );

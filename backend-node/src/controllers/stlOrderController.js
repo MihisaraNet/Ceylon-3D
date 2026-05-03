@@ -43,7 +43,11 @@ const uploadStl = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'File required' });
     
     // Extract customer and order details from the form data
-    const { name, email, email2, phone, address, message, material, quantity } = req.body;
+    let { name, email, email2, phone, address, message, material, quantity } = req.body;
+    
+    // Fallback to authenticated user details if form fields are empty
+    if (!name && req.user?.fullName) name = req.user.fullName;
+    if (!email && req.user?.email) email = req.user.email;
     
     // Validate required contact information
     if (!name || !email) return res.status(400).json({ error: 'name and email required' });

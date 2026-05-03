@@ -1,3 +1,16 @@
+/**
+ * ManageProductsScreen.jsx — Admin Product Management
+ * 
+ * This screen allows administrators to list, add, edit, and delete products
+ * from the shop catalogue. It handles image uploads and stock management.
+ * 
+ * Features:
+ *   - Fetch product list from backend
+ *   - Create new products with images (FormData)
+ *   - Update existing products
+ *   - Delete products with confirmation alert
+ *   - Low stock indicators
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
@@ -46,9 +59,14 @@ export default function ManageProductsScreen() {
   const [saving, setSaving] = useState(false);
   const [fErr, setFErr] = useState(EMPTY_ERRS);
 
+  /**
+   * load — Fetches the product list from the backend.
+   * Updates the 'products' state with the result.
+   */
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // GET /api/products returns all shop items
       const { data } = await api.get('/api/products');
       setProducts(data);
     } catch (err) {
@@ -58,6 +76,7 @@ export default function ManageProductsScreen() {
     }
   }, []);
 
+  // Initial load when the component mounts
   useEffect(() => { load(); }, [load]);
 
   const openAdd = () => {
@@ -81,46 +100,86 @@ export default function ManageProductsScreen() {
     setModal(true);
   };
 
+  /**
+   * pickImage — Opens the system photo library to select a product image.
+   * Stores the URI, MIME type, and filename in the form state.
+   */
   const pickImage = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+    const res = await ImagePicker.launchImageLibraryAsync({ 
+      mediaTypes: ['images'], 
+      quality: 0.8 
+    });
+    
     if (!res.canceled && res.assets?.[0]) {
       const asset = res.assets[0];
-      setForm(f => ({ ...f, imageUri: asset.uri, imageMime: asset.mimeType || 'image/jpeg', imageName: asset.fileName || 'image.jpg' }));
+      setForm(f => ({ 
+        ...f, 
+        imageUri: asset.uri, 
+        imageMime: asset.mimeType || 'image/jpeg', 
+        imageName: asset.fileName || 'image.jpg' 
+      }));
     }
   };
 
+  /**
+   * handleSave — Submits the form to Create or Update a product.
+   * Uses FormData to handle multipart/form-data for image uploads.
+   */
   const handleSave = async () => {
     const e = {};
+    // Name validation
     if (!form.name.trim() || form.name.trim().length < 2) e.name = 'Name too short';
+    
+    // Price validation
     const p = parseFloat(form.price);
     if (!form.price || isNaN(p)) e.price = 'Required';
+    
+    // Stock validation (optional, must be non-negative)
     if (form.stock !== '') {
       const st = parseInt(form.stock, 10);
       if (isNaN(st) || st < 0) e.stock = 'Invalid';
     }
+    
     setFErr(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) return; // Stop if there are validation errors
 
     setSaving(true);
     try {
+      // Build the multipart payload
       const fd = new FormData();
       fd.append('name', form.name.trim());
       fd.append('description', form.description.trim());
       fd.append('price', form.price);
       fd.append('stock', form.stock || '0');
       fd.append('category', form.category);
-      if (form.imageUri) fd.append('image', { uri: form.imageUri, type: form.imageMime, name: form.imageName });
+      
+      // Only append the image if the user picked a new one
+      if (form.imageUri) {
+        fd.append('image', { 
+          uri: form.imageUri, 
+          type: form.imageMime, 
+          name: form.imageName 
+        });
+      }
 
-      if (editing) await api.put(`/api/products/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      else await api.post('/api/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      // PUT for existing, POST for new
+      if (editing) {
+        await api.put(`/api/products/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } else {
+        await api.post('/api/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      }
 
       setModal(false);
-      load();
+      load(); // Refresh the list
     } catch (err) {
       Alert.alert('Save Failed', err.response?.data?.error || 'Could not save product');
     } finally { setSaving(false); }
   };
 
+  /**
+   * handleDelete — Deletes a product after user confirmation.
+   * Sends a DELETE request to the server.
+   */
   const handleDelete = (id) => {
     Alert.alert('Delete Product', 'This action cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
@@ -128,7 +187,7 @@ export default function ManageProductsScreen() {
         text: 'Delete', style: 'destructive', onPress: async () => {
           try {
             await api.delete(`/api/products/${id}`);
-            load();
+            load(); // Refresh the list after deletion
           } catch (err) {
             Alert.alert('Error', 'Delete failed');
           }
@@ -137,7 +196,12 @@ export default function ManageProductsScreen() {
     ]);
   };
 
+  /**
+   * renderProduct — Renders a single product card for the FlatList.
+   * Includes image, category badge, name, price, and action buttons.
+   */
   const renderProduct = ({ item }) => {
+    // Resolve the full image URL from the relative path stored in DB
     const imgUri = getImageUri(item.imagePath);
     return (
       <View style={s.card}>
@@ -161,6 +225,7 @@ export default function ManageProductsScreen() {
         <View style={s.cardBottom}>
           <StockBadge count={item.stock} />
           <View style={s.actions}>
+            {/* Action buttons for Edit and Delete */}
             <TouchableOpacity onPress={() => openEdit(item)} style={s.iconBtn}>
               <Ionicons name="pencil-sharp" size={18} color="#6366f1" />
             </TouchableOpacity>

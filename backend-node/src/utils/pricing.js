@@ -24,6 +24,9 @@
 // Material cost rates in LKR per gram
 const MATERIAL_RATE = { PLA: 5.00, 'PLA+': 5.00, ABS: 6.00, 'ABS+': 6.00 };
 
+// Minimum service fee for any 3D print order (LKR)
+const MIN_SERVICE_FEE = 500;
+
 /**
  * Calculate a detailed cost breakdown for a 3D print job.
  *
@@ -88,7 +91,10 @@ const calculateCost = ({ printTimeHours=0, printTimeMinutes=0, weightGrams=0, ma
 const estimateInitialPrice = (fileSizeBytes, material, quantity) => {
   const mb   = fileSizeBytes / (1024*1024);
   const mult = { ABS:1.15, PETG:1.30, RESIN:1.60, PLA:1.0 }[(material||'PLA').toUpperCase()] || 1.0;
-  return Math.round((8 + mb*4) * mult * (Number(quantity)||1) * 100) / 100;
+  const estimate = (8 + mb*4) * mult * (Number(quantity)||1);
+  
+  // Ensure the estimate never falls below the minimum service fee
+  return Math.round(Math.max(estimate, MIN_SERVICE_FEE) * 100) / 100;
 };
 
 module.exports = { calculateCost, estimateInitialPrice };

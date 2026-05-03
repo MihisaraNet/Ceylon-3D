@@ -1,3 +1,20 @@
+/**
+ * STLUploadScreen.jsx — 3D Print Order Wizard
+ * 
+ * This screen guides the user through a 3-step process to request a quote
+ * for a custom 3D print job by uploading an STL or design file.
+ * 
+ * Flow:
+ *   Step 0: Upload — Select file, choose material, set quantity/notes.
+ *   Step 1: Details — Enter contact info (Name, Email, Phone, Address).
+ *   Step 2: Review — Final summary before submission.
+ * 
+ * Features:
+ *   - File type validation (.stl, .pdf, .jpg, .jpeg)
+ *   - Automatic user profile fallback for authenticated users
+ *   - Multi-step state management with form validation per step
+ *   - Interactive material selection grid
+ */
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
@@ -24,26 +41,50 @@ export default function STLUploadScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
 
+  /**
+   * pickFile — Opens the document picker to select an STL/design file.
+   * Validates the file extension before updating the state.
+   */
   const pickFile = async () => {
+    // Open system file browser
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+    
     if (res.canceled) return;
     const asset = res.assets?.[0];
     if (!asset) return;
+    
+    // Extract extension and validate
     const ext = asset.name.split('.').pop().toLowerCase();
     if (!['stl', 'pdf', 'jpg', 'jpeg'].includes(ext)) {
       return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
     }
+    
     setFile(asset);
   };
 
+  /**
+   * validateStep1 — Ensures a file has been selected before moving to step 2.
+   */
   const validateStep1 = () => {
     if (!file) { Alert.alert('Required', 'Please select a file'); return false; }
     return true;
   };
 
+  /**
+   * validateStep2 — Validates contact information using basic rules and regex.
+   */
   const validateStep2 = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!form.name || !form.email || !form.phone || !form.address) {
       Alert.alert('Required', 'Please fill all required fields');
+      return false;
+    }
+    if (!emailRegex.test(form.email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      return false;
+    }
+    if (form.phone.length < 10) {
+      Alert.alert('Invalid Phone', 'Please enter a valid phone number');
       return false;
     }
     return true;
@@ -55,11 +96,23 @@ export default function STLUploadScreen() {
     setStep(s => s + 1);
   };
 
+  /**
+   * handleSubmit — Final submission of the order to the backend.
+   * Packages the file and form fields into a FormData object.
+   */
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      // Build multipart/form-data payload
       const fd = new FormData();
-      fd.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' });
+      // Attach the physical file
+      fd.append('file', { 
+        uri: file.uri, 
+        name: file.name, 
+        type: file.mimeType || 'application/octet-stream' 
+      });
+      
+      // Attach metadata and contact details
       fd.append('name', form.name);
       fd.append('email', form.email);
       if (form.email2) fd.append('email2', form.email2);
@@ -69,8 +122,12 @@ export default function STLUploadScreen() {
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
 
-      const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setResult(data);
+      // POST /api/uploads/stl triggers the upload and initial pricing logic
+      const { data } = await api.post('/api/uploads/stl', fd, { 
+        headers: { 'Content-Type': 'multipart/form-data' } 
+      });
+      
+      setResult(data); // Display success screen
     } catch (err) {
       Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed');
     } finally { setSubmitting(false); }
