@@ -205,28 +205,3 @@ const s = StyleSheet.create({
   chipText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
   empty: { textAlign: 'center', color: '#94a3b8', marginTop: 100, fontSize: 16, fontWeight: '600' },
 });
-
-const s = StyleSheet.create({
-  card:          { backgroundColor:'#fff', borderRadius:14, padding:16, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:6, elevation:2 },
-  cardHeader:    { flexDirection:'row', justifyContent:'space-between' },
-  orderId:       { fontSize:13, fontWeight:'700', color:'#111827' },
-  customerName:  { fontSize:15, fontWeight:'700', color:'#111827', marginTop:2 },
-  right:         { alignItems:'flex-end', gap:6 },
-  total:         { fontSize:16, fontWeight:'800', color:'#6366f1' },
-  badge:         { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
-  badgeText:     { fontSize:12, fontWeight:'700' },
-  details:       { borderTopWidth:1, borderTopColor:'#f3f4f6', marginTop:12, paddingTop:12 },
-  detailsTitle:  { fontSize:13, fontWeight:'700', color:'#374151', marginTop:10, marginBottom:4 },
-  itemLine:      { fontSize:13, color:'#6b7280', marginBottom:2 },
-  addrText:      { fontSize:13, color:'#374151' },
-  trackVal:      { fontSize:13, color:'#6366f1', fontWeight:'600', marginBottom:6 },
-  trackRow:      { flexDirection:'row', gap:8, marginBottom:4 },
-  trackInput:    { flex:1, backgroundColor:'#f9fafb', borderWidth:1, borderColor:'#e5e7eb', borderRadius:10, padding:10, fontSize:14, color:'#111827' },
-  trackBtn:      { backgroundColor:'#6366f1', borderRadius:10, paddingHorizontal:16, justifyContent:'center' },
-  trackBtnText:  { color:'#fff', fontWeight:'700' },
-  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:6 },
-  statusChip:    { backgroundColor:'#f3f4f6', borderRadius:999, paddingHorizontal:10, paddingVertical:6 },
-  statusChipActive:{ backgroundColor:'#6366f1' },
-  statusChipText:  { fontSize:12, fontWeight:'600', color:'#374151' },
-  empty:         { textAlign:'center', color:'#9ca3af', marginTop:60, fontSize:16 },
-});
