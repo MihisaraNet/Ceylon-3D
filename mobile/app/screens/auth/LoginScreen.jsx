@@ -45,6 +45,7 @@ export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPw,   setShowPw]   = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [errors,   setErrors]   = useState({});
@@ -149,6 +150,24 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </Field>
 
+        {/* Remember Me & Forgot Password Row */}
+        <View style={s.optionsRow}>
+          <TouchableOpacity 
+            style={s.rememberMe} 
+            onPress={() => setRememberMe(!rememberMe)}
+            activeOpacity={0.7}
+          >
+            <View style={[s.checkbox, rememberMe && s.checkboxChecked]}>
+              {rememberMe && <Ionicons name="checkmark" size={12} color="#fff" />}
+            </View>
+            <Text style={s.rememberText}>Remember me</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity>
+            <Text style={s.forgotText}>Forgot password?</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Submit */}
         <TouchableOpacity style={s.btn} onPress={handleLogin} disabled={loading} activeOpacity={0.88}>
           {loading ? (
@@ -192,8 +211,14 @@ const s = StyleSheet.create({
   tagline:        { fontSize: 15, color: '#9ca3af', marginTop: 4 },
   serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 12, padding: 12, marginBottom: 14 },
   serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
-  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 8, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
+  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 18, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
   btnText:        { color: '#fff', fontSize: 16, fontWeight: '900' },
+  optionsRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 8 },
+  rememberMe:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  checkbox:       { width: 18, height: 18, borderRadius: 5, borderWidth: 1.5, borderColor: '#d1d5db', backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  checkboxChecked:{ backgroundColor: '#6366f1', borderColor: '#6366f1' },
+  rememberText:   { fontSize: 13, color: '#6b7280', fontWeight: '600' },
+  forgotText:     { fontSize: 13, color: '#6366f1', fontWeight: '700' },
   link:           { alignItems: 'center', marginTop: 22 },
   linkText:       { color: '#9ca3af', fontSize: 14 },
   linkBold:       { color: '#6366f1', fontWeight: '800' },
