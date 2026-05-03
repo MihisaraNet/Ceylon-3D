@@ -199,26 +199,3 @@ const s = StyleSheet.create({
   deleteBtnText: { color: '#ef4444', fontWeight: '800', fontSize: 14 },
   empty: { textAlign: 'center', color: '#94a3b8', marginTop: 100, fontSize: 16, fontWeight: '600' },
 });
-
-const s = StyleSheet.create({
-  card:          { backgroundColor:'#fff', borderRadius:14, padding:16, shadowColor:'#000', shadowOpacity:0.05, shadowRadius:6, elevation:2 },
-  cardHeader:    { flexDirection:'row', justifyContent:'space-between' },
-  orderId:       { fontSize:13, fontWeight:'700', color:'#111827' },
-  customerName:  { fontSize:15, fontWeight:'700', color:'#111827', marginTop:2 },
-  customerEmail: { fontSize:13, color:'#6b7280' },
-  right:         { alignItems:'flex-end', gap:6 },
-  price:         { fontSize:16, fontWeight:'800', color:'#6366f1' },
-  badge:         { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
-  badgeText:     { fontSize:12, fontWeight:'700' },
-  details:       { borderTopWidth:1, borderTopColor:'#f3f4f6', marginTop:12, paddingTop:12 },
-  noteBox:       { backgroundColor:'#fef3c7', borderRadius:8, padding:8, marginBottom:6 },
-  noteText:      { fontSize:13, color:'#92400e' },
-  statusLabel:   { fontSize:13, fontWeight:'700', color:'#374151', marginTop:8, marginBottom:6 },
-  statusChips:   { flexDirection:'row', flexWrap:'wrap', gap:6, marginBottom:12 },
-  statusChip:    { backgroundColor:'#f3f4f6', borderRadius:999, paddingHorizontal:10, paddingVertical:6 },
-  statusChipActive: { backgroundColor:'#6366f1' },
-  statusChipText:   { fontSize:12, fontWeight:'600', color:'#374151' },
-  deleteBtn:     { flexDirection:'row', alignItems:'center', padding:10, borderWidth:1.5, borderColor:'#ef4444', borderRadius:10, alignSelf:'flex-start' },
-  deleteBtnText: { color:'#ef4444', fontWeight:'700', fontSize:13 },
-  empty:         { textAlign:'center', color:'#9ca3af', marginTop:60, fontSize:16 },
-});
