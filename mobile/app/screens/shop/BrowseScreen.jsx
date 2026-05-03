@@ -342,7 +342,7 @@ const s = StyleSheet.create({
 
   /* Grid */
   gridRow:       { gap: 12, paddingHorizontal: 16 },
-  gridContent:   { paddingTop: 12, paddingBottom: 110, gap: 12 },
+  gridContent:   { paddingTop: 12, paddingBottom: 120, gap: 12 },
 
   /* Card */
   card:          { flex: 1, borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' },

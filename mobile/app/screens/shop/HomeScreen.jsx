@@ -52,7 +52,7 @@ export default function HomeScreen() {
       <ScrollView
         style={s.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* ─── Hero ─── */}
         <LinearGradient
