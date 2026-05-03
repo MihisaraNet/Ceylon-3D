@@ -56,9 +56,16 @@ export default function CostCalculatorScreen() {
     setResult(null);
   };
 
-  const ResultRow = ({ label, val, bold, color }) => (
+  const ResultRow = ({ label, val, bold, color, info }) => (
     <View style={s.resultRow}>
-      <Text style={s.resultLabel}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Text style={s.resultLabel}>{label}</Text>
+        {info && (
+          <TouchableOpacity onPress={() => Alert.alert(label, info)}>
+            <Ionicons name="information-circle-outline" size={14} color="#9ca3af" />
+          </TouchableOpacity>
+        )}
+      </View>
       <Text style={[s.resultVal, bold && s.resultValBold, color && { color }]}>
         LKR {val?.toFixed(2)}
       </Text>
@@ -169,15 +176,15 @@ export default function CostCalculatorScreen() {
             </View>
             
             <View style={s.breakdownBox}>
-              <ResultRow label="Material Cost" val={result.materialCost} />
-              <ResultRow label="Machine usage" val={result.machineCost} />
-              <ResultRow label="Energy consumption" val={result.energyCost} />
-              <ResultRow label="Labour & Handling" val={result.laborCost} />
-              <ResultRow label="Support Material" val={result.supportCost} />
+              <ResultRow label="Material Cost" val={result.materialCost} info="Based on weight and material rate (e.g. PLA is LKR 5/g)." />
+              <ResultRow label="Machine usage" val={result.machineCost} info="Depreciation and maintenance cost of the 3D printer per hour (LKR 50/hr)." />
+              <ResultRow label="Energy consumption" val={result.energyCost} info="Electricity used by the printer and cooling systems (LKR 30/hr)." />
+              <ResultRow label="Labour & Handling" val={result.laborCost} info="Flat fee for setup, slicing, and manual handling." />
+              <ResultRow label="Support Material" val={result.supportCost} info="Additional cost if support structures are required for complex geometries." />
               
               <View style={s.divider} />
               
-              <ResultRow label="Total Net Cost" val={result.totalCost} bold color="#1e1b4b" />
+              <ResultRow label="Total Net Cost" val={result.totalCost} bold color="#1e1b4b" info="Total internal cost to produce the print." />
             </View>
 
             <View style={s.sellingBox}>
