@@ -1,114 +1,65 @@
-/**
- * STLUploadScreen.jsx — 3D Print Order Upload Wizard
- *
- * A 3-step wizard for submitting custom 3D print orders.
- *
- * Steps:
- *   1. Upload File   — Pick a file (.stl/.pdf/.jpg/.jpeg), choose material & quantity, add notes
- *   2. Your Details  — Enter contact info (name, email, phone, address)
- *   3. Review & Submit — Review all details, see trust badges, then submit
- *
- * Features:
- *   - Visual step indicator (dots + progress line)
- *   - File picker using expo-document-picker with extension validation
- *   - Material selection grid (PLA, ABS, PETG, Resin) with emoji icons
- *   - Quantity selector with +/- buttons
- *   - Contact form pre-filled from AuthContext user data
- *   - Review panel with all submitted info before final submission
- *   - Trust badges: "No upfront payment", "Quote before printing", "Secure upload"
- *   - Success screen with order ID, file name, material, estimated price
- *   - "Submit Another Order" button to reset and start over
- *
- * @module screens/upload/STLUploadScreen
- */
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
+import {
+  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  TextInput, Alert, ActivityIndicator, SafeAreaView, StatusBar,
+} from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { STL_MATERIALS } from '../../data/categories';
 
-const STEPS = ['Upload File', 'Your Details', 'Review & Submit'];
+const STEPS = ['Upload', 'Details', 'Review'];
 
 export default function STLUploadScreen() {
   const { user } = useAuth();
-  const [step, setStep]     = useState(0);
-  const [file, setFile]     = useState(null);
-  const [material, setMat]  = useState('PLA');
-  const [quantity, setQty]  = useState(1);
-  const [notes, setNotes]   = useState('');
-  const [form, setForm]     = useState({
+  const [step, setStep] = useState(0);
+  const [file, setFile] = useState(null);
+  const [material, setMat] = useState('PLA');
+  const [quantity, setQty] = useState(1);
+  const [notes, setNotes] = useState('');
+  const [form, setForm] = useState({
     name: user?.fullName || '', email: user?.email || '', phone: '', address: '', email2: ''
   });
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult]         = useState(null);
+  const [result, setResult] = useState(null);
 
-  // This function opens the native file picker to let the user select their 3D design file
   const pickFile = async () => {
     const res = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-    if (res.canceled) return; // User cancelled the picker
-    
+    if (res.canceled) return;
     const asset = res.assets?.[0];
     if (!asset) return;
-    
-    // This part validates the selected file extension to ensure it is supported
     const ext = asset.name.split('.').pop().toLowerCase();
-    if (!['stl','pdf','jpg','jpeg'].includes(ext)) {
+    if (!['stl', 'pdf', 'jpg', 'jpeg'].includes(ext)) {
       return Alert.alert('Invalid file', 'Only .stl, .pdf, .jpg, .jpeg are accepted');
     }
-    
-    // Save the valid file to state so it can be previewed in Step 0
     setFile(asset);
   };
 
-  // This part checks if the user has selected a file before allowing them to proceed to Step 1
   const validateStep1 = () => {
-    if (!file) {
-      Alert.alert('Required', 'Please select a file');
-      return false;
-    }
+    if (!file) { Alert.alert('Required', 'Please select a file'); return false; }
     return true;
   };
-  
-  // This part checks if the contact information form is completely filled out
+
   const validateStep2 = () => {
     if (!form.name || !form.email || !form.phone || !form.address) {
       Alert.alert('Required', 'Please fill all required fields');
       return false;
     }
-    
-    // This part ensures the email format is valid
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      Alert.alert('Invalid', 'Invalid email');
-      return false;
-    }
-    
-    // This part ensures the phone number format is valid
-    if (!/^\+?[0-9\s()\-]{7,20}$/.test(form.phone)) {
-      Alert.alert('Invalid', 'Invalid phone number');
-      return false;
-    }
     return true;
   };
 
-  // This function advances the wizard to the next step, running validation first
   const handleNext = () => {
-    if (step===0 && !validateStep1()) return;
-    if (step===1 && !validateStep2()) return;
-    setStep(s => s+1); // Move to next step
+    if (step === 0 && !validateStep1()) return;
+    if (step === 1 && !validateStep2()) return;
+    setStep(s => s + 1);
   };
 
   const handleSubmit = async () => {
-    setSubmitting(true); // Disable the submit button and show a loading indicator
+    setSubmitting(true);
     try {
-      // Build a FormData object to send both the physical STL file and the text metadata
       const fd = new FormData();
-      
-      // Append the selected file. Expo-document-picker provides the local URI.
       fd.append('file', { uri: file.uri, name: file.name, type: file.mimeType || 'application/octet-stream' });
-      
-      // Append the validated contact information and print specifications
       fd.append('name', form.name);
       fd.append('email', form.email);
       if (form.email2) fd.append('email2', form.email2);
@@ -117,183 +68,295 @@ export default function STLUploadScreen() {
       fd.append('material', material);
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
-      
-      // Post the multipart/form-data payload to the backend
+
       const { data } = await api.post('/api/uploads/stl', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      
-      // On success, save the returned order details to show the confirmation screen
       setResult(data);
     } catch (err) {
-      // If the backend validation fails or the server errors out, show an alert
-      Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed. Please try again.');
-    } finally { 
-      // Stop the loading indicator
-      setSubmitting(false); 
-    }
+      Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed');
+    } finally { setSubmitting(false); }
   };
 
   if (result) return (
-    <ScrollView contentContainerStyle={s.successContainer}>
-      <Ionicons name="checkmark-circle" size={80} color="#22c55e" />
-      <Text style={s.successTitle}>Order Submitted!</Text>
-      <Text style={s.successSub}>Our team will review your file and send you a quote.</Text>
-      <View style={s.resultCard}>
-        <Row label="Order ID" value={`#${result.stlOrderId?.slice(-6).toUpperCase()}`} />
-        <Row label="File"     value={result.fileName?.replace(/^[0-9a-f-]+-/i,'')} />
-        <Row label="Material" value={result.material} />
-        <Row label="Quantity" value={String(result.quantity)} />
-        <Row label="Est. Price" value={`LKR ${result.estimatedPrice?.toFixed(2)}`} />
-        <Row label="Status"   value="Pending Quote" />
-      </View>
-      <TouchableOpacity style={s.resetBtn} onPress={() => { setResult(null); setStep(0); setFile(null); setNotes(''); setQty(1); }}>
-        <Text style={s.resetBtnText}>Submit Another Order</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    <SafeAreaView style={s.safe}>
+      <ScrollView contentContainerStyle={s.successContainer} showsVerticalScrollIndicator={false}>
+        <View style={s.successIconBox}>
+          <Ionicons name="checkmark-circle" size={80} color="#6366f1" />
+        </View>
+        <Text style={s.successTitle}>Order Submitted!</Text>
+        <Text style={s.successSub}>Our team will review your file and send you a quote shortly.</Text>
+        
+        <View style={s.resultCard}>
+          <View style={s.resultHeader}>
+            <Text style={s.resultId}>Order #{result.stlOrderId?.slice(-6).toUpperCase()}</Text>
+            <View style={s.pendingBadge}><Text style={s.pendingText}>PENDING QUOTE</Text></View>
+          </View>
+          <View style={s.resultContent}>
+            <Row label="File Name" value={result.fileName?.replace(/^[0-9a-f-]+-/i, '')} />
+            <Row label="Material" value={result.material} />
+            <Row label="Quantity" value={String(result.quantity)} />
+            <View style={s.priceBox}>
+              <Text style={s.priceLabel}>Estimated Price</Text>
+              <Text style={s.priceVal}>LKR {result.estimatedPrice?.toFixed(2)}</Text>
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity style={s.resetBtn} onPress={() => { setResult(null); setStep(0); setFile(null); setNotes(''); setQty(1); }}>
+          <Text style={s.resetBtnText}>Submit Another Order</Text>
+          <Ionicons name="add-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 
   return (
-    <View style={s.container}>
-      {/* Stepper */}
-      <View style={s.stepper}>
-        {STEPS.map((label, i) => (
-          <View key={i} style={s.stepItem}>
-            <View style={[s.stepDot, i<step && s.stepDone, i===step && s.stepActive]}>
-              {i<step ? <Ionicons name="checkmark" size={14} color="#fff" /> : <Text style={[s.stepNum, i===step && { color:'#fff' }]}>{i+1}</Text>}
-            </View>
-            <Text style={[s.stepLabel, i===step && s.stepLabelActive]}>{label}</Text>
-            {i<STEPS.length-1 && <View style={[s.stepLine, i<step && s.stepLineDone]} />}
-          </View>
-        ))}
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      
+      {/* Premium Stepper */}
+      <View style={s.stepperHeader}>
+        <Text style={s.stepperTitle}>{STEPS[step]}</Text>
+        <View style={s.stepTrack}>
+          {STEPS.map((_, i) => (
+            <React.Fragment key={i}>
+              <View style={[s.stepDot, i <= step && s.stepDotActive, i < step && s.stepDotDone]}>
+                {i < step ? (
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                ) : (
+                  <Text style={[s.stepNum, i === step && { color: '#fff' }]}>{i + 1}</Text>
+                )}
+              </View>
+              {i < STEPS.length - 1 && <View style={[s.stepLine, i < step && s.stepLineDone]} />}
+            </React.Fragment>
+          ))}
+        </View>
       </View>
 
-      <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:20 }}>
-        {/* Step 0 — Upload File */}
-        {step===0 && (
+      <ScrollView style={s.container} contentContainerStyle={{ padding: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+        {step === 0 && (
           <View>
-            <TouchableOpacity style={[s.dropzone, file && s.dropzoneDone]} onPress={pickFile}>
-              <Ionicons name={file ? 'document-text' : 'cloud-upload-outline'} size={48} color={file?'#22c55e':'#6366f1'} />
-              <Text style={[s.dropzoneText, file && { color:'#22c55e' }]}>
-                {file ? file.name : 'Tap to select file\n(.stl, .pdf, .jpg, .jpeg)'}
+            <TouchableOpacity style={[s.dropzone, file && s.dropzoneDone]} onPress={pickFile} activeOpacity={0.7}>
+              <View style={[s.dropzoneIcon, file && { backgroundColor: '#eef2ff' }]}>
+                <Ionicons name={file ? 'document-text' : 'cloud-upload-outline'} size={40} color={file ? '#6366f1' : '#9ca3af'} />
+              </View>
+              <Text style={[s.dropzoneText, file && { color: '#1e1b4b', fontWeight: '800' }]}>
+                {file ? file.name : 'Tap to Select Design File'}
               </Text>
-              {file && <Text style={s.fileSize}>{(file.size/1024).toFixed(1)} KB</Text>}
+              {!file && <Text style={s.dropzoneSub}>STL, PDF, or High-res Image</Text>}
+              {file && <Text style={s.fileSize}>{(file.size / 1024).toFixed(1)} KB</Text>}
             </TouchableOpacity>
 
-            <Text style={s.fieldLabel}>Material</Text>
+            <Text style={s.fieldLabel}>Preferred Material</Text>
             <View style={s.materialGrid}>
               {STL_MATERIALS.map(m => (
-                <TouchableOpacity key={m.id} style={[s.matBtn, material===m.id && s.matBtnActive]} onPress={() => setMat(m.id)}>
+                <TouchableOpacity key={m.id} style={[s.matBtn, material === m.id && s.matBtnActive]} onPress={() => setMat(m.id)}>
                   <Text style={s.matEmoji}>{m.emoji}</Text>
-                  <Text style={[s.matLabel, material===m.id && s.matLabelActive]}>{m.label}</Text>
-                  <Text style={s.matDesc}>{m.desc}</Text>
+                  <Text style={[s.matLabel, material === m.id && s.matLabelActive]}>{m.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.fieldLabel}>Quantity</Text>
-            <View style={s.qtyRow}>
-              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q-1))}><Ionicons name="remove" size={20} color="#6366f1" /></TouchableOpacity>
-              <Text style={s.qtyVal}>{quantity}</Text>
-              <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q+1)}><Ionicons name="add" size={20} color="#6366f1" /></TouchableOpacity>
+            <View style={s.qtySection}>
+              <View>
+                <Text style={s.fieldLabel}>Quantity</Text>
+                <Text style={s.fieldSub}>Number of copies</Text>
+              </View>
+              <View style={s.qtyRow}>
+                <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q - 1))}>
+                  <Ionicons name="remove" size={20} color="#6366f1" />
+                </TouchableOpacity>
+                <Text style={s.qtyVal}>{quantity}</Text>
+                <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q + 1)}>
+                  <Ionicons name="add" size={20} color="#6366f1" />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <Text style={s.fieldLabel}>Special Instructions (optional)</Text>
-            <TextInput style={s.textarea} value={notes} onChangeText={setNotes} placeholder="Any special notes..." multiline numberOfLines={3} placeholderTextColor="#9ca3af" />
+            <Text style={s.fieldLabel}>Additional Notes</Text>
+            <TextInput
+              style={s.textarea}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="E.g. Specific infill, color, or finish requirements..."
+              multiline
+              numberOfLines={4}
+              placeholderTextColor="#9ca3af"
+            />
           </View>
         )}
 
-        {/* Step 1 — Your Details */}
-        {step===1 && (
-          <View>
+        {step === 1 && (
+          <View style={s.form}>
             {[
-              { key:'name',   label:'Full Name *',          icon:'person-outline',   keyboard:'default' },
-              { key:'email',  label:'Email *',              icon:'mail-outline',     keyboard:'email-address', disabled: !!user },
-              { key:'phone',  label:'Phone * (+94 7X XXX)', icon:'call-outline',     keyboard:'phone-pad' },
-              { key:'email2', label:'Alternative Email',    icon:'mail-open-outline',keyboard:'email-address' },
+              { key: 'name', label: 'Full Name', icon: 'person-outline' },
+              { key: 'email', label: 'Email Address', icon: 'mail-outline', disabled: !!user },
+              { key: 'phone', label: 'Phone Number', icon: 'call-outline', keyboard: 'phone-pad' },
+              { key: 'address', label: 'Delivery Address', icon: 'map-outline', multiline: true },
             ].map(f => (
               <View key={f.key} style={s.fieldGroup}>
                 <Text style={s.fieldLabel}>{f.label}</Text>
-                <View style={s.inputRow}>
-                  <Ionicons name={f.icon} size={18} color="#9ca3af" style={s.inputIcon} />
+                <View style={[s.inputRow, f.multiline && { alignItems: 'flex-start', paddingVertical: 10 }]}>
+                  <Ionicons name={f.icon} size={18} color="#6366f1" style={s.inputIcon} />
                   <TextInput
-                    style={[s.inputField, f.disabled && s.inputDisabled]}
+                    style={[s.inputField, f.disabled && s.inputDisabled, f.multiline && { height: 80, textAlignVertical: 'top' }]}
                     value={form[f.key]}
-                    onChangeText={v => setForm(p => ({...p,[f.key]:v}))}
-                    keyboardType={f.keyboard}
-                    autoCapitalize="none"
+                    onChangeText={v => setForm(p => ({ ...p, [f.key]: v }))}
+                    keyboardType={f.keyboard || 'default'}
                     editable={!f.disabled}
+                    placeholder={`Enter your ${f.label.toLowerCase()}`}
                     placeholderTextColor="#9ca3af"
-                    placeholder={f.label}
+                    multiline={f.multiline}
                   />
                 </View>
               </View>
             ))}
-            <View style={s.fieldGroup}>
-              <Text style={s.fieldLabel}>Delivery Address *</Text>
-              <View style={s.inputRow}>
-                <Ionicons name="map-outline" size={18} color="#9ca3af" style={s.inputIcon} />
-                <TextInput style={[s.inputField, { height:80 }]} value={form.address} onChangeText={v => setForm(p => ({...p,address:v}))} multiline numberOfLines={3} placeholder="Full delivery address" placeholderTextColor="#9ca3af" />
-              </View>
-            </View>
           </View>
         )}
 
-        {/* Step 2 — Review */}
-        {step===2 && (
-          <View>
-            <Panel title="Design File">
-              <Row label="File"     value={file?.name?.replace(/^[0-9a-f-]+-/i,'') || '-'} />
-              <Row label="Size"     value={file ? `${(file.size/1024).toFixed(1)} KB` : '-'} />
-            </Panel>
-            <Panel title="Print Details">
-              <Row label="Material" value={material} />
-              <Row label="Quantity" value={String(quantity)} />
-              {notes && <Row label="Notes" value={notes} />}
-            </Panel>
-            <Panel title="Contact Info">
-              <Row label="Name"    value={form.name} />
-              <Row label="Email"   value={form.email} />
-              {form.email2 && <Row label="Alt Email" value={form.email2} />}
-              <Row label="Phone"   value={form.phone} />
-              <Row label="Address" value={form.address} />
-            </Panel>
-            <View style={s.infoBox}>
-              <Ionicons name="information-circle-outline" size={18} color="#3b82f6" />
-              <Text style={s.infoBoxText}> Our team will review your file and send you an accurate quote before any printing begins.</Text>
+        {step === 2 && (
+          <View style={s.reviewBox}>
+            <View style={s.reviewCard}>
+              <View style={s.reviewHeader}>
+                <Ionicons name="document-text-outline" size={18} color="#6366f1" />
+                <Text style={s.reviewTitle}>Summary</Text>
+              </View>
+              <View style={s.reviewBody}>
+                <Row label="File" value={file?.name?.replace(/^[0-9a-f-]+-/i, '') || '-'} />
+                <Row label="Material" value={material} />
+                <Row label="Quantity" value={String(quantity)} />
+                <View style={s.divider} />
+                <Row label="Contact" value={form.name} />
+                <Row label="Phone" value={form.phone} />
+                <Row label="Deliver to" value={form.address} />
+              </View>
             </View>
-            <View style={s.trustBadges}>
-              {['No upfront payment','Quote before printing','Secure file upload'].map(t => (
-                <View key={t} style={s.trustBadge}><Ionicons name="checkmark-circle" size={14} color="#22c55e" /><Text style={s.trustText}> {t}</Text></View>
-              ))}
+
+            <View style={s.infoCard}>
+              <Ionicons name="shield-checkmark-outline" size={24} color="#6366f1" />
+              <View style={{ flex: 1 }}>
+                <Text style={s.infoCardTitle}>Secure Quote System</Text>
+                <Text style={s.infoCardText}>No payment is required now. We will send you a final quote once our experts review the file.</Text>
+              </View>
             </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Footer Navigation */}
       <View style={s.footer}>
-        {step>0 && (
-          <TouchableOpacity style={s.backBtn} onPress={() => setStep(s => s-1)}>
-            <Ionicons name="arrow-back" size={18} color="#6366f1" />
-            <Text style={s.backBtnText}> Back</Text>
+        {step > 0 ? (
+          <TouchableOpacity style={s.backBtn} onPress={() => setStep(s => s - 1)}>
+            <Ionicons name="chevron-back" size={20} color="#6366f1" />
+            <Text style={s.backBtnText}>Previous</Text>
           </TouchableOpacity>
-        )}
-        {step<2 ? (
+        ) : <View style={{ width: 100 }} />}
+
+        {step < 2 ? (
           <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
             <Text style={s.nextBtnText}>Continue</Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={s.submitBtn} onPress={handleSubmit} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#fff" /> : <>
-              <Ionicons name="send" size={18} color="#fff" />
-              <Text style={s.nextBtnText}> Submit Order</Text>
-            </>}
+            {submitting ? <ActivityIndicator color="#fff" /> : (
+              <>
+                <Text style={s.nextBtnText}>Confirm Order</Text>
+                <Ionicons name="send" size={18} color="#fff" />
+              </>
+            )}
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
+
+const Row = ({ label, value }) => (
+  <View style={s.reviewRow}>
+    <Text style={s.reviewLabel}>{label}</Text>
+    <Text style={s.reviewVal} numberOfLines={2}>{value}</Text>
+  </View>
+);
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: '#f8f7ff' },
+  stepperHeader: { padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  stepperTitle: { fontSize: 24, fontWeight: '900', color: '#1e1b4b', marginBottom: 15 },
+  stepTrack: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  stepDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', zIndex: 1 },
+  stepDotActive: { backgroundColor: '#6366f1' },
+  stepDotDone: { backgroundColor: '#22c55e' },
+  stepNum: { fontSize: 13, fontWeight: '800', color: '#94a3b8' },
+  stepLine: { flex: 1, height: 4, backgroundColor: '#f1f5f9', marginHorizontal: -2 },
+  stepLineDone: { backgroundColor: '#22c55e' },
+  
+  container: { flex: 1 },
+  dropzone: { backgroundColor: '#fff', borderRadius: 24, padding: 30, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
+  dropzoneDone: { borderColor: '#6366f1', backgroundColor: '#f8f7ff' },
+  dropzoneIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+  dropzoneText: { fontSize: 16, color: '#6366f1', fontWeight: '700', textAlign: 'center' },
+  dropzoneSub: { fontSize: 12, color: '#94a3b8', marginTop: 5 },
+  fileSize: { fontSize: 12, color: '#6366f1', fontWeight: '800', marginTop: 8 },
+  
+  fieldLabel: { fontSize: 14, fontWeight: '800', color: '#1e1b4b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  fieldSub: { fontSize: 12, color: '#94a3b8', marginTop: -6, marginBottom: 10 },
+  materialGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
+  matBtn: { flex: 1, minWidth: '45%', backgroundColor: '#fff', borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 2, borderColor: '#f1f5f9' },
+  matBtnActive: { borderColor: '#6366f1', backgroundColor: '#eef2ff' },
+  matEmoji: { fontSize: 24, marginBottom: 4 },
+  matLabel: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  matLabelActive: { color: '#6366f1' },
+  
+  qtySection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, backgroundColor: '#fff', padding: 16, borderRadius: 20 },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 15 },
+  qtyBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center' },
+  qtyVal: { fontSize: 20, fontWeight: '900', color: '#1e1b4b', minWidth: 30, textAlign: 'center' },
+  
+  textarea: { backgroundColor: '#fff', borderRadius: 20, padding: 16, fontSize: 16, color: '#1e1b4b', fontWeight: '600', borderWidth: 1.5, borderColor: '#f1f5f9', height: 120 },
+  
+  form: { gap: 16 },
+  fieldGroup: { marginBottom: 10 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 16, borderWidth: 1.5, borderColor: '#f1f5f9' },
+  inputIcon: { marginRight: 12 },
+  inputField: { flex: 1, height: 50, fontSize: 16, color: '#1e1b4b', fontWeight: '600' },
+  inputDisabled: { color: '#94a3b8' },
+  
+  reviewBox: { gap: 16 },
+  reviewCard: { backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 4 },
+  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  reviewTitle: { fontSize: 16, fontWeight: '800', color: '#1e1b4b' },
+  reviewBody: { padding: 16, gap: 10 },
+  reviewRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  reviewLabel: { fontSize: 14, color: '#64748b', fontWeight: '500' },
+  reviewVal: { fontSize: 14, color: '#1e1b4b', fontWeight: '700', flex: 1, textAlign: 'right', marginLeft: 20 },
+  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 8 },
+  
+  infoCard: { flexDirection: 'row', gap: 15, backgroundColor: '#eef2ff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#c7d2fe' },
+  infoCardTitle: { fontSize: 15, fontWeight: '900', color: '#4338ca', marginBottom: 2 },
+  infoCardText: { fontSize: 13, color: '#4f46e5', lineHeight: 18 },
+  
+  footer: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 16 },
+  backBtnText: { color: '#6366f1', fontSize: 16, fontWeight: '800' },
+  nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24, gap: 8, shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
+  submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#22c55e', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24, gap: 8, shadowColor: '#22c55e', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
+  nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  
+  successContainer: { flexGrow: 1, alignItems: 'center', padding: 24, paddingTop: 60 },
+  successIconBox: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  successTitle: { fontSize: 32, fontWeight: '900', color: '#1e1b4b', marginBottom: 10 },
+  successSub: { fontSize: 16, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
+  resultCard: { width: '100%', backgroundColor: '#fff', borderRadius: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  resultHeader: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  resultId: { fontSize: 16, fontWeight: '900', color: '#1e1b4b' },
+  pendingBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  pendingText: { fontSize: 10, fontWeight: '900', color: '#d97706' },
+  resultContent: { padding: 16, gap: 10 },
+  priceBox: { marginTop: 10, backgroundColor: '#1e1b4b', padding: 16, borderRadius: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  priceLabel: { fontSize: 13, color: '#a5b4fc', fontWeight: '800' },
+  priceVal: { fontSize: 20, color: '#fff', fontWeight: '900' },
+  resetBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#6366f1', paddingVertical: 18, paddingHorizontal: 32, borderRadius: 20, marginTop: 40, shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
+  resetBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+});
 
 const Panel = ({ title, children }) => (
   <View style={s.panel}>
