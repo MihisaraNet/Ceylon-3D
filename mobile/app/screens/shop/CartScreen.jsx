@@ -33,6 +33,7 @@ import { useCart } from '../../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import CartItemCard from '../../components/CartItemCard';
 
 /* ── Accent colours per card row ───────────────────────────── */
 const ACCENTS = ['#f97316','#22c55e','#3b82f6','#a855f7','#f59e0b'];
@@ -294,100 +295,18 @@ export default function CartScreen() {
         {/* ── Cart Items ── */}
         <View style={{ paddingHorizontal: 16, gap: 12, paddingTop: 8 }}>
           {items.map((item, idx) => (
-            <View key={item.cartItemId?.toString()} style={[s.itemCard, { backgroundColor: '#ffffff' }]}>
-              {/* Left accent bar */}
-              <View style={[s.accentBar, { backgroundColor: accent(idx) }]} />
-
-              {/* Image */}
-              {item.image ? (
-                <Image source={{ uri: item.image }} style={s.itemImg} resizeMode="cover" />
-              ) : (
-                <View style={[s.itemImg, s.imgPH, { backgroundColor: accent(idx) + '22' }]}>
-                  <Ionicons name="cube-outline" size={28} color={accent(idx)} />
-                </View>
-              )}
-
-              {/* Info */}
-              <View style={s.itemBody}>
-                <Text style={s.itemName} numberOfLines={2}>{item.title}</Text>
-                <Text style={s.itemPrice}>LKR {item.price?.toFixed(2)}</Text>
-
-                {/* Qty row */}
-                <View style={s.qtyRow}>
-                  <TouchableOpacity
-                    style={[s.qtyBtn, { borderColor: accent(idx) }]}
-                    onPress={() => handleQtyChange(item.cartItemId, item.quantity - 1)}
-                    disabled={item.quantity <= 1}
-                  >
-                    <Ionicons name="remove" size={16} color={item.quantity <= 1 ? '#d1d5db' : accent(idx)} />
-                  </TouchableOpacity>
-                  <Text style={s.qtyVal}>{item.quantity}</Text>
-                  <TouchableOpacity
-                    style={[s.qtyBtn, { borderColor: accent(idx) }]}
-                    onPress={() => handleQtyChange(item.cartItemId, item.quantity + 1)}
-                  >
-                    <Ionicons name="add" size={16} color={accent(idx)} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={s.removeBtn}
-                    onPress={() => removeFromCart(item.cartItemId)}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Qty error from server */}
-                {qtyErr[item.cartItemId] && (
-                  <Text style={s.qtyErrText}>⚠ {qtyErr[item.cartItemId]}</Text>
-                )}
-
-                {/* ── Design / Personalisation File Picker ── */}
-                <TouchableOpacity
-                  style={[
-                    s.itemFileBtn,
-                    itemFiles[item.cartItemId] && s.itemFileBtnDone,
-                  ]}
-                  onPress={() => pickItemFile(item.cartItemId)}
-                  activeOpacity={0.8}
-                >
-                  {uploadingFile[item.cartItemId] ? (
-                    <ActivityIndicator size={12} color="#6366f1" />
-                  ) : (
-                    <Ionicons
-                      name={itemFiles[item.cartItemId] ? 'image' : 'attach-outline'}
-                      size={13}
-                      color={itemFiles[item.cartItemId] ? '#22c55e' : accent(idx)}
-                    />
-                  )}
-                  <Text
-                    style={[
-                      s.itemFileBtnText,
-                      { color: itemFiles[item.cartItemId] ? '#22c55e' : accent(idx) },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {uploadingFile[item.cartItemId]
-                      ? 'Uploading…'
-                      : itemFiles[item.cartItemId]
-                        ? itemFiles[item.cartItemId].name
-                        : 'Attach design file'}
-                  </Text>
-                  {itemFiles[item.cartItemId] && !uploadingFile[item.cartItemId] && (
-                    <TouchableOpacity
-                      onPress={() => removeItemFile(item.cartItemId)}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                    >
-                      <Ionicons name="close-circle" size={14} color="#9ca3af" />
-                    </TouchableOpacity>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Line total */}
-              <Text style={[s.lineTotal, { color: accent(idx) }]}>
-                LKR{'\n'}{(item.price * item.quantity).toFixed(2)}
-              </Text>
-            </View>
+            <CartItemCard
+              key={item.cartItemId?.toString()}
+              item={item}
+              accentColor={accent(idx)}
+              onQtyChange={handleQtyChange}
+              onRemove={removeFromCart}
+              onPickFile={pickItemFile}
+              onRemoveFile={removeItemFile}
+              isUploading={uploadingFile[item.cartItemId]}
+              hasFile={itemFiles[item.cartItemId]}
+              qtyError={qtyErr[item.cartItemId]}
+            />
           ))}
         </View>
 
