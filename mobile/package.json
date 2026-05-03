@@ -31,5 +31,9 @@
     "react-native-screens": "~4.16.0",
     "react-native-web": "^0.21.0"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "uuid": "^14.0.0",
+    "postcss": "^8.5.10"
+  }
 }
