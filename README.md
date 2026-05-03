@@ -4,7 +4,12 @@
 
 Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing service platform. This project leverages the **MERN stack** (MongoDB, Express, React Native, Node.js) to deliver a high-performance, visually stunning experience for both customers and administrators.
 
+### 🔗 Live Deployment Links
+*   **🌐 Frontend App (Web):** [print-pied-eight.vercel.app](https://print-pied-eight.vercel.app)
+*   **⚙️ Backend API:** [threedink-studio.onrender.com](https://threedink-studio.onrender.com)
+
 ---
+
 
 ## ✨ Key Features
 
