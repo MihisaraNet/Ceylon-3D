@@ -69,6 +69,19 @@ export default function CartScreen() {
     }
   }, [reloadCart]);
 
+  /* ── Clear cart confirmation ────────────────────────── */
+  const confirmClear = () => {
+    Alert.alert(
+      'Clear Cart?',
+      'Are you sure you want to remove all items from your cart?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear All', style: 'destructive', onPress: clearCart },
+      ]
+    );
+  };
+
+
   /* ── Receipt image picker ────────────────────────────── */
   // Pick optional payment proof image for checkout.
   const pickReceipt = async () => {
@@ -249,10 +262,20 @@ export default function CartScreen() {
 
       {/* Header */}
       <View style={s.topBar}>
-        <Text style={s.pageTitle}>My Cart</Text>
-        <View style={s.itemCountBubble}>
-          <Text style={s.itemCountText}>{items.length} item{items.length !== 1 ? 's' : ''}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Text style={s.pageTitle}>My Cart</Text>
+          <View style={s.itemCountBubble}>
+            <Text style={s.itemCountText}>{items.length} item{items.length !== 1 ? 's' : ''}</Text>
+          </View>
         </View>
+        <TouchableOpacity
+          onPress={confirmClear}
+          style={s.clearHeaderBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="trash-bin-outline" size={16} color="#ef4444" />
+          <Text style={s.clearHeaderText}>Clear All</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -482,6 +505,10 @@ const s = StyleSheet.create({
   pageTitle:       { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
   itemCountBubble: { backgroundColor: '#eef2ff', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1.5, borderColor: '#c7d2fe' },
   itemCountText:   { color: '#4f46e5', fontSize: 13, fontWeight: '800' },
+
+  /* Clear Header Btn */
+  clearHeaderBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fee2e2' },
+  clearHeaderText: { color: '#ef4444', fontSize: 12, fontWeight: '700' },
 
   /* States */
   centred:         { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, paddingHorizontal: 24 },
