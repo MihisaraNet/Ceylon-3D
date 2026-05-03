@@ -119,5 +119,3 @@ LayerForge 3D utilizes a **Premium Dark Aesthetic**. We prioritize visual excell
 - **Interactivity**: Smooth transitions, micro-animations, and responsive layouts.
 
 ---
-
-Built with ❤️ by the LayerForge Team.
