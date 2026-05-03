@@ -175,7 +175,11 @@ const s = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#f5f5ff' },
 
   /* Hero */
-  hero:             { paddingTop: Platform.OS === 'android' ? 20 : 8, paddingBottom: 32, width: '100%' },
+  hero:             {
+    paddingTop: Platform.select({ ios: 10, android: StatusBar.currentHeight || 20, default: 10 }),
+    paddingBottom: 32,
+    width: '100%'
+  },
   heroInner:        { paddingHorizontal: 22, width: '100%' },
   heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, width: '100%' },
   heroTag:          { color: '#a5b4fc', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },

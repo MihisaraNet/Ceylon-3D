@@ -271,8 +271,8 @@ const s = StyleSheet.create({
 
   /* Hero */
   heroWrap:       { position: 'relative' },
-  heroImg:        { width: '100%', height: 300 },
-  heroPlaceholder:{ justifyContent: 'center', alignItems: 'center' },
+  heroImg:        { width: '100%', aspectRatio: 1.1 },
+  heroPlaceholder:{ width: '100%', aspectRatio: 1.1, justifyContent: 'center', alignItems: 'center' },
   soldOverlay:    { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' },
   soldText:       { color: '#fff', fontSize: 22, fontWeight: '900', letterSpacing: 1 },
 
