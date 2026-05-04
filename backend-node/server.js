@@ -93,8 +93,10 @@ app.use('/api/uploads', stlOrderRoutes);     // POST /api/uploads/stl (file uplo
 app.use('/stl-orders', stlOrderRoutes);      // GET/PUT/DELETE /stl-orders (management)
 
 /* ── Health Check Endpoint ────────────────────────────────── */
-// Returns server status and current timestamp for monitoring / uptime checks.
-app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
+// Returns "OK" to indicate the server is healthy.
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
 /* ── 404 Catch-All ────────────────────────────────────────── */
 // Any route not matched above returns a 404 error.
