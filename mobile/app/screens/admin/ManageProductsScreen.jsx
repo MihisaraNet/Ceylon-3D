@@ -20,8 +20,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../lib/api';
-import { getImageUri } from '../../lib/config';
+import { getImageUri, API_BASE_URL } from '../../lib/config';
 import { CATEGORIES } from '../../data/categories';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const EMPTY_FORM = { name: '', description: '', price: '', stock: '', category: 'custom', imageUri: null, imageMime: null, imageName: null };
 const EMPTY_ERRS = { name: '', price: '', stock: '' };
@@ -163,10 +164,19 @@ export default function ManageProductsScreen() {
       }
 
       // PUT for existing, POST for new
-      if (editing) {
-        await api.put(`/api/products/${editing._id}`, fd);
-      } else {
-        await api.post('/api/products', fd);
+      const token = await AsyncStorage.getItem('token');
+      const method = editing ? 'PUT' : 'POST';
+      const url = editing ? `${API_BASE_URL}/api/products/${editing._id}` : `${API_BASE_URL}/api/products`;
+      
+      const res = await fetch(url, {
+        method,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd
+      });
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not save product');
       }
 
       setModal(false);

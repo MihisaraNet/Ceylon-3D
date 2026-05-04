@@ -34,6 +34,8 @@ import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import CartItemCard from '../../components/CartItemCard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../../lib/config';
 
 /* ── Accent colours per card row ───────────────────────────── */
 const ACCENTS = ['#f97316','#22c55e','#3b82f6','#a855f7','#f59e0b'];
@@ -121,7 +123,16 @@ export default function CartScreen() {
     try {
       const fd = new FormData();
       fd.append('customFile', fileObj);
-      await api.put(`/cart/${cartItemId}/file`, fd);
+      const token = await AsyncStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/cart/${cartItemId}/file`, {
+        method: 'PUT',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not attach file');
+      }
     } catch (err) {
       Alert.alert('Upload Failed', err.response?.data?.error || 'Could not attach file');
       setItemFiles(prev => ({ ...prev, [cartItemId]: null }));
@@ -190,7 +201,16 @@ export default function CartScreen() {
         fd.append('shippingAddress', shipping);
         fd.append('items',           JSON.stringify(orderItems));
         fd.append('receipt', receipt);
-        await api.post('/orders', fd);
+        const token = await AsyncStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/orders`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: fd
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Failed to place order');
+        }
       } else {
         // No receipt — send as regular JSON
         await api.post('/orders', { shippingAddress: shipping, items: orderItems });

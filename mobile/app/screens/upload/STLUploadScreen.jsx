@@ -22,7 +22,9 @@ import {
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../../lib/api';
+import { API_BASE_URL } from '../../lib/config';
 import { useAuth } from '../../context/AuthContext';
 import { STL_MATERIALS } from '../../data/categories';
 
@@ -129,12 +131,20 @@ export default function STLUploadScreen() {
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
 
-      // POST /api/uploads/stl triggers the upload and initial pricing logic
-      const { data } = await api.post('/api/uploads/stl', fd);
+      // Use native fetch to bypass Axios FormData boundary issues in React Native
+      const token = await AsyncStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/uploads/stl`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Submission failed');
       
       setResult(data); // Display success screen
     } catch (err) {
-      Alert.alert('Submit Failed', err.response?.data?.error || 'Submission failed');
+      Alert.alert('Submit Failed', err.message || 'Submission failed');
     } finally { setSubmitting(false); }
   };
 
