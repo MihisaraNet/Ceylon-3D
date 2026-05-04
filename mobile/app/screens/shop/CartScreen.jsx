@@ -192,7 +192,7 @@ export default function CartScreen() {
         fd.append('shippingAddress', shipping);
         fd.append('items',           JSON.stringify(orderItems));
         fd.append('receipt', receipt);
-        await api.post('/orders', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post('/orders', fd);
       } else {
         // No receipt — send as regular JSON
         await api.post('/orders', { shippingAddress: shipping, items: orderItems });

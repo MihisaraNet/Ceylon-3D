@@ -24,6 +24,9 @@ const placeOrder = async (req, res) => {
   try {
     // Extract shipping address and items array from the incoming request body
     const { shippingAddress, items } = req.body;
+
+    // Diagnostic logging to help track down order placement issues
+    console.log(`[Order] Placing order for user ${req.user._id}. Items: ${items?.length}, HasReceipt: ${!!req.file}`);
     
     // Validate that the order contains at least one item
     if (!items?.length) return res.status(400).json({ error: 'items required' });
@@ -52,8 +55,9 @@ const placeOrder = async (req, res) => {
       userId: req.user._id, 
       items: orderItems, 
       totalAmount, 
+      category: 'SHOP', 
+      status: 'PENDING',
       shippingAddress: shippingAddress || '', 
-      category: 'SHOP',
       receiptUrl
     });
     

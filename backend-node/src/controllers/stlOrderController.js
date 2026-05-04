@@ -177,7 +177,8 @@ const confirmStlOrder = async (req, res) => {
       }], 
       totalAmount: o.estimatedPrice, 
       category: 'STL', 
-      status: 'PENDING' 
+      status: 'PENDING',
+      shippingAddress: o.address || ''
     });
     
     res.json(o);
