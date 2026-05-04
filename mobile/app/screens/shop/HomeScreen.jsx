@@ -17,7 +17,7 @@
  *
  * @module screens/shop/HomeScreen
  */
-import React from 'react';
+import React from 'react'; 
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   StatusBar, Platform, Animated, SafeAreaView, useWindowDimensions,
