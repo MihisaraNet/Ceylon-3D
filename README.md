@@ -23,9 +23,10 @@ Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing s
 - **Material Selection**: Choose from various materials including **PLA, ABS, and Resin**.
 - **Print Configuration**: Customize infill, layer height, and post-processing options to get an accurate quote.
 
-### 🛡️ Secure Authentication & Authorization
+### 🛡️ Security & Validation
 - **JWT-Based Security**: Robust authentication using JSON Web Tokens.
 - **Role-Based Access Control (RBAC)**: Distinct permissions and interfaces for **Customers** and **Administrators**.
+- **Data Validation**: Comprehensive frontend and backend validation, including strict pattern matching for Sri Lankan phone numbers.
 
 ### 💼 Powerful Admin Dashboard
 - **Cost Calculator**: Advanced tool for admins to calculate production costs (material, energy, machine time, labor) and generate optimized selling prices.
