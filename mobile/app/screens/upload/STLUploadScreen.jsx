@@ -63,6 +63,13 @@ export default function STLUploadScreen() {
   };
 
   /**
+   * removeFile — Clears the selected file and resets the dropzone.
+   */
+  const removeFile = () => {
+    setFile(null);
+  };
+
+  /**
    * validateStep1 — Ensures a file has been selected before moving to step 2.
    */
   const validateStep1 = () => {
@@ -192,16 +199,35 @@ export default function STLUploadScreen() {
       <ScrollView style={s.container} contentContainerStyle={{ padding: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         {step === 0 && (
           <View>
-            <TouchableOpacity style={[s.dropzone, file && s.dropzoneDone]} onPress={pickFile} activeOpacity={0.7}>
-              <View style={[s.dropzoneIcon, file && { backgroundColor: '#eef2ff' }]}>
-                <Ionicons name={file ? 'document-text' : 'cloud-upload-outline'} size={40} color={file ? '#6366f1' : '#9ca3af'} />
-              </View>
-              <Text style={[s.dropzoneText, file && { color: '#1e1b4b', fontWeight: '800' }]}>
-                {file ? file.name : 'Tap to Select Design File'}
-              </Text>
-              {!file && <Text style={s.dropzoneSub}>STL, PDF, or High-res Image</Text>}
-              {file && <Text style={s.fileSize}>{(file.size / 1024).toFixed(1)} KB</Text>}
-            </TouchableOpacity>
+            <View style={[s.dropzone, file && s.dropzoneDone]}>
+              <TouchableOpacity 
+                style={s.dropzoneTouch} 
+                onPress={pickFile} 
+                activeOpacity={0.7}
+              >
+                <View style={[s.dropzoneIcon, file && { backgroundColor: '#eef2ff' }]}>
+                  <Ionicons name={file ? 'document-text' : 'cloud-upload-outline'} size={40} color={file ? '#6366f1' : '#9ca3af'} />
+                </View>
+                <Text style={[s.dropzoneText, file && { color: '#1e1b4b', fontWeight: '800' }]}>
+                  {file ? file.name : 'Tap to Select Design File'}
+                </Text>
+                {!file && <Text style={s.dropzoneSub}>STL, PDF, or High-res Image</Text>}
+              </TouchableOpacity>
+
+              {file && (
+                <View style={s.fileInfoRow}>
+                  <Text style={s.fileSize}>{(file.size / 1024).toFixed(1)} KB</Text>
+                  <TouchableOpacity 
+                    style={s.removeFileBtn} 
+                    onPress={removeFile} 
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                    <Text style={s.removeFileText}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
 
             <Text style={s.fieldLabel}>Preferred Material</Text>
             <View style={s.materialGrid}>
@@ -247,6 +273,7 @@ export default function STLUploadScreen() {
             {[
               { key: 'name', label: 'Full Name', icon: 'person-outline' },
               { key: 'email', label: 'Email Address', icon: 'mail-outline', disabled: !!user },
+              { key: 'email2', label: 'Alt Email (Optional)', icon: 'mail-open-outline' },
               { key: 'phone', label: 'Phone Number', icon: 'call-outline', keyboard: 'phone-pad' },
               { key: 'address', label: 'Delivery Address', icon: 'map-outline', multiline: true },
             ].map(f => (
@@ -285,6 +312,7 @@ export default function STLUploadScreen() {
                 <Row label="Contact" value={form.name} />
                 <Row label="Phone" value={form.phone} />
                 <Row label="Deliver to" value={form.address} />
+                {notes ? <Row label="Notes" value={notes} /> : null}
               </View>
             </View>
 
@@ -349,10 +377,14 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   dropzone: { backgroundColor: '#fff', borderRadius: 24, padding: 30, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
   dropzoneDone: { borderColor: '#6366f1', backgroundColor: '#f8f7ff' },
+  dropzoneTouch: { width: '100%', alignItems: 'center' },
   dropzoneIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
   dropzoneText: { fontSize: 16, color: '#6366f1', fontWeight: '700', textAlign: 'center' },
   dropzoneSub: { fontSize: 12, color: '#94a3b8', marginTop: 5 },
-  fileSize: { fontSize: 12, color: '#6366f1', fontWeight: '800', marginTop: 8 },
+  fileInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginTop: 10 },
+  fileSize: { fontSize: 12, color: '#6366f1', fontWeight: '800' },
+  removeFileBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fef2f2', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#fee2e2' },
+  removeFileText: { fontSize: 11, fontWeight: '700', color: '#ef4444' },
   
   fieldLabel: { fontSize: 14, fontWeight: '800', color: '#1e1b4b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   fieldSub: { fontSize: 12, color: '#94a3b8', marginTop: -6, marginBottom: 10 },
