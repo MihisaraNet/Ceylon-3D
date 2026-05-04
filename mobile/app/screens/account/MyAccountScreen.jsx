@@ -18,9 +18,10 @@
  * @module screens/account/MyAccountScreen
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, SafeAreaView, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { ORDER_STATUSES, STL_STATUSES } from '../../data/categories';
@@ -69,6 +70,7 @@ const ProgressStep = ({ currentStatus, steps, map }) => {
 
 export default function MyAccountScreen() {
   const { user, logout, isAdmin } = useAuth();
+  const { clearCart } = useCart();
   const nav = useNavigation();
   const [shopOrders, setShopOrders]  = useState([]);
   const [stlOrders, setStlOrders]    = useState([]);
@@ -114,27 +116,48 @@ export default function MyAccountScreen() {
     } finally { setConfirming(null); }
   };
 
+  // Handle logout and clear both auth AND cart state
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try { await clearCart(); } catch (_) { /* silent */ }
+            await logout();
+          },
+        },
+      ]
+    );
+  };
+
   const tabs = [
-    { key:'orders', label:'My Orders', icon:'receipt-outline' },
-    { key:'3d',     label:'3D Orders',  icon:'print-outline' },
-    { key:'profile',label:'Profile',    icon:'person-outline' },
+    { key:'orders', label:'Orders',  icon:'receipt-outline' },
+    { key:'3d',     label:'3D Jobs', icon:'print-outline' },
+    { key:'profile',label:'Profile', icon:'person-outline' },
   ];
 
   const shopSteps = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
   const stlSteps  = ['PENDING_QUOTE', 'QUOTED', 'CONFIRMED', 'PRINTING', 'READY', 'DELIVERED'];
 
   return (
-    <ScrollView
-      style={s.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          colors={['#6366f1']}
-          tintColor="#6366f1"
-        />
-      }
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1b4b' }}>
+      <StatusBar barStyle="light-content" backgroundColor="#1e1b4b" />
+      <ScrollView
+        style={s.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#6366f1']}
+            tintColor="#6366f1"
+          />
+        }
+      >
       {/* Header */}
       <View style={s.header}>
         <View style={s.avatar}><Ionicons name="person" size={36} color="#fff" /></View>
@@ -157,7 +180,7 @@ export default function MyAccountScreen() {
         {tabs.map(t => (
           <TouchableOpacity key={t.key} style={[s.tab, activeTab===t.key && s.tabActive]} onPress={() => setActiveTab(t.key)}>
             <Ionicons name={t.icon} size={16} color={activeTab===t.key?'#6366f1':'#6b7280'} />
-            <Text style={[s.tabText, activeTab===t.key && s.tabTextActive]}> {t.label}</Text>
+            <Text style={[s.tabText, activeTab===t.key && s.tabTextActive]} numberOfLines={1}>{t.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -252,28 +275,29 @@ export default function MyAccountScreen() {
       )}
 
       {/* Logout */}
-      <TouchableOpacity style={s.logoutBtn} onPress={() => Alert.alert('Logout','Are you sure you want to logout?',[{text:'Cancel',style:'cancel'},{text:'Logout',style:'destructive',onPress:logout}])}>
+      <TouchableOpacity style={s.logoutBtn} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={18} color="#ef4444" />
         <Text style={s.logoutText}>  Log Out</Text>
       </TouchableOpacity>
-      <View style={{ height:32 }} />
+      <View style={{ height:40 }} />
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
   container:    { flex:1, backgroundColor:'#f9fafb' },
-  header:       { flexDirection:'row', alignItems:'center', backgroundColor:'#1e1b4b', padding:24, gap:16 },
-  avatar:       { width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.15)', justifyContent:'center', alignItems:'center' },
-  name:         { fontSize:20, fontWeight:'800', color:'#fff' },
-  email:        { fontSize:14, color:'rgba(255,255,255,0.6)' },
+  header:       { flexDirection:'row', alignItems:'center', backgroundColor:'#1e1b4b', paddingHorizontal:20, paddingTop:16, paddingBottom:32, gap:16 },
+  avatar:       { width:60, height:60, borderRadius:30, backgroundColor:'rgba(255,255,255,0.15)', justifyContent:'center', alignItems:'center' },
+  name:         { fontSize:18, fontWeight:'800', color:'#fff', flexShrink:1 },
+  email:        { fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:1 },
   adminTag:     { backgroundColor:'#fbbf24', borderRadius:999, paddingHorizontal:8, paddingVertical:2, marginTop:4, alignSelf:'flex-start', fontSize:11, fontWeight:'700', color:'#78350f' },
-  adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor:'#4338ca', margin:16, borderRadius:12, padding:14, justifyContent:'center' },
+  adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor:'#4338ca', margin:16, marginTop:-16, borderRadius:12, padding:14, justifyContent:'center' },
   adminBtnText: { color:'#fff', fontWeight:'700', fontSize:15 },
-  tabRow:       { flexDirection:'row', backgroundColor:'#fff', marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4, marginTop: -15, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
-  tab:          { flex:1, flexDirection:'row', alignItems:'center', justifyContent:'center', padding:12, borderRadius:10 },
+  tabRow:       { flexDirection:'row', backgroundColor:'#fff', marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4, marginTop:-16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  tab:          { flex:1, minWidth:0, flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:4, borderRadius:10, gap:4 },
   tabActive:    { backgroundColor:'#f8f7ff' },
-  tabText:      { fontSize:13, color:'#6b7280', fontWeight:'700' },
+  tabText:      { fontSize:12, color:'#6b7280', fontWeight:'700', flexShrink:1 },
   tabTextActive:{ color:'#6366f1' },
   section:      { padding:16, paddingTop:8 },
   sectionTitle: { fontSize:18, fontWeight:'800', color:'#111827', marginBottom:12 },

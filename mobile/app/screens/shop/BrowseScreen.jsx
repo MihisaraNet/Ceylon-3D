@@ -344,7 +344,7 @@ const s = StyleSheet.create({
   emptyText:          { fontSize: 16, fontWeight: '800', color: '#cbd5e1' },
   emptySub:           { fontSize: 13, color: '#cbd5e1' },
 
-  fab:                { position: 'absolute', bottom: 20, right: 20 },
+  fab:                { position: 'absolute', bottom: Platform.OS === 'ios' ? 100 : 80, right: 20 },
   fabBtn:             { width: 50, height: 50, borderRadius: 25, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
   fabBadge:           { position: 'absolute', top: -4, right: -4, backgroundColor: '#ef4444', borderRadius: 9, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' },
   fabBadgeText:       { color: '#fff', fontSize: 9, fontWeight: '900' },
