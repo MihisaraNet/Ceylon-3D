@@ -53,19 +53,7 @@ const PORT = process.env.PORT || 8080;
 // The wildcard '*' is included as a fallback for development convenience.
 app.use(cors({
   origin: function(origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:5175',
-      'http://localhost:8081',
-      'https://layerforge3d.vercel.app',
-      'https://threedink-studio.onrender.com',
-    ];
-    // Allow requests with no origin (like mobile apps) or if the origin is in the allowed list
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Origin not allowed by CORS'));
-    }
+    callback(null, true);
   },
   credentials: true,
 }));

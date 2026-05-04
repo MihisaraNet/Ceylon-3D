@@ -83,18 +83,19 @@ cd backend-node
 npm install
 npm run dev
 ```
-*The API will be available at `http://localhost:8080`*
+*By default, the frontend is configured to use the **production backend** (`https://threedink-studio.onrender.com`). To test locally, update `API_BASE_URL` in `mobile/app/lib/config.js` to `http://localhost:8080`.*
 
-### 3. Mobile Setup
+### 3. Frontend Setup (Mobile/Web)
 ```bash
 cd mobile
 npm install
 npx expo start
 ```
-*Scan the QR code with your Expo Go app.*
+- **Web App**: Press `w` in the terminal to launch the web version in your browser. The backend is configured to accept dynamic CORS origins, making it suitable for deployment on Netlify/Vercel.
+- **Physical Device**: Scan the QR code with your Expo Go app.
 
 > [!TIP]
-> **Network Configuration:** To test on a physical device, update the `API_BASE_URL` in `mobile/app/lib/config.js` to your computer's local network IP address (e.g., `192.168.1.XXX`).
+> **Network Configuration:** To test locally on a physical device with a local backend, update the `API_BASE_URL` in `mobile/app/lib/config.js` to your computer's local network IP address (e.g., `192.168.1.XXX:8080`).
 
 ---
 
