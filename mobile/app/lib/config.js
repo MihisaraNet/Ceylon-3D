@@ -15,9 +15,9 @@
  *
  * @module lib/config
  */
-// The fallback URL should point to your production backend (e.g. Render, Heroku, or a custom domain).
-// Ensure this matches your latest branding (LayerForge 3D).
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://layerforge3d-backend.onrender.com';
+// Production backend hosted on Render.
+// Override via EXPO_PUBLIC_API_URL env var for local dev (e.g. your machine's LAN IP).
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://threedink-studio.onrender.com';
 export const API_ROOT_URL = API_BASE_URL;
 
 export const getImageUri = (imagePath) => {
