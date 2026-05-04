@@ -179,9 +179,9 @@ export default function CartScreen() {
     if (!address.trim())  return Alert.alert('Missing Info', 'Please enter your delivery address');
     if (!city.trim())     return Alert.alert('Missing Info', 'Please enter your city');
     
-    // Basic phone number sanity check.
-    if (!/^\d{7,15}$/.test(phone.replace(/\s/g, '')))
-      return Alert.alert('Invalid Phone', 'Enter a valid phone number (7-15 digits)');
+    // Robust phone number validation
+    if (!/^(?:0|94|\+94)[0-9]{9}$/.test(phone.replace(/[\s\-().]/g, '')))
+      return Alert.alert('Invalid Phone', 'Enter a valid phone number (e.g., 0712345678 or +94712345678)');
 
     setPlacing(true);
     try {

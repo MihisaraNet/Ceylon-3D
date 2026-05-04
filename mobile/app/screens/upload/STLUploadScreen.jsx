@@ -92,8 +92,8 @@ export default function STLUploadScreen() {
       Alert.alert('Invalid Email', 'Please enter a valid email address');
       return false;
     }
-    if (form.phone.length < 10) {
-      Alert.alert('Invalid Phone', 'Please enter a valid phone number');
+    if (!/^(?:0|94|\+94)[0-9]{9}$/.test(form.phone.replace(/[\s\-().]/g, ''))) {
+      Alert.alert('Invalid Phone', 'Enter a valid phone number (e.g., 0712345678 or +94712345678)');
       return false;
     }
     return true;

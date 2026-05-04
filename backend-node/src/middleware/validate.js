@@ -29,7 +29,7 @@
 /* ── Pure helper functions ─────────────────────────────── */
 
 const isEmail   = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
-const isPhone   = (v) => /^\+?[0-9\s\-().]{7,20}$/.test(String(v || '').trim());
+const isPhone   = (v) => /^(?:0|94|\+94)[0-9]{9}$/.test(String(v || '').replace(/[\s\-().]/g, ''));
 const isStrongPw= (v) => String(v).length >= 8 && /[A-Z]/.test(v) && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(v);
 
 /* ── Auth validation ───────────────────────────────────── */
