@@ -57,7 +57,7 @@ app.use(cors({
       'http://localhost:3000',
       'http://localhost:5175',
       'http://localhost:8081',
-      'https://print-pied-eight.vercel.app',
+      'https://layerforge3d.vercel.app',
       'https://threedink-studio.onrender.com',
     ];
     // Allow requests with no origin (like mobile apps) or if the origin is in the allowed list
