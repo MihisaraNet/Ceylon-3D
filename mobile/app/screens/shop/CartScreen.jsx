@@ -362,25 +362,33 @@ export default function CartScreen() {
             ))}
 
             {/* ── Optional Payment Proof Image ── */}
-            <TouchableOpacity
-              style={[s.receiptBtn, receipt && s.receiptBtnDone]}
-              onPress={pickReceipt}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name={receipt ? 'image' : 'camera-outline'}
-                size={18}
-                color={receipt ? '#22c55e' : '#6366f1'}
-              />
-              <Text style={[s.receiptBtnText, receipt && { color:'#22c55e' }]}>
-                {receipt ? `✔ Receipt attached: ${receipt.name}` : 'Attach Payment Proof (optional)'}
-              </Text>
+            <View style={[s.receiptBtn, receipt && s.receiptBtnDone]}>
+              <TouchableOpacity 
+                style={s.receiptBtnTouch} 
+                onPress={pickReceipt} 
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name={receipt ? 'image' : 'camera-outline'}
+                  size={18}
+                  color={receipt ? '#22c55e' : '#6366f1'}
+                />
+                <Text style={[s.receiptBtnText, receipt && { color:'#22c55e' }]}>
+                  {receipt ? `✔ Receipt attached: ${receipt.name}` : 'Attach Payment Proof (optional)'}
+                </Text>
+              </TouchableOpacity>
+              
               {receipt && (
-                <TouchableOpacity onPress={() => setReceipt(null)} hitSlop={{ top:8, bottom:8, left:8, right:8 }}>
-                  <Ionicons name="close-circle" size={16} color="#9ca3af" />
+                <TouchableOpacity 
+                  style={s.removeReceiptBtn} 
+                  onPress={() => setReceipt(null)} 
+                  hitSlop={{ top:10, bottom:10, left:10, right:10 }}
+                >
+                  <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                  <Text style={s.removeReceiptText}>Remove</Text>
                 </TouchableOpacity>
               )}
-            </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={[s.placeBtn, placing && { opacity: 0.7 }]}
@@ -474,9 +482,12 @@ const s = StyleSheet.create({
   fieldRow:        { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#f8f7ff', borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', marginBottom: 10, overflow: 'hidden' },
   fieldIcon:       { paddingHorizontal: 14, paddingTop: 14 },
   fieldInput:      { flex: 1, paddingVertical: 12, paddingRight: 14, fontSize: 15, color: '#1e1b4b' },
-  receiptBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#6366f1', borderRadius: 12, padding: 13, backgroundColor: '#eef2ff', marginBottom: 12 },
+  receiptBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#6366f1', borderRadius: 12, paddingVertical: 13, paddingHorizontal: 16, backgroundColor: '#eef2ff', marginBottom: 12 },
+  receiptBtnTouch: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   receiptBtnDone:  { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
   receiptBtnText:  { flex: 1, fontSize: 14, fontWeight: '700', color: '#6366f1' },
+  removeReceiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fef2f2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#fee2e2' },
+  removeReceiptText: { fontSize: 11, fontWeight: '700', color: '#ef4444' },
   placeBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 15, marginTop: 6, shadowColor: '#22c55e', shadowOpacity: 0.35, shadowRadius: 10, elevation: 5 },
   placeBtnText:    { color: '#fff', fontSize: 16, fontWeight: '900' },
   cancelBtn:       { alignItems: 'center', padding: 14 },
