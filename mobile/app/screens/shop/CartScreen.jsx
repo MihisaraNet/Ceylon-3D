@@ -121,9 +121,7 @@ export default function CartScreen() {
     try {
       const fd = new FormData();
       fd.append('customFile', fileObj);
-      // PUT /cart/:id with multipart to update the customFileUrl on this cart item
-      await api.put(`/cart/${cartItemId}/file`, fd,
-        { headers: { 'Content-Type': 'multipart/form-data' } });
+      await api.put(`/cart/${cartItemId}/file`, fd);
     } catch (err) {
       Alert.alert('Upload Failed', err.response?.data?.error || 'Could not attach file');
       setItemFiles(prev => ({ ...prev, [cartItemId]: null }));

@@ -130,9 +130,7 @@ export default function STLUploadScreen() {
       fd.append('message', notes);
 
       // POST /api/uploads/stl triggers the upload and initial pricing logic
-      const { data } = await api.post('/api/uploads/stl', fd, { 
-        headers: { 'Content-Type': 'multipart/form-data' } 
-      });
+      const { data } = await api.post('/api/uploads/stl', fd);
       
       setResult(data); // Display success screen
     } catch (err) {

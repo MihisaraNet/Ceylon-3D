@@ -164,9 +164,9 @@ export default function ManageProductsScreen() {
 
       // PUT for existing, POST for new
       if (editing) {
-        await api.put(`/api/products/${editing._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.put(`/api/products/${editing._id}`, fd);
       } else {
-        await api.post('/api/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post('/api/products', fd);
       }
 
       setModal(false);
