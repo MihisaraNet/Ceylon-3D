@@ -61,6 +61,9 @@ const orderSchema = new mongoose.Schema({
   
   // An optional tracking number set by the admin once the order is shipped.
   trackingNumber:  { type: String, default: null },
+  
+  // URL to the payment proof / receipt image uploaded by the user
+  receiptUrl:      { type: String, default: null },
 }, { 
   // Automatically track when the order was created. We do not need an updatedAt timestamp for orders.
   timestamps: { createdAt: 'createdAt', updatedAt: false } 

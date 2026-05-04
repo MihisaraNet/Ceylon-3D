@@ -179,7 +179,12 @@ export default function CartScreen() {
       // Combine the delivery form fields into a single shipping address string
       const shipping   = `${fullName}\n${phone}\n${address}\n${city}`;
       // Map the current cart items into the format required by the orders API
-      const orderItems = items.map(i => ({ productName: i.title, quantity: i.quantity, unitPrice: i.price }));
+      const orderItems = items.map(i => ({ 
+        productId: i.id, 
+        productName: i.title, 
+        quantity: i.quantity, 
+        unitPrice: i.price 
+      }));
 
       if (receipt) {
         // If a receipt image was attached, send as multipart/form-data

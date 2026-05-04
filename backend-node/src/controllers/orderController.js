@@ -40,6 +40,12 @@ const placeOrder = async (req, res) => {
     // Calculate the total cost of the order securely on the server side
     const totalAmount = orderItems.reduce((s, i) => s + i.price * i.quantity, 0);
     
+    // Construct the URL for the uploaded receipt if present
+    let receiptUrl = null;
+    if (req.file) {
+      receiptUrl = `/uploads/product-images/${req.file.filename}`;
+    }
+
     // Create and save the new order document in the database
     // Links the order to the currently authenticated user (req.user._id)
     const order = await Order.create({ 
@@ -47,7 +53,8 @@ const placeOrder = async (req, res) => {
       items: orderItems, 
       totalAmount, 
       shippingAddress: shippingAddress || '', 
-      category: 'SHOP' 
+      category: 'SHOP',
+      receiptUrl
     });
     
     // Respond with a 201 Created status and the new order data

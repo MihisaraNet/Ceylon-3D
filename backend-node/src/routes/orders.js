@@ -14,10 +14,11 @@
 const router = require('express').Router();
 const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
 const { validateOrder } = require('../middleware/validate');
+const { uploadImage } = require('../middleware/upload');
 const { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking } = require('../controllers/orderController');
 
 // User endpoints (require authentication)
-router.post('/',                  verifyToken, requireAuth,  validateOrder, placeOrder);   // Place order
+router.post('/',                  verifyToken, requireAuth,  uploadImage.single('receipt'), validateOrder, placeOrder);   // Place order
 router.get('/',                   verifyToken, requireAuth,  getMyOrders);                 // My orders
 
 // Admin endpoints (require admin role)
