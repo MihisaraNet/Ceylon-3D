@@ -30,7 +30,7 @@ Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing s
 ### 💼 Powerful Admin Dashboard
 - **Cost Calculator**: Advanced tool for admins to calculate production costs (material, energy, machine time, labor) and generate optimized selling prices.
 - **Order Tracking**: Real-time management of shop and custom orders, status updates, and tracking number assignment.
-- **Content Management (CMS)**: Full CRUD capabilities for products, including multi-image uploads and description editing.
+- **Content Management (CMS)**: Full CRUD capabilities for products, including image uploads and description editing.
 
 ---
 

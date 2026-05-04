@@ -124,9 +124,6 @@ export default function BrowseScreen() {
         <View style={s.listingBody}>
           <View style={s.listingTop}>
             <Text style={s.listingTitle} numberOfLines={1}>{item.name || 'Unnamed Product'}</Text>
-            <TouchableOpacity hitSlop={{ top:10, bottom:10, left:10, right:10 }}>
-              <Ionicons name="heart-outline" size={20} color="#64748b" />
-            </TouchableOpacity>
           </View>
 
           <View style={s.locationRow}>
