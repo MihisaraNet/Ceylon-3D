@@ -16,7 +16,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, SafeAreaView, StatusBar,
+  ScrollView, ActivityIndicator, SafeAreaView, StatusBar, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
@@ -163,7 +163,7 @@ export default function LoginScreen({ navigation }) {
             <Text style={s.rememberText}>Remember me</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Alert.alert('Reset Password', 'Please contact support at support@layerforge.com to reset your password.')}>
             <Text style={s.forgotText}>Forgot password?</Text>
           </TouchableOpacity>
         </View>

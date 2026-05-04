@@ -226,10 +226,10 @@ export default function ManageProductsScreen() {
           <StockBadge count={item.stock} />
           <View style={s.actions}>
             {/* Action buttons for Edit and Delete */}
-            <TouchableOpacity onPress={() => openEdit(item)} style={s.iconBtn}>
+            <TouchableOpacity onPress={() => openEdit(item)} style={s.iconBtn} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="pencil-sharp" size={18} color="#6366f1" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(item._id)} style={[s.iconBtn, { backgroundColor: '#fef2f2' }]}>
+            <TouchableOpacity onPress={() => handleDelete(item._id)} style={[s.iconBtn, { backgroundColor: '#fef2f2' }]} activeOpacity={0.6} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="trash-outline" size={18} color="#ef4444" />
             </TouchableOpacity>
           </View>

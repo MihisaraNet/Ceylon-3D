@@ -42,6 +42,8 @@ export default function CartItemCard({
             style={[s.qtyBtn, { borderColor: accentColor }]}
             onPress={() => onQtyChange(item.cartItemId, item.quantity - 1)}
             disabled={item.quantity <= 1}
+            activeOpacity={0.6}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="remove" size={16} color={item.quantity <= 1 ? '#d1d5db' : accentColor} />
           </TouchableOpacity>
@@ -49,12 +51,16 @@ export default function CartItemCard({
           <TouchableOpacity
             style={[s.qtyBtn, { borderColor: accentColor }]}
             onPress={() => onQtyChange(item.cartItemId, item.quantity + 1)}
+            activeOpacity={0.6}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="add" size={16} color={accentColor} />
           </TouchableOpacity>
           <TouchableOpacity 
             style={s.removeBtn} 
             onPress={() => onRemove(item.cartItemId)}
+            activeOpacity={0.5}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="trash-outline" size={16} color="#ef4444" />
           </TouchableOpacity>
