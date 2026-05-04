@@ -245,11 +245,11 @@ export default function STLUploadScreen() {
                 <Text style={s.fieldSub}>Number of copies</Text>
               </View>
               <View style={s.qtyRow}>
-                <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q - 1))}>
+                <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => Math.max(1, q - 1))} activeOpacity={0.6} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                   <Ionicons name="remove" size={20} color="#6366f1" />
                 </TouchableOpacity>
                 <Text style={s.qtyVal}>{quantity}</Text>
-                <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q + 1)}>
+                <TouchableOpacity style={s.qtyBtn} onPress={() => setQty(q => q + 1)} activeOpacity={0.6} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                   <Ionicons name="add" size={20} color="#6366f1" />
                 </TouchableOpacity>
               </View>

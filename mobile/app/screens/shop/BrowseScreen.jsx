@@ -52,6 +52,7 @@ export default function BrowseScreen() {
   const [search,      setSearch]      = useState('');
   const [category,    setCategory]    = useState('');
   const [addingId,    setAddingId]    = useState(null);
+  const searchRef = useRef(null);
 
   /* ── Fetch products ────────────────────────────────── */
   const load = useCallback(async (isRefresh = false) => {
@@ -143,6 +144,8 @@ export default function BrowseScreen() {
               style={[s.miniAddBtn, !inStock && { opacity: 0.5 }]} 
               onPress={() => inStock && handleQuickAdd(item)}
               disabled={!inStock || isAdding}
+              activeOpacity={0.6}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               {isAdding ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -184,7 +187,7 @@ export default function BrowseScreen() {
         
         <View style={s.headerRight}>
           <Text style={s.brandText}>LayerForge</Text>
-          <TouchableOpacity style={s.searchIconBtn}>
+          <TouchableOpacity style={s.searchIconBtn} onPress={() => searchRef.current?.focus()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name="search" size={18} color="#1e293b" />
           </TouchableOpacity>
         </View>
@@ -199,6 +202,7 @@ export default function BrowseScreen() {
       <View style={s.searchWrap}>
         <Ionicons name="search-outline" size={18} color="#94a3b8" style={{ marginRight: 10 }} />
         <TextInput
+          ref={searchRef}
           style={s.searchInput}
           placeholder="What are you looking for?"
           placeholderTextColor="#94a3b8"
