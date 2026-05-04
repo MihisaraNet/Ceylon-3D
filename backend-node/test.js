@@ -150,7 +150,7 @@ async function runTests() {
 
   res = await request('/api/uploads/stl', { method: 'POST', body: stlForm });
   if (!res.ok) throw new Error('Failed to upload STL order: ' + JSON.stringify(res.data));
-  console.log('✅ STL File uploaded and print order placed! STL Order ID:', res.data.order?._id);
+  console.log('✅ STL File uploaded and print order placed! STL Order ID:', res.data.stlOrderId);
 
   /* -------------------------------------------------------------------------- */
   /* 7. CLEANUP                                                               */
