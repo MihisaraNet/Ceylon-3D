@@ -66,45 +66,45 @@ export default function CartItemCard({
         )}
 
         {/* Design / Personalisation File Picker */}
-        <TouchableOpacity
-          style={[
-            s.itemFileBtn,
-            hasFile && s.itemFileBtnDone,
-          ]}
-          onPress={() => onPickFile(item.cartItemId)}
-          activeOpacity={0.8}
-        >
-          {isUploading ? (
-            <ActivityIndicator size={12} color="#6366f1" />
-          ) : (
-            <Ionicons
-              name={hasFile ? 'image' : 'attach-outline'}
-              size={13}
-              color={hasFile ? '#22c55e' : accentColor}
-            />
-          )}
-          <Text
-            style={[
-              s.itemFileBtnText,
-              { color: hasFile ? '#22c55e' : accentColor },
-            ]}
-            numberOfLines={1}
+        <View style={[s.itemFileBtn, hasFile && s.itemFileBtnDone]}>
+          <TouchableOpacity
+            style={s.itemFileBtnTouch}
+            onPress={() => onPickFile(item.cartItemId)}
+            activeOpacity={0.8}
           >
-            {isUploading
-              ? 'Uploading…'
-              : hasFile
-                ? hasFile.name
-                : 'Attach design file'}
-          </Text>
+            {isUploading ? (
+              <ActivityIndicator size={12} color="#6366f1" />
+            ) : (
+              <Ionicons
+                name={hasFile ? 'image' : 'attach-outline'}
+                size={13}
+                color={hasFile ? '#22c55e' : accentColor}
+              />
+            )}
+            <Text
+              style={[
+                s.itemFileBtnText,
+                { color: hasFile ? '#22c55e' : accentColor },
+              ]}
+              numberOfLines={1}
+            >
+              {isUploading
+                ? 'Uploading…'
+                : hasFile
+                  ? hasFile.name
+                  : 'Attach design file'}
+            </Text>
+          </TouchableOpacity>
+          
           {hasFile && !isUploading && (
             <TouchableOpacity
               onPress={() => onRemoveFile(item.cartItemId)}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
-              <Ionicons name="close-circle" size={14} color="#9ca3af" />
+              <Ionicons name="trash-outline" size={14} color="#ef4444" />
             </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </View>
       </View>
 
       {/* Line Total */}
@@ -156,6 +156,7 @@ const s = StyleSheet.create({
     paddingVertical: 5, 
     backgroundColor: 'rgba(255,255,255,0.6)' 
   },
+  itemFileBtnTouch: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5 },
   itemFileBtnDone: { borderColor: '#22c55e', backgroundColor: 'rgba(240,253,244,0.8)' },
   itemFileBtnText: { fontSize: 11, fontWeight: '700', flex: 1 },
   priceCol:        { minWidth: 70, alignItems: 'flex-end' },
