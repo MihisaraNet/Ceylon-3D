@@ -94,24 +94,18 @@ const MainTabs = () => {
           backgroundColor: '#fff',
           borderTopWidth: 1,
           borderTopColor: '#f3f4f6',
-          // Web needs a fixed height, Native handles it better with defaults or specific padding
-          height: Platform.OS === 'web' ? 75 : (Platform.OS === 'ios' ? 88 : 65),
-          paddingBottom: Platform.OS === 'ios' ? 30 : (Platform.OS === 'web' ? 12 : 8),
+          height: Platform.OS === 'ios' ? 88 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 8,
           paddingTop: 8,
           shadowColor: '#6366f1',
           shadowOpacity: 0.1,
           shadowRadius: 12,
           elevation: 10,
-          // Translucent effect for a premium feel
-          position: Platform.OS === 'web' ? 'absolute' : 'relative',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          borderTopLeftRadius: Platform.OS === 'web' ? 0 : 20,
-          borderTopRightRadius: Platform.OS === 'web' ? 0 : 20,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginTop: 1 },
-        tabBarItemStyle: { paddingVertical: Platform.OS === 'web' ? 4 : 2 },
+        tabBarItemStyle: { paddingVertical: 2 },
         headerStyle: { backgroundColor: '#1e1b4b' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: '800', fontSize: 18, letterSpacing: -0.3 },
@@ -134,22 +128,29 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
+/**
+ * AppStack — The main authenticated navigator.
+ * Wraps MainTabs + modal screens (ProductDetail, AdminStack).
+ * Kept in its own component so when 'user' becomes null, the entire
+ * tree is unmounted and replaced cleanly with AuthStack.
+ */
+const AppStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Main"          component={MainTabs} />
+    <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ headerShown:true, title:'Product', headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#fff' }} />
+    <Stack.Screen name="AdminStack"    component={AdminStack} />
+  </Stack.Navigator>
+);
+
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+  // Wait for AsyncStorage session restore before rendering any navigator
   if (loading) return null;
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <>
-            <Stack.Screen name="Main"           component={MainTabs} />
-            <Stack.Screen name="ProductDetail"  component={ProductDetailScreen} options={{ headerShown:true, title:'Product', headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#fff' }} />
-            <Stack.Screen name="AdminStack"     component={AdminStack} />
-          </>
-        ) : (
-          <Stack.Screen name="Auth" component={AuthStack} />
-        )}
-      </Stack.Navigator>
+      {/* Conditionally render completely separate navigators so React Navigation
+          fully resets its internal state when auth changes (fixes logout). */}
+      {user ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
 };
