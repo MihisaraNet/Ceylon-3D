@@ -27,6 +27,7 @@ import api from '../../lib/api';
 import { getImageUri } from '../../lib/config';
 import { CATEGORIES } from '../../data/categories';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 /* ── Category accent colours ───────────────────────────── */
 const CAT_COLORS = {
@@ -47,6 +48,7 @@ const cardBg = (index) => CARD_BG_CYCLE[index % CARD_BG_CYCLE.length];
 export default function BrowseScreen() {
   const nav = useNavigation();
   const { totalItems, addToCart } = useCart();
+  const { user } = useAuth();
 
   const [products,    setProducts]    = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -121,67 +123,60 @@ export default function BrowseScreen() {
   const renderCard = ({ item, index }) => {
     const imgUri   = getImageUri(item.imagePath);
     const catInfo  = CATEGORIES.find(c => c.id === item.category);
-    const cat      = getCatColor(item.category || '');
-    const inStock  = item.stock === null || item.stock === undefined || item.stock > 0;
     const isAdding = addingId === item._id;
 
     return (
       <TouchableOpacity
-        activeOpacity={0.88}
-        style={[s.card, { backgroundColor: cardBg(index) }]}
+        activeOpacity={0.9}
+        style={s.listingCard}
         onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
       >
-        {/* ── Image ── */}
-        <View style={s.imgWrap}>
+        <View style={s.cardImageContainer}>
           {imgUri ? (
-            <Image source={{ uri: imgUri }} style={s.cardImg} resizeMode="cover" />
+            <Image source={{ uri: imgUri }} style={s.listingImg} />
           ) : (
-            <View style={[s.cardImg, s.imgPlaceholder, { backgroundColor: cat.light }]}>
-              <Ionicons name="cube-outline" size={48} color={cat.bg} />
-            </View>
-          )}
-          {/* Out of stock */}
-          {!inStock && (
-            <View style={s.soldOutBadge}>
-              <Text style={s.soldOutText}>Sold Out</Text>
-            </View>
-          )}
-          {/* Low stock */}
-          {inStock && item.stock > 0 && item.stock <= 5 && (
-            <View style={s.lowStockBadge}>
-              <Text style={s.lowStockText}>Only {item.stock} left</Text>
+            <View style={s.listingImgPlaceholder}>
+              <Ionicons name="cube-outline" size={40} color="#cbd5e1" />
             </View>
           )}
         </View>
 
-        {/* ── Body ── */}
-        <View style={s.cardBody}>
-          {/* Category pill */}
-          {catInfo && (
-            <View style={[s.catPill, { backgroundColor: cat.light }]}>
-              <Text style={[s.catPillText, { color: cat.text }]}>{catInfo.icon} {catInfo.name}</Text>
-            </View>
-          )}
-          <Text style={s.cardName} numberOfLines={2}>{item.name}</Text>
-          <Text style={s.cardPrice}>LKR {item.price?.toFixed(2)}</Text>
+        <View style={s.listingBody}>
+          <View style={s.listingTop}>
+            <Text style={s.listingTitle} numberOfLines={1}>{item.name}</Text>
+            <TouchableOpacity hitSlop={{ top:10, bottom:10, left:10, right:10 }}>
+              <Ionicons name="heart-outline" size={22} color="#64748b" />
+            </TouchableOpacity>
+          </View>
 
-          {/* Add button */}
-          <TouchableOpacity
-            style={[s.addBtn, { backgroundColor: inStock ? cat.bg : '#d1d5db' }]}
-            disabled={!inStock || !!addingId}
-            onPress={() => handleQuickAdd(item)}
-            activeOpacity={0.8}
-          >
-            {isAdding ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="cart-outline" size={14} color="#fff" />
-                <Text style={s.addBtnText}>{inStock ? 'Add to Cart' : 'Sold Out'}</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={s.locationRow}>
+            <Ionicons name="location-sharp" size={14} color="#64748b" />
+            <Text style={s.locationText} numberOfLines={1}>
+              {catInfo?.name || 'General'} Listing • Colombo
+            </Text>
+          </View>
+
+          <View style={s.listingBottom}>
+            <View style={s.priceRow}>
+              <Text style={s.currencyText}>LKR </Text>
+              <Text style={s.priceText}>{item.price?.toLocaleString()}</Text>
+              <Text style={s.unitText}>/unit</Text>
+            </View>
+
+            <View style={s.specIcons}>
+              <View style={s.specItem}>
+                <Ionicons name="cube-outline" size={14} color="#1e293b" />
+                <Text style={s.specText}>1</Text>
+              </View>
+              <View style={s.specItem}>
+                <Ionicons name="shield-checkmark-outline" size={14} color="#1e293b" />
+                <Text style={s.specText}>High</Text>
+              </View>
+            </View>
+          </View>
         </View>
+
+        {/* Quick Add overlay or floating button could go here, but matching screenshot exactly */}
       </TouchableOpacity>
     );
   };
@@ -194,24 +189,36 @@ export default function BrowseScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
 
       {/* ── Top Bar ── */}
-      <View style={s.topBar}>
-        <View style={s.topBarLeft}>
-          <Text style={s.pageTitle}>Explore</Text>
-          <Text style={s.pageSubTitle}>{filtered.length} products</Text>
-        </View>
-        {/* Cart shortcut */}
-        <TouchableOpacity
-          style={s.cartChip}
-          onPress={() => nav.navigate('Cart')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="cart" size={20} color="#6366f1" />
-          {totalItems > 0 && (
-            <View style={s.cartChipBadge}>
-              <Text style={s.cartChipBadgeText}>{totalItems}</Text>
+      <View style={s.header}>
+        <View style={s.userInfo}>
+          <View style={s.avatar}>
+            <Text style={s.avatarText}>{user?.fullName?.[0] || 'U'}</Text>
+            <View style={s.onlineDot} />
+          </View>
+          <View>
+            <View style={s.nameRow}>
+              <Text style={s.greetingText}>Hi, </Text>
+              <Text style={s.userNameText}>{user?.fullName?.split(' ')[0] || 'Guest'}</Text>
+              <Ionicons name="chevron-down" size={14} color="#64748b" style={{ marginLeft: 4 }} />
             </View>
-          )}
-        </TouchableOpacity>
+            <View style={s.roleBadge}>
+              <View style={s.roleDot} />
+              <Text style={s.roleText}>{user?.role === 'ROLE_ADMIN' ? 'ADMIN' : 'MEMBER'}</Text>
+            </View>
+          </View>
+        </View>
+        
+        <View style={s.headerRight}>
+          <Text style={s.brandText}>LayerForge</Text>
+          <TouchableOpacity style={s.searchIconBtn}>
+            <Ionicons name="search" size={20} color="#1e293b" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={s.sectionHeader}>
+        <Text style={s.sectionTitle}>Recent Listings</Text>
+        <View style={s.titleUnderline} />
       </View>
 
       {/* ── Search ── */}
@@ -276,16 +283,15 @@ export default function BrowseScreen() {
         <FlatList
           data={filtered}
           keyExtractor={i => i._id}
-          numColumns={2}
-          columnWrapperStyle={s.gridRow}
-          contentContainerStyle={s.gridContent}
+          numColumns={1}
+          contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => load(true)}
-              colors={['#6366f1']}
-              tintColor="#6366f1"
+              colors={['#0891b2']}
+              tintColor="#0891b2"
             />
           }
           renderItem={renderCard}
@@ -299,81 +305,89 @@ export default function BrowseScreen() {
         />
       )}
 
-      {/* ── Floating View Cart button ── */}
-      <Animated.View style={[s.fab, { transform: [{ scale: fabScale }] }]}>
-        <TouchableOpacity
-          style={s.fabBtn}
-          onPress={() => nav.navigate('Cart')}
-          activeOpacity={0.88}
-        >
-          <View style={s.fabBadge}>
-            <Text style={s.fabBadgeText}>{totalItems}</Text>
-          </View>
-          <Ionicons name="cart" size={20} color="#fff" />
-          <Text style={s.fabText}>View Cart</Text>
-          <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-      </Animated.View>
+      {/* ── Floating Filter Button ── */}
+      <TouchableOpacity style={s.fab} onPress={() => { /* Filter logic */ }}>
+        <View style={s.fabBtn}>
+          {totalItems > 0 && (
+            <View style={s.fabBadge}>
+              <Text style={s.fabBadgeText}>{totalItems}</Text>
+            </View>
+          )}
+          <Ionicons name="options-outline" size={24} color="#fff" />
+        </View>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 /* ─────────────────────────────────────────────────────── */
 const s = StyleSheet.create({
-  safe:          { flex: 1, backgroundColor: '#f8f7ff' },
+  safe:               { flex: 1, backgroundColor: '#f8fafc' },
+  
+  /* Header Styles */
+  header:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? 15 : 5, paddingBottom: 15 },
+  userInfo:           { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar:             { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0ea5e9', justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  avatarText:         { color: '#fff', fontSize: 18, fontWeight: '800' },
+  onlineDot:          { position: 'absolute', top: 2, right: 2, width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#fff' },
+  nameRow:            { flexDirection: 'row', alignItems: 'center' },
+  greetingText:       { fontSize: 16, color: '#64748b' },
+  userNameText:       { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  roleBadge:          { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e0f2fe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginTop: 4, alignSelf: 'flex-start' },
+  roleDot:            { width: 6, height: 6, borderRadius: 3, backgroundColor: '#0ea5e9', marginRight: 5 },
+  roleText:           { fontSize: 10, fontWeight: '800', color: '#0ea5e9', letterSpacing: 0.5 },
+  headerRight:        { flexDirection: 'row', alignItems: 'center', gap: 15 },
+  brandText:          { fontSize: 20, fontWeight: '900', color: '#1e293b', letterSpacing: -0.5 },
+  searchIconBtn:      { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
 
-  /* Top bar */
-  topBar:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 12 : 4, paddingBottom: 4 },
-  topBarLeft:    { gap: 1 },
-  pageTitle:     { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  pageSubTitle:  { fontSize: 13, color: '#9ca3af', fontWeight: '600' },
-  cartChip:      { backgroundColor: '#eef2ff', borderRadius: 14, padding: 10, borderWidth: 1.5, borderColor: '#c7d2fe', position: 'relative' },
-  cartChipBadge: { position: 'absolute', top: -5, right: -5, backgroundColor: '#ef4444', borderRadius: 999, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#fff' },
-  cartChipBadgeText: { color: '#fff', fontSize: 10, fontWeight: '900' },
+  /* Section Header */
+  sectionHeader:      { paddingHorizontal: 20, marginTop: 10, marginBottom: 15 },
+  sectionTitle:       { fontSize: 24, fontWeight: '800', color: '#1e293b' },
+  titleUnderline:     { width: 35, height: 4, backgroundColor: '#0369a1', marginTop: 6, borderRadius: 2 },
 
   /* Search */
-  searchWrap:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 16, marginVertical: 10, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 2, borderWidth: 1.5, borderColor: '#e5e7eb', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
-  searchInput:   { flex: 1, height: 44, fontSize: 15, color: '#1e1b4b' },
+  searchWrap:         { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 20, marginBottom: 15, borderRadius: 16, paddingHorizontal: 15, height: 50, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  searchInput:        { flex: 1, fontSize: 15, color: '#1e293b' },
 
   /* Category tabs */
-  catRow:        { paddingHorizontal: 14, paddingVertical: 6, gap: 8 },
-  catTab:        { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e5e7eb' },
-  catTabText:    { fontSize: 13, fontWeight: '700', color: '#6b7280' },
+  catRow:             { paddingHorizontal: 16, paddingVertical: 4, gap: 10 },
+  catTab:             { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff', borderWidth: 1, borderColor: '#f1f5f9' },
+  catTabText:         { fontSize: 14, fontWeight: '700', color: '#64748b' },
 
-  /* Grid */
-  gridRow:       { gap: 12, paddingHorizontal: 16 },
-  gridContent:   { paddingTop: 12, paddingBottom: 120, gap: 12 },
+  /* List */
+  listContent:        { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 100, gap: 18 },
 
-  /* Card */
-  card:          { flex: 1, borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' },
-  imgWrap:       { position: 'relative' },
-  cardImg:       { width: '100%', aspectRatio: 1 },
-  imgPlaceholder:{ justifyContent: 'center', alignItems: 'center' },
-  soldOutBadge:  { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
-  soldOutText:   { color: '#fff', fontWeight: '900', fontSize: 14, letterSpacing: 0.5 },
-  lowStockBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: '#fef3c7', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  lowStockText:  { color: '#92400e', fontSize: 10, fontWeight: '800' },
-  cardBody:      { padding: 10, gap: 5 },
-  catPill:       { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  catPillText:   { fontSize: 10, fontWeight: '700' },
-  cardName:      { fontSize: 13, fontWeight: '800', color: '#1e1b4b', lineHeight: 18 },
-  cardPrice:     { fontSize: 15, fontWeight: '900', color: '#6366f1' },
-  addBtn:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 10, paddingVertical: 8, gap: 5, marginTop: 2 },
-  addBtnText:    { color: '#fff', fontSize: 12, fontWeight: '800' },
+  /* Listing Card */
+  listingCard:        { backgroundColor: '#fff', borderRadius: 24, padding: 12, flexDirection: 'row', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 12, elevation: 4 },
+  cardImageContainer: { width: 110, height: 110, borderRadius: 20, overflow: 'hidden' },
+  listingImg:         { width: '100%', height: '100%', resizeMode: 'cover' },
+  listingImgPlaceholder: { width: '100%', height: '100%', backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
+  listingBody:        { flex: 1, marginLeft: 15, justifyContent: 'space-between', paddingVertical: 2 },
+  listingTop:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  listingTitle:       { fontSize: 17, fontWeight: '800', color: '#1e293b', flex: 1, marginRight: 8 },
+  locationRow:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  locationText:       { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  listingBottom:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
+  priceRow:           { flexDirection: 'row', alignItems: 'baseline' },
+  currencyText:       { fontSize: 16, fontWeight: '800', color: '#0891b2' },
+  priceText:          { fontSize: 18, fontWeight: '900', color: '#0891b2' },
+  unitText:           { fontSize: 12, color: '#64748b', fontWeight: '600' },
+  specIcons:          { flexDirection: 'row', gap: 12 },
+  specItem:           { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  specText:           { fontSize: 12, fontWeight: '700', color: '#1e293b' },
 
   /* States */
-  centred:       { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 80, gap: 10 },
-  loadText:      { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
-  errText:       { color: '#ef4444', textAlign: 'center', fontSize: 14, paddingHorizontal: 30 },
-  retryBtn:      { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#6366f1', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, marginTop: 4 },
-  retryText:     { color: '#fff', fontWeight: '700' },
-  emptyText:     { fontSize: 17, fontWeight: '800', color: '#6b7280' },
-  emptySub:      { fontSize: 13, color: '#9ca3af' },
+  centred:            { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60, gap: 12 },
+  loadText:           { color: '#94a3b8', fontSize: 15, fontWeight: '600' },
+  errText:            { color: '#ef4444', textAlign: 'center', fontSize: 14, paddingHorizontal: 40 },
+  retryBtn:           { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0ea5e9', paddingHorizontal: 22, paddingVertical: 12, borderRadius: 12, marginTop: 5 },
+  retryText:          { color: '#fff', fontWeight: '700' },
+  emptyText:          { fontSize: 18, fontWeight: '800', color: '#64748b' },
+  emptySub:           { fontSize: 14, color: '#94a3b8' },
 
   /* FAB */
-  fab:           { position: 'absolute', bottom: 24, alignSelf: 'center', left: 0, right: 0, alignItems: 'center' },
-  fabBtn:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4f46e5', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 13, gap: 8, shadowColor: '#6366f1', shadowOpacity: 0.5, shadowRadius: 18, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
-  fabBadge:      { backgroundColor: '#fff', borderRadius: 999, minWidth: 22, height: 22, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
-  fabBadgeText:  { fontSize: 12, fontWeight: '900', color: '#4f46e5' },
-  fabText:       { color: '#fff', fontSize: 15, fontWeight: '800' },
+  fab:                { position: 'absolute', bottom: 30, right: 20 },
+  fabBtn:             { width: 56, height: 56, borderRadius: 28, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10, elevation: 8 },
+  fabBadge:           { position: 'absolute', top: -5, right: -5, backgroundColor: '#ef4444', borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: '#fff' },
+  fabBadgeText:       { color: '#fff', fontSize: 10, fontWeight: '900' },
 });
