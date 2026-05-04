@@ -284,16 +284,29 @@ export default function ManageProductsScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={s.imgPicker} onPress={pickImage} activeOpacity={0.7}>
-            {form.imageUri ? (
-              <Image source={{ uri: form.imageUri }} style={s.imgPreview} />
-            ) : (
-              <View style={s.imgPHLarge}>
-                <Ionicons name="cloud-upload-outline" size={40} color="#6366f1" />
-                <Text style={s.imgPHText}>Upload Product Image</Text>
-              </View>
+          <View style={s.imgPickerContainer}>
+            <TouchableOpacity style={s.imgPicker} onPress={pickImage} activeOpacity={0.7}>
+              {form.imageUri ? (
+                <Image source={{ uri: form.imageUri }} style={s.imgPreview} />
+              ) : editing?.imagePath ? (
+                <Image source={{ uri: getImageUri(editing.imagePath) }} style={s.imgPreview} />
+              ) : (
+                <View style={s.imgPHLarge}>
+                  <Ionicons name="cloud-upload-outline" size={40} color="#6366f1" />
+                  <Text style={s.imgPHText}>Upload Product Image</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            {form.imageUri && (
+              <TouchableOpacity 
+                style={s.imgRemoveBtn} 
+                onPress={() => setForm(f => ({ ...f, imageUri: null, imageMime: null, imageName: null }))}
+              >
+                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                <Text style={s.imgRemoveText}>Remove Selected</Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
 
           <View style={s.form}>
             <Text style={s.label}>Product Name</Text>
@@ -401,10 +414,13 @@ const s = StyleSheet.create({
   modalTitle: { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
   closeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
   
-  imgPicker: { width: '100%', height: 180, borderRadius: 20, backgroundColor: '#f8f7ff', borderWeight: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', overflow: 'hidden', marginBottom: 24 },
+  imgPickerContainer: { marginBottom: 24, alignItems: 'center' },
+  imgPicker: { width: '100%', height: 180, borderRadius: 20, backgroundColor: '#f8f7ff', borderWidth: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', overflow: 'hidden' },
   imgPHLarge: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10 },
   imgPHText: { color: '#6366f1', fontSize: 14, fontWeight: '700' },
   imgPreview: { width: '100%', height: '100%', resizeMode: 'cover' },
+  imgRemoveBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2', marginTop: 10 },
+  imgRemoveText: { fontSize: 12, fontWeight: '700', color: '#ef4444' },
   
   form: { gap: 16 },
   formRow: { flexDirection: 'row', gap: 12 },
