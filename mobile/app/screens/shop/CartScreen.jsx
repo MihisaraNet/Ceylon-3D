@@ -269,14 +269,6 @@ export default function CartScreen() {
             <Text style={s.itemCountText}>{items.length} item{items.length !== 1 ? 's' : ''}</Text>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={confirmClear}
-          style={s.clearHeaderBtn}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="trash-bin-outline" size={16} color="#ef4444" />
-          <Text style={s.clearHeaderText}>Clear All</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView
