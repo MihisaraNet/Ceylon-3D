@@ -21,7 +21,7 @@
  *
  * @module screens/shop/CartScreen
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   TextInput, Alert, ActivityIndicator, SafeAreaView,
@@ -55,6 +55,8 @@ export default function CartScreen() {
   const [placing, setPlacing]   = useState(false);
   const [done,    setDone]       = useState(false);
   const [qtyErr,  setQtyErr]     = useState({}); // { [cartItemId]: 'error string' }
+  // Ref-based guard to prevent double-submission on rapid taps (state update is async)
+  const placingRef = useRef(false);
   // Optional payment proof image selected by the user at checkout
   const [receipt, setReceipt]   = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -121,17 +123,23 @@ export default function CartScreen() {
   /* ── Place order ─────────────────────────────────────── */
   // Validate inputs and submit final order payload.
   const handlePlaceOrder = async () => {
+    // Immediately block re-entry before any async state update (prevents double-tap submission)
+    if (placingRef.current) return;
+    placingRef.current = true;
+
     const { fullName, phone, address, city } = form;
     
     // Required delivery fields.
-    if (!fullName.trim()) return Alert.alert('Missing Info', 'Please enter your full name');
-    if (!phone.trim())    return Alert.alert('Missing Info', 'Please enter your phone number');
-    if (!address.trim())  return Alert.alert('Missing Info', 'Please enter your delivery address');
-    if (!city.trim())     return Alert.alert('Missing Info', 'Please enter your city');
+    if (!fullName.trim()) { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your full name'); }
+    if (!phone.trim())    { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your phone number'); }
+    if (!address.trim())  { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your delivery address'); }
+    if (!city.trim())     { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your city'); }
     
     // Robust phone number validation
-    if (!/^(?:0|94|\+94)[0-9]{9}$/.test(phone.replace(/[\s\-().]/g, '')))
+    if (!/^(?:0|94|\+94)[0-9]{9}$/.test(phone.replace(/[\s\-().]/g, ''))) {
+      placingRef.current = false;
       return Alert.alert('Invalid Phone', 'Enter a valid phone number (e.g., 0712345678 or +94712345678)');
+    }
 
     setPlacing(true);
     try {
@@ -173,6 +181,7 @@ export default function CartScreen() {
       Alert.alert('Order Failed', err.response?.data?.error || err.message || 'Failed to place order');
     } finally {
       setPlacing(false);
+      placingRef.current = false; // Release the guard so the user can retry after a failure
     }
   };
 
