@@ -131,20 +131,39 @@ export default function STLUploadScreen() {
       fd.append('quantity', String(quantity));
       fd.append('message', notes);
 
-      // Use native fetch to bypass Axios FormData boundary issues in React Native
+      // Use native fetch to bypass Axios FormData boundary issues in React Native.
+      // AbortController gives us a 60s timeout so Render cold-starts don't hang forever.
+      const controller = new AbortController();
+      const timeoutId  = setTimeout(() => controller.abort(), 60000);
+
       const token = await AsyncStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/uploads/stl`, {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: fd
-      });
+      let res;
+      try {
+        res = await fetch(`${API_BASE_URL}/api/uploads/stl`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: fd,
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Submission failed');
+      // Parse response — even on error the server returns JSON
+      let data = {};
+      try { data = await res.json(); } catch { /* non-JSON body */ }
+
+      if (!res.ok) {
+        throw new Error(data.error || `Server error (${res.status})`);
+      }
       
       setResult(data); // Display success screen
     } catch (err) {
-      Alert.alert('Submit Failed', err.message || 'Submission failed');
+      if (err.name === 'AbortError') {
+        Alert.alert('Request Timed Out', 'The server took too long to respond. Please try again.');
+      } else {
+        Alert.alert('Submit Failed', err.message || 'Submission failed. Please try again.');
+      }
     } finally { setSubmitting(false); }
   };
 
@@ -350,7 +369,12 @@ export default function STLUploadScreen() {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={s.submitBtn} onPress={handleSubmit} disabled={submitting}>
-            {submitting ? <ActivityIndicator color="#fff" /> : (
+            {submitting ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <ActivityIndicator color="#fff" />
+                <Text style={s.nextBtnText}>Submitting...</Text>
+              </View>
+            ) : (
               <>
                 <Text style={s.nextBtnText}>Confirm Order</Text>
                 <Ionicons name="send" size={18} color="#fff" />

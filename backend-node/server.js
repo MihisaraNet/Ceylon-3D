@@ -33,7 +33,14 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./src/config/db');
+
+/* ── Ensure upload directories exist (critical for Render ephemeral FS) ─ */
+['uploads/stl-files', 'uploads/product-images'].forEach(dir => {
+  const full = path.join(__dirname, dir);
+  if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
+});
 const { seedAdmin } = require('./src/utils/dataInit');
 
 /* ── Import all route modules ─────────────────────────────── */
