@@ -172,8 +172,8 @@ const validateStlOrder = (req, res, next) => {
     errors.email = 'Please enter a valid email address';
   if (!phone || !isPhone(phone))
     errors.phone = 'Please enter a valid phone number';
-  if (!address || String(address).trim().length < 10)
-    errors.address = 'Please enter a complete delivery address';
+  if (!address || String(address).trim().length < 3)
+    errors.address = 'Please enter a delivery address';
 
   const VALID_MATERIALS = ['PLA', 'ABS', 'PETG', 'RESIN'];
   if (!material || !VALID_MATERIALS.includes(String(material).toUpperCase()))
