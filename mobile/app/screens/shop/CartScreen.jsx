@@ -24,7 +24,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Image, TextInput, Alert, ActivityIndicator, SafeAreaView,
+  TextInput, Alert, ActivityIndicator, SafeAreaView,
   StatusBar, Platform, RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -420,9 +420,6 @@ const s = StyleSheet.create({
   qtyVal:          { fontSize: 16, fontWeight: '900', color: '#1e1b4b', minWidth: 22, textAlign: 'center' },
   removeBtn:       { marginLeft: 4, padding: 4 },
   qtyErrText:      { fontSize: 11, color: '#ef4444', fontWeight: '600', marginTop: 2 },
-  itemFileBtn:     { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6, borderWidth: 1, borderStyle: 'dashed', borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: 'rgba(255,255,255,0.6)' },
-  itemFileBtnDone: { borderColor: '#22c55e', backgroundColor: 'rgba(240,253,244,0.8)' },
-  itemFileBtnText: { fontSize: 11, fontWeight: '700', flex: 1 },
   lineTotal:       { fontSize: 12, fontWeight: '900', textAlign: 'right', lineHeight: 18, minWidth: 64 },
 
   /* Summary */

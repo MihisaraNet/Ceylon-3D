@@ -198,7 +198,7 @@ export default function BrowseScreen() {
     <ProductCard
       item={item}
       onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
-      onAddToCart={() => item.stock > 0 && handleQuickAdd(item)}
+      onAddToCart={() => handleQuickAdd(item)}
       isAdding={addingId === item._id}
     />
   );
