@@ -33,7 +33,10 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
-    if (err.response?.status === 401 || err.response?.status === 403) {
+    // Only clear auth on 401 (token expired / not authenticated).
+    // 403 means the user IS authenticated but lacks permission (e.g. not admin);
+    // wiping the token on 403 would silently log the user out on every admin check.
+    if (err.response?.status === 401) {
       await AsyncStorage.multiRemove(['token', 'authUser']);
     }
     return Promise.reject(err);

@@ -106,6 +106,13 @@ export default function ManageProductsScreen() {
    * Stores the URI, MIME type, and filename in the form state.
    */
   const pickImage = async () => {
+    // Request media library permission first (required on iOS)
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Please allow access to your photo library to add a product image.');
+      return;
+    }
+
     const res = await ImagePicker.launchImageLibraryAsync({ 
       mediaTypes: ['images'], 
       quality: 0.8 
@@ -113,11 +120,17 @@ export default function ManageProductsScreen() {
     
     if (!res.canceled && res.assets?.[0]) {
       const asset = res.assets[0];
+      // Ensure mimeType and fileName are never null/undefined.
+      // Some Android devices omit these fields; multer will reject the upload
+      // if the MIME type is missing or the filename is null.
+      const ext = asset.uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const safeMime = asset.mimeType || `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+      const safeName = asset.fileName || `product-image.${ext}`;
       setForm(f => ({ 
         ...f, 
         imageUri: asset.uri, 
-        imageMime: asset.mimeType || 'image/jpeg', 
-        imageName: asset.fileName || 'image.jpg' 
+        imageMime: safeMime, 
+        imageName: safeName 
       }));
     }
   };
@@ -176,13 +189,14 @@ export default function ManageProductsScreen() {
       
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Could not save product');
+        throw new Error(data.error || data.message || `Server error (${res.status})`);
       }
 
       setModal(false);
       load(); // Refresh the list
     } catch (err) {
-      Alert.alert('Save Failed', err.response?.data?.error || 'Could not save product');
+      // err.message is set by the throw above (fetch path) or by network failures
+      Alert.alert('Save Failed', err.message || 'Could not save product');
     } finally { setSaving(false); }
   };
 
@@ -199,7 +213,9 @@ export default function ManageProductsScreen() {
             await api.delete(`/api/products/${id}`);
             load(); // Refresh the list after deletion
           } catch (err) {
-            Alert.alert('Error', 'Delete failed');
+            // Show the actual server error message for better diagnosis
+            const msg = err.response?.data?.error || err.message || 'Delete failed. Please try again.';
+            Alert.alert('Delete Failed', msg);
           }
         }
       },
