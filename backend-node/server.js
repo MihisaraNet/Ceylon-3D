@@ -56,13 +56,16 @@ const PORT = process.env.PORT || 8080;
 
 /* ── Middleware Configuration ─────────────────────────────── */
 
-// Enable CORS for the specified frontend origins (React web, Expo mobile, etc.)
-// The wildcard '*' is included as a fallback for development convenience.
+// Allow ALL origins — required for Expo mobile app, Vercel frontend, and Postman.
+// Using a function form so `credentials: true` works alongside open origin policy.
 app.use(cors({
   origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman) and all browser origins
     callback(null, true);
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Parse incoming JSON request bodies (e.g., login credentials, order data)
