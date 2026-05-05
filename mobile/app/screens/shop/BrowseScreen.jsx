@@ -41,6 +41,104 @@ const CAT_COLORS = {
 };
 const getCatColor = (id) => CAT_COLORS[id] || CAT_COLORS['custom'];
 
+/* ── ProductCard — extracted as a proper component so useState is legal ── */
+function ProductCard({ item, onPress, onAddToCart, isAdding }) {
+  const [imgErr, setImgErr] = useState(false);
+  const imgUri  = getImageUri(item.imagePath);
+  const catInfo = CATEGORIES.find(c => c.id === item.category);
+  const catCol  = getCatColor(item.category || '');
+  const inStock = item.stock === null || item.stock === undefined || item.stock > 0;
+  const stockQty = item.stock != null ? item.stock : null;
+
+  return (
+    <TouchableOpacity activeOpacity={0.88} style={s.card} onPress={onPress}>
+      {/* ── Left: product image ── */}
+      <View style={s.imgWrap}>
+        {imgUri && !imgErr ? (
+          <Image
+            source={{ uri: imgUri }}
+            style={s.img}
+            onError={() => setImgErr(true)}
+          />
+        ) : (
+          <View style={[s.imgPlaceholder, { backgroundColor: catCol.pill }]}>
+            <Text style={s.imgEmoji}>{catInfo?.icon || '📦'}</Text>
+          </View>
+        )}
+
+        {/* Out-of-stock overlay */}
+        {!inStock && (
+          <View style={s.outOverlay}>
+            <Text style={s.outText}>OUT OF{'\n'}STOCK</Text>
+          </View>
+        )}
+
+        {/* Category colour strip at the bottom of image */}
+        <View style={[s.imgStrip, { backgroundColor: catCol.bg }]} />
+      </View>
+
+      {/* ── Right: details ── */}
+      <View style={s.cardBody}>
+
+        {/* Category pill */}
+        <View style={[s.catPill, { backgroundColor: catCol.pill }]}>
+          <Text style={[s.catPillText, { color: catCol.pillText }]}>
+            {catInfo?.icon}  {catInfo?.name || 'Custom'}
+          </Text>
+        </View>
+
+        {/* Product name */}
+        <Text style={s.productName} numberOfLines={2}>
+          {item.name || 'Unnamed Product'}
+        </Text>
+
+        {/* Description preview */}
+        {!!item.description && (
+          <Text style={s.descText} numberOfLines={1}>
+            {item.description}
+          </Text>
+        )}
+
+        {/* Price */}
+        <Text style={s.priceLabel}>
+          LKR{' '}
+          <Text style={s.priceValue}>
+            {item.price?.toLocaleString() || '0'}
+          </Text>
+        </Text>
+
+        {/* Bottom row: stock chip + add button */}
+        <View style={s.bottomRow}>
+          {/* Stock indicator */}
+          <View style={[s.stockChip, !inStock && { backgroundColor: '#fee2e2' }]}>
+            <View style={[s.stockDot, { backgroundColor: inStock ? '#22c55e' : '#ef4444' }]} />
+            <Text style={[s.stockText, !inStock && { color: '#ef4444' }]}>
+              {inStock
+                ? stockQty != null ? `${stockQty} in stock` : 'In Stock'
+                : 'Out of Stock'
+              }
+            </Text>
+          </View>
+
+          {/* Add to cart */}
+          <TouchableOpacity
+            style={[s.addBtn, !inStock && s.addBtnDisabled]}
+            onPress={onAddToCart}
+            disabled={!inStock || isAdding}
+            activeOpacity={0.75}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            {isAdding
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Ionicons name="cart-outline" size={16} color="#fff" />
+            }
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function BrowseScreen() {
   const nav = useNavigation();
   const { totalItems, addToCart } = useCart();
@@ -95,110 +193,15 @@ export default function BrowseScreen() {
     return nameMatch && catMatch;
   });
 
-  /* ── Single product card ────────────────────────────────── */
-  const renderCard = ({ item }) => {
-    const imgUri   = getImageUri(item.imagePath);
-    const catInfo  = CATEGORIES.find(c => c.id === item.category);
-    const catCol   = getCatColor(item.category || '');
-    const isAdding = addingId === item._id;
-    const inStock  = item.stock === null || item.stock === undefined || item.stock > 0;
-    const stockQty = item.stock != null ? item.stock : null;
-
-    // Track whether the remote image failed to load so we can fall back to emoji
-    const [imgErr, setImgErr] = React.useState(false);
-
-    return (
-      <TouchableOpacity
-        activeOpacity={0.88}
-        style={s.card}
-        onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
-      >
-        {/* ── Left: product image ── */}
-        <View style={s.imgWrap}>
-          {imgUri && !imgErr ? (
-            <Image
-              source={{ uri: imgUri }}
-              style={s.img}
-              onError={() => setImgErr(true)}
-            />
-          ) : (
-            <View style={[s.imgPlaceholder, { backgroundColor: catCol.pill }]}>
-              <Text style={s.imgEmoji}>{catInfo?.icon || '📦'}</Text>
-            </View>
-          )}
-
-          {/* Out-of-stock overlay */}
-          {!inStock && (
-            <View style={s.outOverlay}>
-              <Text style={s.outText}>OUT OF{'\n'}STOCK</Text>
-            </View>
-          )}
-
-          {/* Category colour strip at the bottom of image */}
-          <View style={[s.imgStrip, { backgroundColor: catCol.bg }]} />
-        </View>
-
-        {/* ── Right: details ── */}
-        <View style={s.cardBody}>
-
-          {/* Category pill */}
-          <View style={[s.catPill, { backgroundColor: catCol.pill }]}>
-            <Text style={[s.catPillText, { color: catCol.pillText }]}>
-              {catInfo?.icon}  {catInfo?.name || 'Custom'}
-            </Text>
-          </View>
-
-          {/* Product name */}
-          <Text style={s.productName} numberOfLines={2}>
-            {item.name || 'Unnamed Product'}
-          </Text>
-
-          {/* Description preview */}
-          {!!item.description && (
-            <Text style={s.descText} numberOfLines={1}>
-              {item.description}
-            </Text>
-          )}
-
-          {/* Price */}
-          <Text style={s.priceLabel}>
-            LKR{' '}
-            <Text style={s.priceValue}>
-              {item.price?.toLocaleString() || '0'}
-            </Text>
-          </Text>
-
-          {/* Bottom row: stock chip + add button */}
-          <View style={s.bottomRow}>
-            {/* Stock indicator */}
-            <View style={[s.stockChip, !inStock && { backgroundColor: '#fee2e2' }]}>
-              <View style={[s.stockDot, { backgroundColor: inStock ? '#22c55e' : '#ef4444' }]} />
-              <Text style={[s.stockText, !inStock && { color: '#ef4444' }]}>
-                {inStock
-                  ? stockQty != null ? `${stockQty} in stock` : 'In Stock'
-                  : 'Out of Stock'
-                }
-              </Text>
-            </View>
-
-            {/* Add to cart */}
-            <TouchableOpacity
-              style={[s.addBtn, !inStock && s.addBtnDisabled]}
-              onPress={() => inStock && handleQuickAdd(item)}
-              disabled={!inStock || isAdding}
-              activeOpacity={0.75}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              {isAdding
-                ? <ActivityIndicator size="small" color="#fff" />
-                : <Ionicons name="cart-outline" size={16} color="#fff" />
-              }
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  /* ── Render item for FlatList ───────────────────────────── */
+  const renderCard = ({ item }) => (
+    <ProductCard
+      item={item}
+      onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
+      onAddToCart={() => item.stock > 0 && handleQuickAdd(item)}
+      isAdding={addingId === item._id}
+    />
+  );
 
   const allCats = [{ id: '', name: 'All', icon: '🗂️' }, ...CATEGORIES];
 
@@ -394,9 +397,6 @@ const s = StyleSheet.create({
   },
 
   /* Left image block */
-  // Fixed height (not minHeight) is required so that Image's height:'100%'
-  // can be resolved by the RN layout engine. percentage heights only work
-  // when the parent has a definite (non-min) height.
   imgWrap:      { width: 120, height: 140 },
   img:          { width: 120, height: 140, resizeMode: 'cover' },
   imgPlaceholder:{ width: 120, height: 140, justifyContent: 'center', alignItems: 'center' },
