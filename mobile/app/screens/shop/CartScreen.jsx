@@ -57,10 +57,6 @@ export default function CartScreen() {
   const [qtyErr,  setQtyErr]     = useState({}); // { [cartItemId]: 'error string' }
   // Optional payment proof image selected by the user at checkout
   const [receipt, setReceipt]   = useState(null);
-  // Per-item custom design files: { [cartItemId]: { uri, type, name } | null }
-  const [itemFiles, setItemFiles] = useState({});
-  // Uploading state per item
-  const [uploadingFile, setUploadingFile] = useState({});
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
@@ -102,52 +98,6 @@ export default function CartScreen() {
     }
   };
 
-  /* ── Per-item design file picker ────────────────────────── */
-  // This lets the user attach or replace a custom design/personalisation image for a specific cart item
-  const pickItemFile = async (cartItemId) => {
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-    });
-    if (res.canceled || !res.assets?.[0]) return;
-    const asset = res.assets[0];
-    const fileObj = {
-      uri:  asset.uri,
-      type: asset.mimeType || 'image/jpeg',
-      name: asset.fileName || 'design.jpg',
-    };
-    // Optimistically show the file in the UI immediately
-    setItemFiles(prev => ({ ...prev, [cartItemId]: fileObj }));
-    // Upload the file to the backend to attach it to this cart item
-    setUploadingFile(prev => ({ ...prev, [cartItemId]: true }));
-    try {
-      const fd = new FormData();
-      fd.append('customFile', fileObj);
-      const token = await AsyncStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/cart/${cartItemId}/file`, {
-        method: 'PUT',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: fd
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Could not attach file');
-      }
-    } catch (err) {
-      Alert.alert('Upload Failed', err.response?.data?.error || 'Could not attach file');
-      setItemFiles(prev => ({ ...prev, [cartItemId]: null }));
-    } finally {
-      setUploadingFile(prev => ({ ...prev, [cartItemId]: false }));
-    }
-  };
-
-  // Remove attached custom file for one cart row.
-  const removeItemFile = async (cartItemId) => {
-    setItemFiles(prev => ({ ...prev, [cartItemId]: null }));
-    try {
-      await api.put(`/cart/${cartItemId}/file`, { removeFile: true });
-    } catch (_) { /* silent */ }
-  };
 
   /* ── Quantity update with inline stock error display ─── */
   // Handles + / - taps, and keeps server-side stock errors scoped to the changed item
@@ -316,10 +266,6 @@ export default function CartScreen() {
               accentColor={accent(idx)}
               onQtyChange={handleQtyChange}
               onRemove={removeFromCart}
-              onPickFile={pickItemFile}
-              onRemoveFile={removeItemFile}
-              isUploading={uploadingFile[item.cartItemId]}
-              hasFile={itemFiles[item.cartItemId]}
               qtyError={qtyErr[item.cartItemId]}
             />
           ))}
