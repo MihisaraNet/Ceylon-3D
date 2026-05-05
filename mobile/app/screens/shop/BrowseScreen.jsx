@@ -104,6 +104,9 @@ export default function BrowseScreen() {
     const inStock  = item.stock === null || item.stock === undefined || item.stock > 0;
     const stockQty = item.stock != null ? item.stock : null;
 
+    // Track whether the remote image failed to load so we can fall back to emoji
+    const [imgErr, setImgErr] = React.useState(false);
+
     return (
       <TouchableOpacity
         activeOpacity={0.88}
@@ -112,8 +115,12 @@ export default function BrowseScreen() {
       >
         {/* ── Left: product image ── */}
         <View style={s.imgWrap}>
-          {imgUri ? (
-            <Image source={{ uri: imgUri }} style={s.img} />
+          {imgUri && !imgErr ? (
+            <Image
+              source={{ uri: imgUri }}
+              style={s.img}
+              onError={() => setImgErr(true)}
+            />
           ) : (
             <View style={[s.imgPlaceholder, { backgroundColor: catCol.pill }]}>
               <Text style={s.imgEmoji}>{catInfo?.icon || '📦'}</Text>
@@ -387,9 +394,12 @@ const s = StyleSheet.create({
   },
 
   /* Left image block */
-  imgWrap:      { width: 120, minHeight: 140 },
-  img:          { width: '100%', height: '100%', resizeMode: 'cover' },
-  imgPlaceholder:{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', minHeight: 140 },
+  // Fixed height (not minHeight) is required so that Image's height:'100%'
+  // can be resolved by the RN layout engine. percentage heights only work
+  // when the parent has a definite (non-min) height.
+  imgWrap:      { width: 120, height: 140 },
+  img:          { width: 120, height: 140, resizeMode: 'cover' },
+  imgPlaceholder:{ width: 120, height: 140, justifyContent: 'center', alignItems: 'center' },
   imgEmoji:     { fontSize: 40 },
   outOverlay:   { position: 'absolute', inset: 0, backgroundColor: 'rgba(15,23,42,0.55)', justifyContent: 'center', alignItems: 'center' },
   outText:      { color: '#fff', fontSize: 11, fontWeight: '900', textAlign: 'center', lineHeight: 16 },
