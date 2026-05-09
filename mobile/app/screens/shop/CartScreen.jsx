@@ -190,7 +190,7 @@ export default function CartScreen() {
     <SafeAreaView style={s.safe}>
       <View style={s.successScreen}>
         <View style={s.successCircle}>
-          <Ionicons name="checkmark-sharp" size={56} color="#fff" />
+          <Ionicons name="checkmark-sharp" size={56} color="#f8fafc" />
         </View>
         <Text style={s.successTitle}>Order Placed! 🎉</Text>
         <Text style={s.successSub}>
@@ -201,7 +201,7 @@ export default function CartScreen() {
           onPress={() => { setDone(false); nav.navigate('Browse'); }}
           activeOpacity={0.88}
         >
-          <Ionicons name="storefront-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
+          <Ionicons name="storefront-outline" size={18} color="#f8fafc" style={{ marginRight: 6 }} />
           <Text style={s.continueText}>Continue Shopping</Text>
         </TouchableOpacity>
       </View>
@@ -231,7 +231,7 @@ export default function CartScreen() {
         <Text style={s.emptyTitle}>Your cart is empty</Text>
         <Text style={s.emptySub}>Browse products and add something you like!</Text>
         <TouchableOpacity style={s.browseBtn} onPress={() => nav.navigate('Browse')} activeOpacity={0.88}>
-          <Ionicons name="grid-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+          <Ionicons name="grid-outline" size={16} color="#f8fafc" style={{ marginRight: 6 }} />
           <Text style={s.browseBtnText}>Browse Products</Text>
         </TouchableOpacity>
       </View>
@@ -310,7 +310,7 @@ export default function CartScreen() {
         {/* ── Checkout toggle ── */}
         {!checkout ? (
           <TouchableOpacity style={s.checkoutBtn} onPress={() => setCheckout(true)} activeOpacity={0.88}>
-            <Ionicons name="bag-check-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Ionicons name="bag-check-outline" size={20} color="#f8fafc" style={{ marginRight: 8 }} />
             <Text style={s.checkoutBtnText}>Proceed to Checkout</Text>
           </TouchableOpacity>
         ) : (
@@ -375,10 +375,10 @@ export default function CartScreen() {
               activeOpacity={0.88}
             >
               {placing ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#f8fafc" />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                  <Ionicons name="checkmark-circle-outline" size={20} color="#f8fafc" style={{ marginRight: 8 }} />
                   <Text style={s.placeBtnText}>Place Order</Text>
                 </>
               )}
@@ -414,10 +414,10 @@ const s = StyleSheet.create({
   emptyTitle:      { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
   emptySub:        { fontSize: 14, color: '#9ca3af', textAlign: 'center' },
   browseBtn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingHorizontal: 24, paddingVertical: 13, marginTop: 6 },
-  browseBtnText:   { color: '#fff', fontWeight: '800', fontSize: 15 },
+  browseBtnText:   { color: '#f8fafc', fontWeight: '800', fontSize: 15 },
 
   /* Item card */
-  itemCard:        { flexDirection: 'row', borderRadius: 18, overflow: 'hidden', padding: 12, alignItems: 'flex-start', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)' },
+  itemCard:        { flexDirection: 'row', borderRadius: 18, overflow: 'hidden', padding: 12, alignItems: 'flex-start', shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: 'rgba(15,23,42,0.04)' },
   accentBar:       { width: 4, borderRadius: 99, marginRight: 10, alignSelf: 'stretch' },
   itemImg:         { width: 72, height: 72, borderRadius: 12, marginRight: 10 },
   imgPH:           { justifyContent: 'center', alignItems: 'center' },
@@ -432,7 +432,7 @@ const s = StyleSheet.create({
   lineTotal:       { fontSize: 12, fontWeight: '900', textAlign: 'right', lineHeight: 18, minWidth: 64 },
 
   /* Summary */
-  summaryCard:     { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, borderRadius: 20, padding: 18, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  summaryCard:     { backgroundColor: '#f8fafc', marginHorizontal: 16, marginTop: 16, borderRadius: 20, padding: 18, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   summaryTitle:    { fontSize: 16, fontWeight: '900', color: '#1e1b4b', marginBottom: 14 },
   sumRow:          { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   sumLabel:        { fontSize: 14, color: '#6b7280' },
@@ -449,10 +449,10 @@ const s = StyleSheet.create({
 
   /* Checkout button */
   checkoutBtn:     { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', marginHorizontal: 16, marginTop: 14, borderRadius: 16, paddingVertical: 16, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 },
-  checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  checkoutBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
 
   /* Form */
-  formCard:        { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 14, borderRadius: 20, padding: 18, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  formCard:        { backgroundColor: '#f8fafc', marginHorizontal: 16, marginTop: 14, borderRadius: 20, padding: 18, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   formTitle:       { fontSize: 18, fontWeight: '900', color: '#1e1b4b', marginBottom: 16 },
   fieldRow:        { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#f8f7ff', borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', marginBottom: 10, overflow: 'hidden' },
   fieldIcon:       { paddingHorizontal: 14, paddingTop: 14 },
@@ -464,7 +464,7 @@ const s = StyleSheet.create({
   removeReceiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fef2f2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#fee2e2' },
   removeReceiptText: { fontSize: 11, fontWeight: '700', color: '#ef4444' },
   placeBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 15, marginTop: 6, shadowColor: '#22c55e', shadowOpacity: 0.35, shadowRadius: 10, elevation: 5 },
-  placeBtnText:    { color: '#fff', fontSize: 16, fontWeight: '900' },
+  placeBtnText:    { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
   cancelBtn:       { alignItems: 'center', padding: 14 },
   cancelText:      { color: '#6b7280', fontSize: 14, fontWeight: '700' },
 
@@ -474,5 +474,5 @@ const s = StyleSheet.create({
   successTitle:    { fontSize: 30, fontWeight: '900', color: '#1e1b4b', textAlign: 'center' },
   successSub:      { fontSize: 15, color: '#6b7280', textAlign: 'center', lineHeight: 22 },
   continuBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 16, paddingHorizontal: 30, paddingVertical: 14, marginTop: 8 },
-  continueText:    { color: '#fff', fontWeight: '900', fontSize: 15 },
+  continueText:    { color: '#f8fafc', fontWeight: '900', fontSize: 15 },
 });

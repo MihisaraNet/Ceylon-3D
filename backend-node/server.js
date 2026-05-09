@@ -49,6 +49,7 @@ const productRoutes  = require('./src/routes/products');
 const cartRoutes     = require('./src/routes/cart');
 const orderRoutes    = require('./src/routes/orders');
 const stlOrderRoutes = require('./src/routes/stlOrders');
+const reviewRoutes   = require('./src/routes/reviews');
 
 /* ── Create Express app and define server port ────────────── */
 const app  = express();
@@ -90,6 +91,7 @@ app.use('/cart', cartRoutes);                // GET/POST/PUT/DELETE /cart
 app.use('/orders', orderRoutes);             // GET/POST/PUT /orders
 app.use('/api/uploads', stlOrderRoutes);     // POST /api/uploads/stl (file upload)
 app.use('/stl-orders', stlOrderRoutes);      // GET/PUT/DELETE /stl-orders (management)
+app.use('/reviews', reviewRoutes);           // GET/POST/DELETE /reviews (product reviews)
 
 /* ── Health Check Endpoint ────────────────────────────────── */
 // Returns "OK" to indicate the server is healthy.

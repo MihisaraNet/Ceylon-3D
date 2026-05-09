@@ -44,6 +44,7 @@ import HomeScreen          from '../screens/shop/HomeScreen';
 import BrowseScreen        from '../screens/shop/BrowseScreen';
 import ProductDetailScreen from '../screens/shop/ProductDetailScreen';
 import CartScreen          from '../screens/shop/CartScreen';
+import ReviewScreen        from '../screens/shop/ReviewScreen';
 
 // Account
 import MyAccountScreen  from '../screens/account/MyAccountScreen';
@@ -63,7 +64,7 @@ const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
 
 const AdminStack = () => (
-  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#4f46e5' }, headerTintColor:'#fff' }}>
+  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#4f46e5' }, headerTintColor:'#f8fafc' }}>
     <Stack.Screen name="AdminDashboard"  component={AdminDashboardScreen}  options={{ title:'Admin Dashboard' }} />
     <Stack.Screen name="ManageProducts"  component={ManageProductsScreen}  options={{ title:'Manage Products' }} />
     <Stack.Screen name="StlOrdersAdmin"  component={StlOrdersAdminScreen}  options={{ title:'STL Orders' }} />
@@ -91,7 +92,7 @@ const MainTabs = () => {
         tabBarActiveTintColor: '#6366f1',
         tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: '#f8fafc',
           borderTopWidth: 1,
           borderTopColor: '#f3f4f6',
           height: Platform.OS === 'ios' ? 88 : 65,
@@ -107,7 +108,7 @@ const MainTabs = () => {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginTop: 1 },
         tabBarItemStyle: { paddingVertical: 2 },
         headerStyle: { backgroundColor: '#1e1b4b' },
-        headerTintColor: '#fff',
+        headerTintColor: '#f8fafc',
         headerTitleStyle: { fontWeight: '800', fontSize: 18, letterSpacing: -0.3 },
         headerShadowVisible: false,
       })}
@@ -122,7 +123,7 @@ const MainTabs = () => {
 };
 
 const AuthStack = () => (
-  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#fff' }}>
+  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#f8fafc' }}>
     <Stack.Screen name="Login"    component={LoginScreen}    options={{ title:'Sign In' }} />
     <Stack.Screen name="Register" component={RegisterScreen} options={{ title:'Create Account' }} />
   </Stack.Navigator>
@@ -137,7 +138,8 @@ const AuthStack = () => (
 const AppStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Main"          component={MainTabs} />
-    <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ headerShown:true, title:'Product', headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#fff' }} />
+    <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ headerShown:true, title:'Product', headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#f8fafc' }} />
+    <Stack.Screen name="Review"        component={ReviewScreen}        options={{ headerShown:false }} />
     <Stack.Screen name="AdminStack"    component={AdminStack} />
   </Stack.Navigator>
 );

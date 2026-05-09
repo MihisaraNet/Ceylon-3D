@@ -147,7 +147,7 @@ export default function RegisterScreen({ navigation }) {
         {/* Brand */}
         <View style={s.brand}>
           <View style={s.logoBox}>
-            <Ionicons name="cube" size={36} color="#fff" />
+            <Ionicons name="cube" size={36} color="#f8fafc" />
           </View>
           <Text style={s.logo}>LayerForge 3D</Text>
           <Text style={s.tagline}>Create your free account</Text>
@@ -228,10 +228,10 @@ export default function RegisterScreen({ navigation }) {
         {/* Submit */}
         <TouchableOpacity style={s.btn} onPress={handleRegister} disabled={loading} activeOpacity={0.88}>
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#f8fafc" />
           ) : (
             <>
-              <Ionicons name="person-add-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
+              <Ionicons name="person-add-outline" size={20} color="#f8fafc" style={{ marginRight: 6 }} />
               <Text style={s.btnText}>Create Account</Text>
             </>
           )}
@@ -251,7 +251,7 @@ export default function RegisterScreen({ navigation }) {
 const f = StyleSheet.create({
   group:  { marginBottom: 14 },
   label:  { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
-  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, overflow: 'hidden' },
+  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, overflow: 'hidden' },
   rowErr: { borderColor: '#ef4444', backgroundColor: '#fff5f5' },
   icon:   { paddingLeft: 13, paddingRight: 4 },
   input:  { flex: 1, height: 50, fontSize: 15, color: '#1e1b4b', paddingHorizontal: 8 },
@@ -282,7 +282,7 @@ const s = StyleSheet.create({
   serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 12, padding: 12, marginBottom: 14 },
   serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
   btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 8, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
-  btnText:        { color: '#fff', fontSize: 16, fontWeight: '900' },
+  btnText:        { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
   link:           { alignItems: 'center', marginTop: 22 },
   linkText:       { color: '#9ca3af', fontSize: 14 },
   linkBold:       { color: '#6366f1', fontWeight: '800' },

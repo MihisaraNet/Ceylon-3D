@@ -17,16 +17,18 @@
  *
  * @module screens/shop/HomeScreen
  */
-import React from 'react'; 
+import React, { useState, useEffect } from 'react'; 
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   StatusBar, Platform, Animated, SafeAreaView, useWindowDimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import api from '../../lib/api';
 
 const SERVICE_CARDS = [
   { icon: 'cube-outline',             title: 'Rapid Prototyping',    desc: 'Fast turnaround, multiple materials', color: '#6366f1', bg: '#eef2ff' },
@@ -45,6 +47,21 @@ export default function HomeScreen() {
   const nav = useNavigation();
   const { isAdmin } = useAuth();
   const { totalItems } = useCart();
+  const [reviews, setReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get('/reviews/recent?limit=5');
+        setReviews(data);
+      } catch (err) {
+        console.log('[Home] Review fetch error:', err.message);
+      } finally {
+        setLoadingReviews(false);
+      }
+    })();
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f0f1a' }}>
@@ -70,7 +87,7 @@ export default function HomeScreen() {
               </View>
               {totalItems > 0 && (
                 <TouchableOpacity style={s.cartPill} onPress={() => nav.navigate('Cart')} activeOpacity={0.8}>
-                  <Ionicons name="cart" size={18} color="#fff" />
+                  <Ionicons name="cart" size={18} color="#f8fafc" />
                   <Text style={s.cartPillText}>{totalItems}</Text>
                 </TouchableOpacity>
               )}
@@ -87,7 +104,7 @@ export default function HomeScreen() {
                 <Text style={s.btnPrimaryText}>Upload STL</Text>
               </TouchableOpacity>
               <TouchableOpacity style={s.btnSecondary} onPress={() => nav.navigate('Browse')} activeOpacity={0.85}>
-                <Ionicons name="grid-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
+                <Ionicons name="grid-outline" size={18} color="#f8fafc" style={{ marginRight: 6 }} />
                 <Text style={s.btnSecondaryText}>Browse Shop</Text>
               </TouchableOpacity>
             </View>
@@ -140,9 +157,68 @@ export default function HomeScreen() {
               <Text style={s.bannerTitle}>Ready to order?</Text>
               <Text style={s.bannerSub}>Browse our full catalogue →</Text>
             </View>
-            <Ionicons name="arrow-forward-circle" size={40} color="rgba(255,255,255,0.7)" />
+            <Ionicons name="arrow-forward-circle" size={40} color="rgba(248,250,252,0.7)" />
           </LinearGradient>
         </TouchableOpacity>
+
+        {/* ─── Latest Reviews ─── */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>What Customers Say</Text>
+          <Text style={s.sectionSub}>Real feedback from our community</Text>
+        </View>
+
+        <View style={s.reviewsContainer}>
+          {loadingReviews ? (
+            <ActivityIndicator color="#6366f1" style={{ marginVertical: 20 }} />
+          ) : reviews.length === 0 ? (
+            <View style={s.noReviews}>
+              <Text style={s.noReviewsText}>Be the first to leave a review!</Text>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}
+            >
+              {reviews.map((rv) => (
+                <TouchableOpacity
+                  key={rv._id}
+                  style={s.reviewCard}
+                  activeOpacity={0.9}
+                  onPress={() => rv.productId && nav.navigate('ProductDetail', { productId: rv.productId._id })}
+                >
+                  <View style={s.revHeader}>
+                    <View style={s.revAvatar}>
+                      <Text style={s.revAvatarText}>{(rv.userName || '?')[0].toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.revName} numberOfLines={1}>{rv.userName}</Text>
+                      <View style={s.starsRow}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Ionicons
+                            key={n}
+                            name={n <= rv.rating ? 'star' : 'star-outline'}
+                            size={10}
+                            color={n <= rv.rating ? '#f59e0b' : '#d1d5db'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={s.revComment} numberOfLines={3}>
+                    "{rv.comment || 'No comment provided.'}"
+                  </Text>
+                  {rv.productId && (
+                    <View style={s.revProductPill}>
+                      <Ionicons name="cube-outline" size={10} color="#6366f1" />
+                      <Text style={s.revProductText} numberOfLines={1}>{rv.productId.name}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
 
         {/* ─── About ─── */}
         <View style={s.aboutCard}>
@@ -184,20 +260,20 @@ const s = StyleSheet.create({
   heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, width: '100%' },
   heroTag:          { color: '#a5b4fc', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   heroBadge:        { color: 'rgba(165,180,252,0.7)', fontSize: 10, marginTop: 2 },
-  heroTitle:        { color: '#fff', fontSize: Platform.OS === 'web' ? 26 : 34, fontWeight: '900', lineHeight: Platform.OS === 'web' ? 32 : 42, marginBottom: 14, letterSpacing: -1, width: '100%' },
+  heroTitle:        { color: '#f8fafc', fontSize: Platform.OS === 'web' ? 26 : 34, fontWeight: '900', lineHeight: Platform.OS === 'web' ? 32 : 42, marginBottom: 14, letterSpacing: -1, width: '100%' },
   heroSub:          { color: '#c7d2fe', fontSize: 12, lineHeight: 18, marginBottom: 26, width: '100%', flexShrink: 1 },
   heroButtons:      { flexDirection: 'row', gap: 10, flexWrap: 'wrap', width: '100%' },
-  btnPrimary:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
+  btnPrimary:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
   btnPrimaryText:   { color: '#4f46e5', fontWeight: '800', fontSize: 14 },
-  btnSecondary:     { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.5)', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
-  btnSecondaryText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  adminBtn:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginTop: 16, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(251,191,36,0.3)' },
+  btnSecondary:     { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(248,250,252,0.5)', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
+  btnSecondaryText: { color: '#f8fafc', fontWeight: '700', fontSize: 14 },
+  adminBtn:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(15,23,42,0.25)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginTop: 16, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(251,191,36,0.3)' },
   adminBtnText:     { color: '#fbbf24', fontWeight: '700', fontSize: 13 },
-  cartPill:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, gap: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  cartPillText:     { color: '#fff', fontWeight: '800', fontSize: 14 },
+  cartPill:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(248,250,252,0.2)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, gap: 6, borderWidth: 1, borderColor: 'rgba(248,250,252,0.3)' },
+  cartPillText:     { color: '#f8fafc', fontWeight: '800', fontSize: 14 },
 
   /* Stats */
-  statsRow:         { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 16, marginTop: -20, backgroundColor: '#fff', borderRadius: 20, paddingVertical: 20, shadowColor: '#6366f1', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  statsRow:         { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 16, marginTop: -20, backgroundColor: '#f8fafc', borderRadius: 20, paddingVertical: 20, shadowColor: '#6366f1', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   statCard:         { alignItems: 'center', gap: 4 },
   statIconWrap:     { backgroundColor: '#eef2ff', borderRadius: 10, padding: 8, marginBottom: 2 },
   statVal:          { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
@@ -210,7 +286,7 @@ const s = StyleSheet.create({
 
   /* Services */
   servicesGrid:     { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 10, marginBottom: 8 },
-  serviceCard:      { width: Platform.OS === 'web' ? '46%' : '47%', backgroundColor: '#fff', borderRadius: 18, padding: 14, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, gap: 6 },
+  serviceCard:      { width: Platform.OS === 'web' ? '46%' : '47%', backgroundColor: '#f8fafc', borderRadius: 18, padding: 14, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, gap: 6 },
   serviceIconWrap:  { borderRadius: 12, padding: 10, alignSelf: 'flex-start' },
   serviceTitle:     { fontSize: 13, fontWeight: '800', color: '#1e1b4b' },
   serviceDesc:      { fontSize: 11, color: '#9ca3af', lineHeight: 16 },
@@ -218,11 +294,11 @@ const s = StyleSheet.create({
   /* Banner */
   actionBanner:     { marginHorizontal: 16, marginVertical: 8, borderRadius: 20, overflow: 'hidden', shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 },
   actionBannerInner:{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 20 },
-  bannerTitle:      { color: '#fff', fontSize: 18, fontWeight: '900' },
-  bannerSub:        { color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 2 },
+  bannerTitle:      { color: '#f8fafc', fontSize: 18, fontWeight: '900' },
+  bannerSub:        { color: 'rgba(248,250,252,0.75)', fontSize: 13, marginTop: 2 },
 
   /* About */
-  aboutCard:        { margin: 16, backgroundColor: '#fff', borderRadius: 20, padding: 20, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
+  aboutCard:        { margin: 16, backgroundColor: '#f8fafc', borderRadius: 20, padding: 20, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
   aboutHeader:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   aboutIconWrap:    { backgroundColor: '#eef2ff', borderRadius: 10, padding: 8 },
   aboutTitle:       { fontSize: 18, fontWeight: '900', color: '#1e1b4b' },
@@ -230,4 +306,18 @@ const s = StyleSheet.create({
   contactRow:       { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 },
   contactIconWrap:  { backgroundColor: '#eef2ff', borderRadius: 8, padding: 6 },
   contactText:      { fontSize: 14, color: '#374151', fontWeight: '500' },
+
+  /* Reviews */
+  reviewsContainer: { marginBottom: 10 },
+  reviewCard:       { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, width: 240, gap: 10, shadowColor: '#6366f1', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(99,102,241,0.05)' },
+  revHeader:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  revAvatar:        { width: 32, height: 32, borderRadius: 16, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#c7d2fe' },
+  revAvatarText:    { color: '#6366f1', fontSize: 14, fontWeight: '800' },
+  revName:          { fontSize: 13, fontWeight: '800', color: '#1e1b4b' },
+  starsRow:         { flexDirection: 'row', gap: 1 },
+  revComment:       { fontSize: 13, color: '#6b7280', lineHeight: 18, fontStyle: 'italic' },
+  revProductPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f8f7ff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start' },
+  revProductText:   { fontSize: 10, fontWeight: '700', color: '#6366f1' },
+  noReviews:        { paddingHorizontal: 20, paddingVertical: 10 },
+  noReviewsText:    { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
 });

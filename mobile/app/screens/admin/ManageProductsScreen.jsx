@@ -275,7 +275,7 @@ export default function ManageProductsScreen() {
           </View>
         </View>
         <TouchableOpacity style={s.addBtn} onPress={openAdd} activeOpacity={0.85}>
-          <Ionicons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={24} color="#f8fafc" />
         </TouchableOpacity>
       </View>
 
@@ -378,7 +378,7 @@ export default function ManageProductsScreen() {
                   style={[s.catChip, form.category === c.id && s.catChipActive]}
                   onPress={() => setForm(f => ({ ...f, category: c.id }))}
                 >
-                  <Text style={[s.catChipText, form.category === c.id && { color: '#fff' }]}>{c.name}</Text>
+                  <Text style={[s.catChipText, form.category === c.id && { color: '#f8fafc' }]}>{c.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -394,7 +394,7 @@ export default function ManageProductsScreen() {
             />
 
             <TouchableOpacity style={s.saveBtn} onPress={handleSave} disabled={saving}>
-              {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>{editing ? 'Update Product' : 'Create Product'}</Text>}
+              {saving ? <ActivityIndicator color="#f8fafc" /> : <Text style={s.saveBtnText}>{editing ? 'Update Product' : 'Create Product'}</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -414,7 +414,7 @@ const s = StyleSheet.create({
   centred: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10 },
   loadText: { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
   
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 12, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.02)' },
+  card: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 12, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(15,23,42,0.02)' },
   cardTop: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   thumb: { width: 80, height: 80, borderRadius: 12 },
   thumbPH: { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center' },
@@ -434,7 +434,7 @@ const s = StyleSheet.create({
   emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100, gap: 10 },
   emptyText: { fontSize: 16, color: '#9ca3af', fontWeight: '600' },
 
-  modalContainer: { flex: 1, backgroundColor: '#fff' },
+  modalContainer: { flex: 1, backgroundColor: '#f8fafc' },
   modalContent: { padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitle: { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
@@ -463,5 +463,5 @@ const s = StyleSheet.create({
   catChipText: { fontSize: 13, fontWeight: '700', color: '#475569' },
   
   saveBtn: { backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginTop: 10, shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  saveBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
 });

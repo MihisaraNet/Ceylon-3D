@@ -101,7 +101,7 @@ export default function StlOrdersAdminScreen() {
                   style={[s.chip, item.status === st && { backgroundColor: '#6366f1', borderColor: '#6366f1' }]}
                   onPress={() => updateStatus(item._id, st)}
                 >
-                  <Text style={[s.chipText, item.status === st && { color: '#fff' }]}>{st.replace('_', ' ')}</Text>
+                  <Text style={[s.chipText, item.status === st && { color: '#f8fafc' }]}>{st.replace('_', ' ')}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -162,7 +162,7 @@ const s = StyleSheet.create({
   countText: { fontSize: 13, fontWeight: '900', color: '#6366f1' },
   
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 15, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.02)' },
+  card: { backgroundColor: '#f8fafc', borderRadius: 24, overflow: 'hidden', shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 15, elevation: 3, borderWidth: 1, borderColor: 'rgba(15,23,42,0.02)' },
   cardExpanded: { shadowOpacity: 0.08, shadowRadius: 20, elevation: 6 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16 },
   headerLeft: { flex: 1, gap: 4 },
@@ -183,7 +183,7 @@ const s = StyleSheet.create({
   infoLabel: { fontSize: 11, color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' },
   infoVal: { fontSize: 13, color: '#1e1b4b', fontWeight: '700' },
   
-  addressBox: { backgroundColor: '#fff', padding: 14, borderRadius: 16, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0' },
+  addressBox: { backgroundColor: '#f8fafc', padding: 14, borderRadius: 16, marginBottom: 15, borderWidth: 1, borderColor: '#e2e8f0' },
   addressLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 },
   addressText: { fontSize: 14, color: '#1e1b4b', fontWeight: '600', lineHeight: 20 },
   
@@ -192,7 +192,7 @@ const s = StyleSheet.create({
   
   sectionTitle: { fontSize: 13, fontWeight: '800', color: '#1e1b4b', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  chip: { backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: '#e2e8f0' },
+  chip: { backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: '#e2e8f0' },
   chipText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
   
   deleteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9', marginTop: 10 },

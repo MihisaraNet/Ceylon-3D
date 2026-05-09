@@ -87,13 +87,13 @@ const s = StyleSheet.create({
     overflow: 'hidden', 
     padding: 12, 
     alignItems: 'flex-start', 
-    shadowColor: '#000', 
+    shadowColor: '#1a1a1a', 
     shadowOpacity: 0.05, 
     shadowRadius: 8, 
     elevation: 2, 
     borderWidth: 1, 
-    borderColor: 'rgba(0,0,0,0.04)',
-    backgroundColor: '#ffffff'
+    borderColor: 'rgba(15,23,42,0.04)',
+    backgroundColor: '#f8fafc'
   },
   accentBar:       { width: 4, borderRadius: 99, marginRight: 10, alignSelf: 'stretch' },
   itemImg:         { width: 72, height: 72, borderRadius: 12, marginRight: 10 },
@@ -117,7 +117,7 @@ const s = StyleSheet.create({
     borderRadius: 8, 
     paddingHorizontal: 8, 
     paddingVertical: 5, 
-    backgroundColor: 'rgba(255,255,255,0.6)' 
+    backgroundColor: 'rgba(248,250,252,0.6)' 
   },
 
   priceCol:        { minWidth: 70, alignItems: 'flex-end' },

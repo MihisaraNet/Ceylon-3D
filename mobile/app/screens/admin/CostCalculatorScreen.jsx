@@ -161,7 +161,7 @@ export default function CostCalculatorScreen() {
             activeOpacity={0.7}
           >
             <View style={[s.checkbox, form.supportStructures && s.checkboxActive]}>
-              {form.supportStructures && <Ionicons name="checkmark" size={14} color="#fff" />}
+              {form.supportStructures && <Ionicons name="checkmark" size={14} color="#f8fafc" />}
             </View>
             <Text style={s.supportLabel}>Include Support Structures (+LKR 100)</Text>
           </TouchableOpacity>
@@ -173,10 +173,10 @@ export default function CostCalculatorScreen() {
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#f8fafc" />
             ) : (
               <>
-                <Ionicons name="calculator-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Ionicons name="calculator-outline" size={20} color="#f8fafc" style={{ marginRight: 8 }} />
                 <Text style={s.calcBtnText}>Calculate Breakdown</Text>
               </>
             )}
@@ -225,7 +225,7 @@ const s = StyleSheet.create({
   resetText: { color: '#4f46e5', fontSize: 13, fontWeight: '800' },
   container: { flex: 1 },
   
-  card: { backgroundColor: '#fff', borderRadius: 24, padding: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 5, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
+  card: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 20, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 15, elevation: 5, borderWidth: 1, borderColor: 'rgba(15,23,42,0.03)' },
   timeRow: { flexDirection: 'row', gap: 15 },
   fieldGroup: { marginBottom: 18 },
   label: { fontSize: 13, fontWeight: '800', color: '#4b5563', marginBottom: 8, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -240,14 +240,14 @@ const s = StyleSheet.create({
   matChipTextActive: { color: '#6366f1' },
   
   supportRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 10, backgroundColor: '#f8f7ff', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#e5e7eb' },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#6366f1', justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#6366f1', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
   checkboxActive: { backgroundColor: '#6366f1' },
   supportLabel: { fontSize: 14, color: '#1e1b4b', fontWeight: '700' },
   
   calcBtn: { flexDirection: 'row', backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
-  calcBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  calcBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
   
-  resultCard: { marginTop: 20, backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 20, elevation: 10, borderWidth: 1, borderColor: 'rgba(0,0,0,0.03)' },
+  resultCard: { marginTop: 20, backgroundColor: '#f8fafc', borderRadius: 24, overflow: 'hidden', shadowColor: '#1a1a1a', shadowOpacity: 0.08, shadowRadius: 20, elevation: 10, borderWidth: 1, borderColor: 'rgba(15,23,42,0.03)' },
   resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 20, backgroundColor: '#f8f7ff', borderBottomWidth: 1, borderBottomColor: '#f1f1f1' },
   resultTitle: { fontSize: 18, fontWeight: '900', color: '#1e1b4b' },
   breakdownBox: { padding: 20 },
@@ -259,6 +259,6 @@ const s = StyleSheet.create({
   
   sellingBox: { backgroundColor: '#1e1b4b', padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sellingLabel: { fontSize: 14, color: '#a5b4fc', fontWeight: '800' },
-  sellingSub: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
-  sellingVal: { fontSize: 22, color: '#fff', fontWeight: '900' },
+  sellingSub: { fontSize: 11, color: 'rgba(248,250,252,0.5)', marginTop: 2 },
+  sellingVal: { fontSize: 22, color: '#f8fafc', fontWeight: '900' },
 });

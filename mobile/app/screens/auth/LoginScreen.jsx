@@ -104,7 +104,7 @@ export default function LoginScreen({ navigation }) {
         {/* Brand */}
         <View style={s.brand}>
           <View style={s.logoBox}>
-            <Ionicons name="cube" size={36} color="#fff" />
+            <Ionicons name="cube" size={36} color="#f8fafc" />
           </View>
           <Text style={s.logo}>LayerForge 3D</Text>
           <Text style={s.tagline}>Sign in to your account</Text>
@@ -158,7 +158,7 @@ export default function LoginScreen({ navigation }) {
             activeOpacity={0.7}
           >
             <View style={[s.checkbox, rememberMe && s.checkboxChecked]}>
-              {rememberMe && <Ionicons name="checkmark" size={12} color="#fff" />}
+              {rememberMe && <Ionicons name="checkmark" size={12} color="#f8fafc" />}
             </View>
             <Text style={s.rememberText}>Remember me</Text>
           </TouchableOpacity>
@@ -171,10 +171,10 @@ export default function LoginScreen({ navigation }) {
         {/* Submit */}
         <TouchableOpacity style={s.btn} onPress={handleLogin} disabled={loading} activeOpacity={0.88}>
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#f8fafc" />
           ) : (
             <>
-              <Ionicons name="log-in-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
+              <Ionicons name="log-in-outline" size={20} color="#f8fafc" style={{ marginRight: 6 }} />
               <Text style={s.btnText}>Sign In</Text>
             </>
           )}
@@ -194,7 +194,7 @@ export default function LoginScreen({ navigation }) {
 const f = StyleSheet.create({
   group:  { marginBottom: 14 },
   label:  { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
-  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, overflow: 'hidden' },
+  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, overflow: 'hidden' },
   rowErr: { borderColor: '#ef4444', backgroundColor: '#fff5f5' },
   icon:   { paddingLeft: 13, paddingRight: 4 },
   input:  { flex: 1, height: 50, fontSize: 15, color: '#1e1b4b', paddingHorizontal: 8 },
@@ -212,10 +212,10 @@ const s = StyleSheet.create({
   serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 12, padding: 12, marginBottom: 14 },
   serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
   btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 18, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
-  btnText:        { color: '#fff', fontSize: 16, fontWeight: '900' },
+  btnText:        { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
   optionsRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 8 },
   rememberMe:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  checkbox:       { width: 18, height: 18, borderRadius: 5, borderWidth: 1.5, borderColor: '#d1d5db', backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  checkbox:       { width: 18, height: 18, borderRadius: 5, borderWidth: 1.5, borderColor: '#d1d5db', backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
   checkboxChecked:{ backgroundColor: '#6366f1', borderColor: '#6366f1' },
   rememberText:   { fontSize: 13, color: '#6b7280', fontWeight: '600' },
   forgotText:     { fontSize: 13, color: '#6366f1', fontWeight: '700' },

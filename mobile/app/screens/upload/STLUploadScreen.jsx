@@ -194,7 +194,7 @@ export default function STLUploadScreen() {
 
         <TouchableOpacity style={s.resetBtn} onPress={() => { setResult(null); setStep(0); setFile(null); setNotes(''); setQty(1); }}>
           <Text style={s.resetBtnText}>Submit Another Order</Text>
-          <Ionicons name="add-outline" size={20} color="#fff" />
+          <Ionicons name="add-outline" size={20} color="#f8fafc" />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -212,9 +212,9 @@ export default function STLUploadScreen() {
             <React.Fragment key={i}>
               <View style={[s.stepDot, i <= step && s.stepDotActive, i < step && s.stepDotDone]}>
                 {i < step ? (
-                  <Ionicons name="checkmark" size={14} color="#fff" />
+                  <Ionicons name="checkmark" size={14} color="#f8fafc" />
                 ) : (
-                  <Text style={[s.stepNum, i === step && { color: '#fff' }]}>{i + 1}</Text>
+                  <Text style={[s.stepNum, i === step && { color: '#f8fafc' }]}>{i + 1}</Text>
                 )}
               </View>
               {i < STEPS.length - 1 && <View style={[s.stepLine, i < step && s.stepLineDone]} />}
@@ -365,19 +365,19 @@ export default function STLUploadScreen() {
         {step < 2 ? (
           <TouchableOpacity style={s.nextBtn} onPress={handleNext}>
             <Text style={s.nextBtnText}>Continue</Text>
-            <Ionicons name="chevron-forward" size={20} color="#fff" />
+            <Ionicons name="chevron-forward" size={20} color="#f8fafc" />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity style={s.submitBtn} onPress={handleSubmit} disabled={submitting}>
             {submitting ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#f8fafc" />
                 <Text style={s.nextBtnText}>Submitting...</Text>
               </View>
             ) : (
               <>
                 <Text style={s.nextBtnText}>Confirm Order</Text>
-                <Ionicons name="send" size={18} color="#fff" />
+                <Ionicons name="send" size={18} color="#f8fafc" />
               </>
             )}
           </TouchableOpacity>
@@ -396,7 +396,7 @@ const Row = ({ label, value }) => (
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f8f7ff' },
-  stepperHeader: { padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  stepperHeader: { padding: 20, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: 'rgba(15,23,42,0.05)' },
   stepperTitle: { fontSize: 24, fontWeight: '900', color: '#1e1b4b', marginBottom: 15 },
   stepTrack: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   stepDot: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', zIndex: 1 },
@@ -407,7 +407,7 @@ const s = StyleSheet.create({
   stepLineDone: { backgroundColor: '#22c55e' },
   
   container: { flex: 1 },
-  dropzone: { backgroundColor: '#fff', borderRadius: 24, padding: 30, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', marginBottom: 24, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
+  dropzone: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 30, alignItems: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', marginBottom: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
   dropzoneDone: { borderColor: '#6366f1', backgroundColor: '#f8f7ff' },
   dropzoneTouch: { width: '100%', alignItems: 'center' },
   dropzoneIcon: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
@@ -421,28 +421,28 @@ const s = StyleSheet.create({
   fieldLabel: { fontSize: 14, fontWeight: '800', color: '#1e1b4b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   fieldSub: { fontSize: 12, color: '#94a3b8', marginTop: -6, marginBottom: 10 },
   materialGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
-  matBtn: { flex: 1, minWidth: '45%', backgroundColor: '#fff', borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 2, borderColor: '#f1f5f9' },
+  matBtn: { flex: 1, minWidth: '45%', backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, alignItems: 'center', borderWidth: 2, borderColor: '#f1f5f9' },
   matBtnActive: { borderColor: '#6366f1', backgroundColor: '#eef2ff' },
   matEmoji: { fontSize: 24, marginBottom: 4 },
   matLabel: { fontSize: 14, fontWeight: '700', color: '#64748b' },
   matLabelActive: { color: '#6366f1' },
   
-  qtySection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, backgroundColor: '#fff', padding: 16, borderRadius: 20 },
+  qtySection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, backgroundColor: '#f8fafc', padding: 16, borderRadius: 20 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 15 },
   qtyBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center' },
   qtyVal: { fontSize: 20, fontWeight: '900', color: '#1e1b4b', minWidth: 30, textAlign: 'center' },
   
-  textarea: { backgroundColor: '#fff', borderRadius: 20, padding: 16, fontSize: 16, color: '#1e1b4b', fontWeight: '600', borderWidth: 1.5, borderColor: '#f1f5f9', height: 120 },
+  textarea: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, fontSize: 16, color: '#1e1b4b', fontWeight: '600', borderWidth: 1.5, borderColor: '#f1f5f9', height: 120 },
   
   form: { gap: 16 },
   fieldGroup: { marginBottom: 10 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 16, borderWidth: 1.5, borderColor: '#f1f5f9' },
+  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 16, paddingHorizontal: 16, borderWidth: 1.5, borderColor: '#f1f5f9' },
   inputIcon: { marginRight: 12 },
   inputField: { flex: 1, height: 50, fontSize: 16, color: '#1e1b4b', fontWeight: '600' },
   inputDisabled: { color: '#94a3b8' },
   
   reviewBox: { gap: 16 },
-  reviewCard: { backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 15, elevation: 4 },
+  reviewCard: { backgroundColor: '#f8fafc', borderRadius: 24, overflow: 'hidden', shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 15, elevation: 4 },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   reviewTitle: { fontSize: 16, fontWeight: '800', color: '#1e1b4b' },
   reviewBody: { padding: 16, gap: 10 },
@@ -455,18 +455,18 @@ const s = StyleSheet.create({
   infoCardTitle: { fontSize: 15, fontWeight: '900', color: '#4338ca', marginBottom: 2 },
   infoCardText: { fontSize: 13, color: '#4f46e5', lineHeight: 18 },
   
-  footer: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#f1f5f9' },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 16 },
   backBtnText: { color: '#6366f1', fontSize: 16, fontWeight: '800' },
   nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24, gap: 8, shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#22c55e', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 24, gap: 8, shadowColor: '#22c55e', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
-  nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  nextBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
   
   successContainer: { flexGrow: 1, alignItems: 'center', padding: 24, paddingTop: 60 },
   successIconBox: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   successTitle: { fontSize: 32, fontWeight: '900', color: '#1e1b4b', marginBottom: 10 },
   successSub: { fontSize: 16, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
-  resultCard: { width: '100%', backgroundColor: '#fff', borderRadius: 24, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
+  resultCard: { width: '100%', backgroundColor: '#f8fafc', borderRadius: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 20, elevation: 5 },
   resultHeader: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   resultId: { fontSize: 16, fontWeight: '900', color: '#1e1b4b' },
   pendingBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
@@ -474,7 +474,7 @@ const s = StyleSheet.create({
   resultContent: { padding: 16, gap: 10 },
   priceBox: { marginTop: 10, backgroundColor: '#1e1b4b', padding: 16, borderRadius: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   priceLabel: { fontSize: 13, color: '#a5b4fc', fontWeight: '800' },
-  priceVal: { fontSize: 20, color: '#fff', fontWeight: '900' },
+  priceVal: { fontSize: 20, color: '#f8fafc', fontWeight: '900' },
   resetBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#6366f1', paddingVertical: 18, paddingHorizontal: 32, borderRadius: 20, marginTop: 40, shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 15, elevation: 8 },
-  resetBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+  resetBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
 });

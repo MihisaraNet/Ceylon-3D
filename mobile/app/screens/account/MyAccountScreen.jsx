@@ -53,9 +53,9 @@ const ProgressStep = ({ currentStatus, steps, map }) => {
             <View style={s.stepLineWrapper}>
               <View style={[s.stepCircle, isDone && { backgroundColor: cfg.color }]}>
                 {i < currentIndex ? (
-                  <Ionicons name="checkmark" size={12} color="#fff" />
+                  <Ionicons name="checkmark" size={12} color="#f8fafc" />
                 ) : (
-                  <View style={[s.stepDot, isDone && { backgroundColor: '#fff' }]} />
+                  <View style={[s.stepDot, isDone && { backgroundColor: '#f8fafc' }]} />
                 )}
               </View>
               {!isLast && <View style={[s.line, i < currentIndex && { backgroundColor: cfg.color }]} />}
@@ -160,7 +160,7 @@ export default function MyAccountScreen() {
       >
       {/* Header */}
       <View style={s.header}>
-        <View style={s.avatar}><Ionicons name="person" size={36} color="#fff" /></View>
+        <View style={s.avatar}><Ionicons name="person" size={36} color="#f8fafc" /></View>
         <View>
           <Text style={s.name}>{user?.fullName}</Text>
           <Text style={s.email}>{user?.email}</Text>
@@ -170,7 +170,7 @@ export default function MyAccountScreen() {
 
       {isAdmin && (
         <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')}>
-          <Ionicons name="shield-checkmark" size={18} color="#fff" />
+          <Ionicons name="shield-checkmark" size={18} color="#f8fafc" />
           <Text style={s.adminBtnText}>  Open Admin Dashboard</Text>
         </TouchableOpacity>
       )}
@@ -251,7 +251,7 @@ export default function MyAccountScreen() {
                       onPress={() => confirmOrder(o._id)}
                       disabled={confirmingId===o._id}
                     >
-                      {confirmingId===o._id ? <ActivityIndicator color="#fff" size="small" /> : <Text style={s.confirmBtnText}>Accept & Confirm Order</Text>}
+                      {confirmingId===o._id ? <ActivityIndicator color="#f8fafc" size="small" /> : <Text style={s.confirmBtnText}>Accept & Confirm Order</Text>}
                     </TouchableOpacity>
                   )}
                 </View>
@@ -288,13 +288,13 @@ export default function MyAccountScreen() {
 const s = StyleSheet.create({
   container:    { flex:1, backgroundColor:'#f9fafb' },
   header:       { flexDirection:'row', alignItems:'center', backgroundColor:'#1e1b4b', paddingHorizontal:20, paddingTop:16, paddingBottom:32, gap:16 },
-  avatar:       { width:60, height:60, borderRadius:30, backgroundColor:'rgba(255,255,255,0.15)', justifyContent:'center', alignItems:'center' },
-  name:         { fontSize:18, fontWeight:'800', color:'#fff', flexShrink:1 },
-  email:        { fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:1 },
+  avatar:       { width:60, height:60, borderRadius:30, backgroundColor:'rgba(248,250,252,0.15)', justifyContent:'center', alignItems:'center' },
+  name:         { fontSize:18, fontWeight:'800', color:'#f8fafc', flexShrink:1 },
+  email:        { fontSize:13, color:'rgba(248,250,252,0.6)', flexShrink:1 },
   adminTag:     { backgroundColor:'#fbbf24', borderRadius:999, paddingHorizontal:8, paddingVertical:2, marginTop:4, alignSelf:'flex-start', fontSize:11, fontWeight:'700', color:'#78350f' },
   adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor:'#4338ca', margin:16, marginTop:-16, borderRadius:12, padding:14, justifyContent:'center' },
-  adminBtnText: { color:'#fff', fontWeight:'700', fontSize:15 },
-  tabRow:       { flexDirection:'row', backgroundColor:'#fff', marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4, marginTop:-16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  adminBtnText: { color:'#f8fafc', fontWeight:'700', fontSize:15 },
+  tabRow:       { flexDirection:'row', backgroundColor:'#f8fafc', marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4, marginTop:-16, shadowColor: '#1a1a1a', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
   tab:          { flex:1, minWidth:0, flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:4, borderRadius:10, gap:4 },
   tabActive:    { backgroundColor:'#f8f7ff' },
   tabText:      { fontSize:12, color:'#6b7280', fontWeight:'700', flexShrink:1 },
@@ -302,7 +302,7 @@ const s = StyleSheet.create({
   section:      { padding:16, paddingTop:8 },
   sectionTitle: { fontSize:18, fontWeight:'800', color:'#111827', marginBottom:12 },
   empty:        { color:'#9ca3af', textAlign:'center', padding:24, marginTop: 40 },
-  orderCard:    { backgroundColor:'#fff', borderRadius:20, padding:16, marginBottom:12, shadowColor:'#000', shadowOpacity:0.04, shadowRadius:10, elevation:2, borderWidth: 1, borderColor: '#f1f5f9' },
+  orderCard:    { backgroundColor:'#f8fafc', borderRadius:20, padding:16, marginBottom:12, shadowColor:'#1a1a1a', shadowOpacity:0.04, shadowRadius:10, elevation:2, borderWidth: 1, borderColor: '#f1f5f9' },
   orderHeader:  { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:4 },
   orderId:      { fontSize:14, fontWeight:'800', color:'#64748b' },
   badge:        { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
@@ -328,10 +328,10 @@ const s = StyleSheet.create({
   shipAddr:     { fontSize: 13, color:'#64748b', marginTop: 10, lineHeight: 18 },
   
   confirmBtn:   { backgroundColor:'#22c55e', borderRadius:14, padding:15, alignItems:'center', marginTop:15, shadowColor: '#22c55e', shadowOpacity: 0.2, shadowRadius: 10, elevation: 4 },
-  confirmBtnText:{ color:'#fff', fontWeight:'800', fontSize:15 },
-  profileCard:  { backgroundColor:'#fff', borderRadius:20, padding:20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  confirmBtnText:{ color:'#f8fafc', fontWeight:'800', fontSize:15 },
+  profileCard:  { backgroundColor:'#f8fafc', borderRadius:20, padding:20, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
   profileLabel: { fontSize:11, color:'#94a3b8', fontWeight:'800', textTransform: 'uppercase', marginTop:15, marginBottom:4 },
   profileVal:   { fontSize:16, color:'#1e1b4b', fontWeight:'700' },
-  logoutBtn:    { flexDirection:'row', alignItems:'center', justifyContent:'center', margin:20, backgroundColor:'#fff', borderWidth:1.5, borderColor:'#fee2e2', borderRadius:16, padding:16 },
+  logoutBtn:    { flexDirection:'row', alignItems:'center', justifyContent:'center', margin:20, backgroundColor:'#f8fafc', borderWidth:1.5, borderColor:'#fee2e2', borderRadius:16, padding:16 },
   logoutText:   { color:'#ef4444', fontSize:15, fontWeight:'800' },
 });

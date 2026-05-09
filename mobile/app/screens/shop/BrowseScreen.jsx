@@ -129,8 +129,8 @@ function ProductCard({ item, onPress, onAddToCart, isAdding }) {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             {isAdding
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name="cart-outline" size={16} color="#fff" />
+              ? <ActivityIndicator size="small" color="#f8fafc" />
+              : <Ionicons name="cart-outline" size={16} color="#f8fafc" />
             }
           </TouchableOpacity>
         </View>
@@ -283,7 +283,7 @@ export default function BrowseScreen() {
                 onPress={() => setCategory(cat.id)}
                 activeOpacity={0.8}
               >
-                <Text style={[s.catTabText, active && { color: '#fff' }]}>
+                <Text style={[s.catTabText, active && { color: '#f8fafc' }]}>
                   {cat.icon}  {cat.name}
                 </Text>
               </TouchableOpacity>
@@ -351,16 +351,16 @@ const s = StyleSheet.create({
   header:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 18, paddingTop: Platform.OS === 'android' ? 12 : 4, paddingBottom: 8 },
   headerLeft:   { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar:       { width: 42, height: 42, borderRadius: 21, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center' },
-  avatarText:   { color: '#fff', fontSize: 17, fontWeight: '900' },
+  avatarText:   { color: '#f8fafc', fontSize: 17, fontWeight: '900' },
   onlineDot:    { position: 'absolute', top: 1, right: 1, width: 11, height: 11, borderRadius: 6, backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#f1f5f9' },
   nameRow:      { flexDirection: 'row', alignItems: 'center' },
   greetText:    { fontSize: 14, color: '#64748b' },
   greetName:    { fontSize: 14, fontWeight: '800', color: '#1e293b' },
   greetSub:     { fontSize: 11, color: '#94a3b8', marginTop: 1 },
   headerRight:  { position: 'relative' },
-  cartIconBtn:  { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
+  cartIconBtn:  { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', shadowColor: '#1a1a1a', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
   cartBadge:    { position: 'absolute', top: -3, right: -3, backgroundColor: '#ef4444', borderRadius: 8, minWidth: 17, height: 17, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#f1f5f9' },
-  cartBadgeText:{ color: '#fff', fontSize: 9, fontWeight: '900' },
+  cartBadgeText:{ color: '#f8fafc', fontSize: 9, fontWeight: '900' },
 
   /* ── Brand strip ── */
   brandStrip:   { flexDirection: 'row', alignItems: 'baseline', gap: 6, paddingHorizontal: 18, marginBottom: 12 },
@@ -368,12 +368,12 @@ const s = StyleSheet.create({
   brandTag:     { fontSize: 13, color: '#6366f1', fontWeight: '700' },
 
   /* ── Search ── */
-  searchWrap:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', marginHorizontal: 18, marginBottom: 12, borderRadius: 14, paddingHorizontal: 14, height: 48, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
+  searchWrap:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f8fafc', marginHorizontal: 18, marginBottom: 12, borderRadius: 14, paddingHorizontal: 14, height: 48, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
   searchInput:  { flex: 1, fontSize: 14, color: '#1e293b' },
 
   /* ── Category tabs ── */
   catRow:       { paddingHorizontal: 14, paddingVertical: 6, gap: 8, alignItems: 'center' },
-  catTab:       { borderRadius: 20, paddingHorizontal: 13, paddingVertical: 6, backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#e2e8f0' },
+  catTab:       { borderRadius: 20, paddingHorizontal: 13, paddingVertical: 6, backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#e2e8f0' },
   catTabText:   { fontSize: 12, fontWeight: '700', color: '#64748b' },
 
   /* ── Result row ── */
@@ -385,7 +385,7 @@ const s = StyleSheet.create({
 
   /* ─────────────── CARD ─────────────── */
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f8fafc',
     borderRadius: 18,
     flexDirection: 'row',
     overflow: 'hidden',
@@ -402,7 +402,7 @@ const s = StyleSheet.create({
   imgPlaceholder:{ width: 120, height: 140, justifyContent: 'center', alignItems: 'center' },
   imgEmoji:     { fontSize: 40 },
   outOverlay:   { position: 'absolute', inset: 0, backgroundColor: 'rgba(15,23,42,0.55)', justifyContent: 'center', alignItems: 'center' },
-  outText:      { color: '#fff', fontSize: 11, fontWeight: '900', textAlign: 'center', lineHeight: 16 },
+  outText:      { color: '#f8fafc', fontSize: 11, fontWeight: '900', textAlign: 'center', lineHeight: 16 },
   imgStrip:     { position: 'absolute', bottom: 0, left: 0, right: 0, height: 4 },
 
   /* Right body */
@@ -439,7 +439,7 @@ const s = StyleSheet.create({
   loadText:     { color: '#94a3b8', fontSize: 14, fontWeight: '600' },
   errText:      { color: '#ef4444', textAlign: 'center', fontSize: 13, paddingHorizontal: 30 },
   retryBtn:     { backgroundColor: '#6366f1', paddingHorizontal: 22, paddingVertical: 10, borderRadius: 12, marginTop: 6 },
-  retryText:    { color: '#fff', fontWeight: '700', fontSize: 13 },
+  retryText:    { color: '#f8fafc', fontWeight: '700', fontSize: 13 },
   emptyTitle:   { fontSize: 16, fontWeight: '800', color: '#cbd5e1' },
   emptySub:     { fontSize: 13, color: '#cbd5e1' },
 });

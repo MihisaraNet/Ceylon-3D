@@ -121,15 +121,15 @@ export default function AdminDashboardScreen() {
 const s = StyleSheet.create({
   container:    { flex:1, backgroundColor:'#f9fafb' },
   header:       { backgroundColor:'#4f46e5', padding:24, paddingTop:32 },
-  headerTitle:  { fontSize:26, fontWeight:'900', color:'#fff' },
+  headerTitle:  { fontSize:26, fontWeight:'900', color:'#f8fafc' },
   headerSub:    { fontSize:14, color:'#c7d2fe', marginTop:4 },
   statsGrid:    { flexDirection:'row', flexWrap:'wrap', gap:12, padding:16 },
-  statCard:     { flex:1, minWidth:'45%', backgroundColor:'#fff', borderRadius:14, padding:16, borderLeftWidth:4, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:8, elevation:3 },
+  statCard:     { flex:1, minWidth:'45%', backgroundColor:'#f8fafc', borderRadius:14, padding:16, borderLeftWidth:4, shadowColor:'#1a1a1a', shadowOpacity:0.06, shadowRadius:8, elevation:3 },
   statVal:      { fontSize:28, fontWeight:'900', color:'#111827', marginTop:8, marginBottom:2 },
   statLabel:    { fontSize:13, color:'#6b7280', fontWeight:'600' },
   sectionTitle: { fontSize:18, fontWeight:'800', color:'#111827', paddingHorizontal:16, marginBottom:8 },
   actions:      { paddingHorizontal:16, gap:8 },
-  actionBtn:    { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', borderRadius:14, padding:16, gap:12, shadowColor:'#000', shadowOpacity:0.04, shadowRadius:6, elevation:2 },
+  actionBtn:    { flexDirection:'row', alignItems:'center', backgroundColor:'#f8fafc', borderRadius:14, padding:16, gap:12, shadowColor:'#1a1a1a', shadowOpacity:0.04, shadowRadius:6, elevation:2 },
   actionIcon:   { width:44, height:44, borderRadius:12, justifyContent:'center', alignItems:'center' },
   actionLabel:  { flex:1, fontSize:15, fontWeight:'600', color:'#111827' },
 });

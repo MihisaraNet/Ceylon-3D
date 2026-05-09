@@ -122,7 +122,7 @@ export default function ShopOrdersAdminScreen() {
                   style={[s.chip, item.status === st && { backgroundColor: '#6366f1', borderColor: '#6366f1' }]}
                   onPress={() => updateStatus(item._id, st)}
                 >
-                  <Text style={[s.chipText, item.status === st && { color: '#fff' }]}>{st}</Text>
+                  <Text style={[s.chipText, item.status === st && { color: '#f8fafc' }]}>{st}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -166,7 +166,7 @@ const s = StyleSheet.create({
   countText: { fontSize: 13, fontWeight: '900', color: '#6366f1' },
 
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 15, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.02)' },
+  card: { backgroundColor: '#f8fafc', borderRadius: 24, overflow: 'hidden', shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 15, elevation: 3, borderWidth: 1, borderColor: 'rgba(15,23,42,0.02)' },
   cardExpanded: { shadowOpacity: 0.08, shadowRadius: 20, elevation: 6 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16 },
   headerLeft: { flex: 1, gap: 4 },
@@ -182,26 +182,26 @@ const s = StyleSheet.create({
   details: { padding: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9', backgroundColor: '#f8fafc' },
   sectionTitle: { fontSize: 12, fontWeight: '800', color: '#1e1b4b', textTransform: 'uppercase', marginBottom: 12, letterSpacing: 0.5 },
   itemsList: { gap: 8, marginBottom: 20 },
-  orderItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', padding: 10, borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0' },
+  orderItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f8fafc', padding: 10, borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0' },
   itemIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center' },
   itemName: { fontSize: 14, fontWeight: '700', color: '#1e1b4b' },
   itemMeta: { fontSize: 12, color: '#64748b', fontWeight: '500' },
 
-  addressBox: { backgroundColor: '#fff', padding: 14, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e2e8f0' },
+  addressBox: { backgroundColor: '#f8fafc', padding: 14, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e2e8f0' },
   addressLabel: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 },
   addressText: { fontSize: 13, color: '#1e1b4b', fontWeight: '600', lineHeight: 18 },
 
   trackingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#eef2ff', padding: 10, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#c7d2fe' },
   trackingValText: { fontSize: 13, fontWeight: '700', color: '#4338ca' },
   trackInputRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  trackInput: { flex: 1, height: 45, backgroundColor: '#fff', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1.5, borderColor: '#e2e8f0', fontSize: 14, color: '#1e1b4b', fontWeight: '600' },
+  trackInput: { flex: 1, height: 45, backgroundColor: '#f8fafc', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1.5, borderColor: '#e2e8f0', fontSize: 14, color: '#1e1b4b', fontWeight: '600' },
   trackBtn: { backgroundColor: '#6366f1', paddingHorizontal: 15, borderRadius: 12, justifyContent: 'center' },
-  trackBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  trackBtnText: { color: '#f8fafc', fontWeight: '800', fontSize: 13 },
 
   divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 16 },
 
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: '#e2e8f0' },
+  chip: { backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: '#e2e8f0' },
   chipText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
   empty: { textAlign: 'center', color: '#94a3b8', marginTop: 100, fontSize: 16, fontWeight: '600' },
 });
