@@ -28,15 +28,16 @@ const submitReview = async (req, res) => {
       return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
-    // Check that the user has purchased this product (any SHOP order containing it)
+    // Check that the user has a delivered order containing this product
     const hasPurchased = await Order.findOne({
       userId: req.user._id,
       category: 'SHOP',
+      status: 'DELIVERED',
       'items.productId': productId,
     });
 
     if (!hasPurchased) {
-      return res.status(403).json({ error: 'You can only review products you have purchased' });
+      return res.status(403).json({ error: 'You can only review products from delivered orders' });
     }
 
     // Upsert: one review per user per product

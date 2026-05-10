@@ -206,7 +206,19 @@ export default function MyAccountScreen() {
                   <View style={s.divider} />
                   
                   {o.items?.map((item, i) => (
-                    <Text key={i} style={s.orderItem}>{item.productName} × {item.quantity} — LKR {item.price?.toFixed(2)}</Text>
+                    <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <Text style={[s.orderItem, { marginBottom: 0, flex: 1 }]}>
+                        {item.productName} × {item.quantity} — LKR {item.price?.toFixed(2)}
+                      </Text>
+                      {o.status === 'DELIVERED' && item.productId && (
+                        <TouchableOpacity 
+                          style={{ backgroundColor: '#eef2ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 10, borderWidth: 1, borderColor: '#c7d2fe' }}
+                          onPress={() => nav.navigate('Review', { productId: item.productId, productName: item.productName })}
+                        >
+                          <Text style={{ fontSize: 12, color: '#6366f1', fontWeight: '700' }}>Review</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   ))}
                   {o.trackingNumber && (
                     <View style={s.trackingBox}>
