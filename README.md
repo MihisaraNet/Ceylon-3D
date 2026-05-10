@@ -121,3 +121,15 @@ LayerForge 3D utilizes a **Premium Dark Aesthetic**. We prioritize visual excell
 - **Interactivity**: Smooth transitions, micro-animations, and responsive layouts.
 
 ---
+
+## 🚀 Roadmap & Future Updates
+
+The following features are planned for future development to further enhance the platform:
+
+1. **Finish Social Authentication Integration**: Process Google and Apple sign-ins using the newly integrated UI buttons.
+2. **Payment Gateway Integration**: Integrate Stripe or PayPal to securely process credit cards directly inside the app, replacing manual receipt uploads.
+3. **Advanced Search & Filtering**: Add real-time product search, category filters, and sorting options to the `BrowseScreen`.
+4. **Push Notifications**: Integrate Firebase Cloud Messaging (FCM) to automatically notify users when their 3D print quote is ready or their order has shipped.
+5. **Wishlist (Favorites) Feature**: Allow users to save favorite products or 3D models to purchase later.
+6. **Profile Editing & Address Management**: Allow users to update their default shipping address and reset passwords directly from the app.
+7. **Admin Analytics Dashboard**: Add visual charts to the Admin Dashboard showing monthly revenue, best-selling items, and order volume.
