@@ -180,6 +180,26 @@ export default function LoginScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
+        {/* Separator */}
+        <View style={s.separatorContainer}>
+          <View style={s.separatorLine} />
+          <Text style={s.separatorText}>OR</Text>
+          <View style={s.separatorLine} />
+        </View>
+
+        {/* Social Login */}
+        <View style={s.socialRow}>
+          <TouchableOpacity style={s.socialBtn} onPress={() => Alert.alert('Google Sign-In', 'Google Sign-In backend integration pending.')} activeOpacity={0.88}>
+            <Ionicons name="logo-google" size={20} color="#db4437" />
+            <Text style={s.socialBtnText}>Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={s.socialBtn} onPress={() => Alert.alert('Apple Sign-In', 'Apple Sign-In backend integration pending.')} activeOpacity={0.88}>
+            <Ionicons name="logo-apple" size={20} color="#111827" />
+            <Text style={s.socialBtnText}>Apple</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Register link */}
         <TouchableOpacity style={s.link} onPress={() => navigation.navigate('Register')}>
           <Text style={s.linkText}>Don't have an account? <Text style={s.linkBold}>Create one →</Text></Text>
@@ -219,7 +239,13 @@ const s = StyleSheet.create({
   checkboxChecked:{ backgroundColor: '#6366f1', borderColor: '#6366f1' },
   rememberText:   { fontSize: 13, color: '#6b7280', fontWeight: '600' },
   forgotText:     { fontSize: 13, color: '#6366f1', fontWeight: '700' },
-  link:           { alignItems: 'center', marginTop: 22 },
+  separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
+  separatorLine:  { flex: 1, height: 1, backgroundColor: '#e5e7eb' },
+  separatorText:  { marginHorizontal: 12, fontSize: 13, color: '#9ca3af', fontWeight: '700' },
+  socialRow:      { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  socialBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 14, paddingVertical: 14 },
+  socialBtnText:  { color: '#374151', fontSize: 15, fontWeight: '700', marginLeft: 8 },
+  link:           { alignItems: 'center', marginTop: 32 },
   linkText:       { color: '#9ca3af', fontSize: 14 },
   linkBold:       { color: '#6366f1', fontWeight: '800' },
 });

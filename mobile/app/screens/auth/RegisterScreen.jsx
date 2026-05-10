@@ -22,7 +22,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, SafeAreaView, StatusBar,
+  ScrollView, ActivityIndicator, SafeAreaView, StatusBar, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
@@ -237,6 +237,26 @@ export default function RegisterScreen({ navigation }) {
           )}
         </TouchableOpacity>
 
+        {/* Separator */}
+        <View style={s.separatorContainer}>
+          <View style={s.separatorLine} />
+          <Text style={s.separatorText}>OR</Text>
+          <View style={s.separatorLine} />
+        </View>
+
+        {/* Social Login */}
+        <View style={s.socialRow}>
+          <TouchableOpacity style={s.socialBtn} onPress={() => Alert.alert('Google Sign-In', 'Google Sign-In backend integration pending.')} activeOpacity={0.88}>
+            <Ionicons name="logo-google" size={20} color="#db4437" />
+            <Text style={s.socialBtnText}>Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={s.socialBtn} onPress={() => Alert.alert('Apple Sign-In', 'Apple Sign-In backend integration pending.')} activeOpacity={0.88}>
+            <Ionicons name="logo-apple" size={20} color="#111827" />
+            <Text style={s.socialBtnText}>Apple</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Login link */}
         <TouchableOpacity style={s.link} onPress={() => navigation.navigate('Login')}>
           <Text style={s.linkText}>Already have an account? <Text style={s.linkBold}>Sign In →</Text></Text>
@@ -283,7 +303,13 @@ const s = StyleSheet.create({
   serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
   btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 8, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
   btnText:        { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
-  link:           { alignItems: 'center', marginTop: 22 },
+  separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
+  separatorLine:  { flex: 1, height: 1, backgroundColor: '#e5e7eb' },
+  separatorText:  { marginHorizontal: 12, fontSize: 13, color: '#9ca3af', fontWeight: '700' },
+  socialRow:      { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  socialBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 14, paddingVertical: 14 },
+  socialBtnText:  { color: '#374151', fontSize: 15, fontWeight: '700', marginLeft: 8 },
+  link:           { alignItems: 'center', marginTop: 32 },
   linkText:       { color: '#9ca3af', fontSize: 14 },
   linkBold:       { color: '#6366f1', fontWeight: '800' },
 });
