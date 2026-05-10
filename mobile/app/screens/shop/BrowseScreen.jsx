@@ -57,12 +57,12 @@ function ProductCard({ item, onPress, onAddToCart, isAdding }) {
               {isAdding ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
-                <Text style={s.addBtnText}>Add to Bag</Text>
+                <Text style={s.addBtnText}>Add to Cart</Text>
               )}
             </LinearGradient>
           ) : (
             <View style={[s.addBtn, s.addBtnDisabled]}>
-              <Text style={s.addBtnText}>Add to Bag</Text>
+              <Text style={s.addBtnText}>Add to Cart</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -130,7 +130,7 @@ export default function BrowseScreen() {
       <View style={s.header}>
         <Text style={s.headerTitle}>Explore</Text>
         <TouchableOpacity style={s.cartBtn} onPress={() => nav.navigate('Cart')}>
-          <Ionicons name="bag-outline" size={24} color="#0f172a" />
+          <Ionicons name="cart-outline" size={24} color="#0f172a" />
           {totalItems > 0 && (
             <LinearGradient
               colors={['#ec4899', '#f43f5e']}

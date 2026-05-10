@@ -57,7 +57,8 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          const icons = { Home: 'home', Browse: 'grid', Upload: 'add-circle', Cart: 'bag', Account: 'person' };
+          // Changed icons to be more universally familiar
+          const icons = { Home: 'home', Browse: 'search', Upload: 'cloud-upload', Cart: 'cart', Account: 'person' };
           return (
             <Ionicons
               name={focused ? icons[route.name] : `${icons[route.name]}-outline`}

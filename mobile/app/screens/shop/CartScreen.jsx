@@ -168,9 +168,9 @@ export default function CartScreen() {
       </View>
       <View style={s.centred}>
         <LinearGradient colors={['#f3e8ff', '#e0e7ff']} style={s.emptyIconBox}>
-          <Ionicons name="bag-outline" size={48} color="#8b5cf6" />
+          <Ionicons name="cart-outline" size={48} color="#8b5cf6" />
         </LinearGradient>
-        <Text style={s.emptyTitle}>Your bag is empty.</Text>
+        <Text style={s.emptyTitle}>Your cart is empty.</Text>
         <TouchableOpacity style={s.browseBtnShadow} onPress={() => nav.navigate('Browse')}>
           <LinearGradient colors={['#8b5cf6', '#ec4899']} start={{x:0,y:0}} end={{x:1,y:1}} style={s.browseBtn}>
             <Text style={s.browseBtnText}>Explore Shop</Text>
@@ -255,7 +255,7 @@ export default function CartScreen() {
             ))}
 
             <TouchableOpacity style={[s.receiptBtn, receipt && s.receiptBtnDone]} onPress={pickReceipt}>
-              <Ionicons name={receipt ? "checkmark-circle" : "image-outline"} size={20} color={receipt ? "#10b981" : "#8b5cf6"} />
+              <Ionicons name={receipt ? "checkmark-circle" : "document-attach-outline"} size={20} color={receipt ? "#10b981" : "#8b5cf6"} />
               <Text style={[s.receiptBtnText, receipt && { color: '#10b981' }]}>
                 {receipt ? 'Receipt Attached' : 'Attach Payment Proof (Optional)'}
               </Text>

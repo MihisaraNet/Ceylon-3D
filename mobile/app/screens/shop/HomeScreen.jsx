@@ -11,8 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const SERVICES = [
   { id: '1', title: 'Rapid Prototyping', icon: 'cube', colors: ['#8b5cf6', '#a855f7'], bg: '#f3e8ff' },
-  { id: '2', title: 'Custom Parts', icon: 'hardware-chip', colors: ['#0ea5e9', '#3b82f6'], bg: '#e0f2fe' },
-  { id: '3', title: 'Design Consult', icon: 'brush', colors: ['#f43f5e', '#fb7185'], bg: '#ffe4e6' },
+  { id: '2', title: 'Custom Parts', icon: 'cog', colors: ['#0ea5e9', '#3b82f6'], bg: '#e0f2fe' },
+  { id: '3', title: 'Design Consult', icon: 'chatbubbles', colors: ['#f43f5e', '#fb7185'], bg: '#ffe4e6' },
 ];
 
 export default function HomeScreen() {
