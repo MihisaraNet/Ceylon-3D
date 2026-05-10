@@ -1,35 +1,35 @@
 import React, { useState, useEffect } from 'react'; 
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  StatusBar, Platform, SafeAreaView, ActivityIndicator, Image
+  StatusBar, Platform, SafeAreaView, ActivityIndicator, Image, Dimensions
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CATEGORIES } from '../../data/categories';
+import { getImageUri } from '../../lib/config';
 
-const SERVICES = [
-  { id: '1', title: 'Rapid Prototyping', icon: 'cube', colors: ['#8b5cf6', '#a855f7'], bg: '#f3e8ff' },
-  { id: '2', title: 'Custom Parts', icon: 'cog', colors: ['#0ea5e9', '#3b82f6'], bg: '#e0f2fe' },
-  { id: '3', title: 'Design Consult', icon: 'chatbubbles', colors: ['#f43f5e', '#fb7185'], bg: '#ffe4e6' },
-];
+const { width } = Dimensions.get('window');
+const FEATURED_CARD_WIDTH = width * 0.4;
 
 export default function HomeScreen() {
   const nav = useNavigation();
   const { user, isAdmin } = useAuth();
-  const [reviews, setReviews] = useState([]);
-  const [loadingReviews, setLoadingReviews] = useState(true);
+  
+  const [featured, setFeatured] = useState([]);
+  const [loadingFeat, setLoadingFeat] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await api.get('/reviews/recent?limit=5');
-        setReviews(data);
+        const { data } = await api.get('/api/products');
+        setFeatured((Array.isArray(data) ? data : []).slice(0, 5));
       } catch (err) {
-        console.log('[Home] Review fetch error:', err.message);
+        console.log('[Home] Featured fetch error:', err.message);
       } finally {
-        setLoadingReviews(false);
+        setLoadingFeat(false);
       }
     })();
   }, []);
@@ -43,7 +43,7 @@ export default function HomeScreen() {
         <View style={s.header}>
           <View>
             <Text style={s.greeting}>Hi, {user?.fullName?.split(' ')[0] || 'Guest'} 👋</Text>
-            <Text style={s.dateText}>Ready to build something amazing?</Text>
+            <Text style={s.dateText}>Ready to shop?</Text>
           </View>
           {isAdmin && (
             <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')}>
@@ -52,21 +52,24 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Hero Section */}
-        <TouchableOpacity activeOpacity={0.9} onPress={() => nav.navigate('Upload')}>
+        {/* Promo Hero Section */}
+        <TouchableOpacity activeOpacity={0.9} onPress={() => nav.navigate('Browse')}>
           <LinearGradient
-            colors={['#8b5cf6', '#ec4899', '#f43f5e']}
+            colors={['#8b5cf6', '#ec4899']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={s.heroCard}
           >
             <View style={s.heroGlass}>
-              <Text style={s.heroTitle}>Bring your ideas{'\n'}to reality.</Text>
-              <Text style={s.heroSub}>Premium 3D printing and prototyping services right at your fingertips.</Text>
+              <View style={s.badgeWrap}>
+                <Text style={s.badgeText}>NEW ARRIVALS</Text>
+              </View>
+              <Text style={s.heroTitle}>Discover Premium{'\n'}3D Prints</Text>
+              <Text style={s.heroSub}>Shop exclusive designs and high-quality models today.</Text>
               
               <View style={s.heroActionRow}>
                 <View style={s.primaryBtn}>
-                  <Text style={s.primaryBtnText}>Upload STL</Text>
+                  <Text style={s.primaryBtnText}>Shop Now</Text>
                   <Ionicons name="arrow-forward" size={16} color="#0f172a" style={{ marginLeft: 6 }} />
                 </View>
               </View>
@@ -74,72 +77,78 @@ export default function HomeScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Quick Stats */}
-        <View style={s.statsContainer}>
-          <View style={s.statBox}>
-            <Text style={[s.statNumber, { color: '#8b5cf6' }]}>24h</Text>
-            <Text style={s.statLabel}>Avg. Turnaround</Text>
-          </View>
-          <View style={s.statDivider} />
-          <View style={s.statBox}>
-            <Text style={[s.statNumber, { color: '#0ea5e9' }]}>99%</Text>
-            <Text style={s.statLabel}>Precision Rate</Text>
-          </View>
-          <View style={s.statDivider} />
-          <View style={s.statBox}>
-            <Text style={[s.statNumber, { color: '#f43f5e' }]}>10+</Text>
-            <Text style={s.statLabel}>Materials</Text>
-          </View>
-        </View>
-
-        {/* Services */}
+        {/* Categories */}
         <View style={s.section}>
           <View style={s.sectionHeader}>
-            <Text style={s.sectionTitle}>Our Services</Text>
-            <TouchableOpacity onPress={() => nav.navigate('Browse')}>
-              <Text style={s.seeAllText}>Explore</Text>
-            </TouchableOpacity>
+            <Text style={s.sectionTitle}>Categories</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.servicesScroll}>
-            {SERVICES.map((srv) => (
-              <View key={srv.id} style={[s.serviceCard, { backgroundColor: srv.bg }]}>
-                <LinearGradient colors={srv.colors} style={s.serviceIconWrap}>
-                  <Ionicons name={srv.icon} size={22} color="#ffffff" />
-                </LinearGradient>
-                <Text style={s.serviceTitle}>{srv.title}</Text>
-              </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.catScroll}>
+            {CATEGORIES.map((cat) => (
+              <TouchableOpacity key={cat.id} style={s.catItem} onPress={() => nav.navigate('Browse')}>
+                <View style={s.catIconWrap}>
+                  <Text style={s.catEmoji}>{cat.icon}</Text>
+                </View>
+                <Text style={s.catName}>{cat.name}</Text>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        {/* Recent Feedback */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Community Feedback</Text>
-          {loadingReviews ? (
-            <ActivityIndicator color="#8b5cf6" style={{ marginTop: 20 }} />
-          ) : reviews.length === 0 ? (
-            <Text style={s.emptyText}>No reviews yet.</Text>
-          ) : (
-            <View style={s.reviewsList}>
-              {reviews.slice(0, 3).map((rv, i) => (
-                <View key={rv._id} style={s.reviewItem}>
-                  <View style={s.reviewHeader}>
-                    <View style={s.avatarPlaceholder}>
-                      <Text style={s.avatarText}>{rv.userName.charAt(0)}</Text>
-                    </View>
-                    <View>
-                      <Text style={s.reviewAuthor}>{rv.userName}</Text>
-                      <View style={s.reviewStars}>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <Ionicons key={n} name="star" size={12} color={n <= rv.rating ? '#f59e0b' : '#e2e8f0'} />
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-                  <Text style={s.reviewComment}>"{rv.comment}"</Text>
-                </View>
-              ))}
+        {/* Upload STL CTA */}
+        <TouchableOpacity activeOpacity={0.9} onPress={() => nav.navigate('Upload')} style={s.uploadBannerWrap}>
+          <LinearGradient colors={['#e0f2fe', '#bae6fd']} start={{x:0, y:0}} end={{x:1, y:1}} style={s.uploadBanner}>
+            <View style={s.uploadIconBox}>
+              <Ionicons name="cloud-upload" size={24} color="#0284c7" />
             </View>
+            <View style={{ flex: 1, paddingLeft: 16 }}>
+              <Text style={s.uploadTitle}>Have your own design?</Text>
+              <Text style={s.uploadSub}>Upload your STL file for printing.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#0284c7" />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {/* Featured Products */}
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Featured Products</Text>
+            <TouchableOpacity onPress={() => nav.navigate('Browse')}>
+              <Text style={s.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {loadingFeat ? (
+            <ActivityIndicator color="#8b5cf6" style={{ marginTop: 20 }} />
+          ) : featured.length === 0 ? (
+            <Text style={s.emptyText}>No products available.</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.featScroll}>
+              {featured.map(item => {
+                const imgUri = getImageUri(item.imagePath);
+                return (
+                  <TouchableOpacity 
+                    key={item._id} 
+                    style={s.featCard} 
+                    onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
+                    activeOpacity={0.9}
+                  >
+                    <View style={s.featImgWrap}>
+                      {imgUri ? (
+                        <Image source={{ uri: imgUri }} style={s.featImg} resizeMode="cover" />
+                      ) : (
+                        <View style={s.featImgPH}>
+                          <Ionicons name="cube-outline" size={32} color="#cbd5e1" />
+                        </View>
+                      )}
+                    </View>
+                    <View style={s.featBody}>
+                      <Text style={s.featName} numberOfLines={1}>{item.name}</Text>
+                      <Text style={s.featPrice}>LKR {item.price?.toLocaleString()}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           )}
         </View>
 
@@ -158,37 +167,41 @@ const s = StyleSheet.create({
   dateText: { fontSize: 14, color: '#64748b', fontWeight: '500' },
   adminBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f3e8ff', justifyContent: 'center', alignItems: 'center' },
 
-  heroCard: { borderRadius: 28, marginBottom: 24, shadowColor: '#ec4899', shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
+  heroCard: { borderRadius: 28, marginBottom: 32, shadowColor: '#ec4899', shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
   heroGlass: { backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: 28, borderRadius: 28 },
+  badgeWrap: { backgroundColor: '#ffffff', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99, marginBottom: 16 },
+  badgeText: { fontSize: 10, fontWeight: '800', color: '#ec4899', letterSpacing: 1 },
   heroTitle: { fontSize: 32, fontWeight: '800', color: '#ffffff', lineHeight: 38, marginBottom: 12, letterSpacing: -1 },
   heroSub: { fontSize: 15, color: 'rgba(255,255,255,0.9)', lineHeight: 24, marginBottom: 24 },
   heroActionRow: { flexDirection: 'row', alignItems: 'center' },
   primaryBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 99 },
   primaryBtnText: { color: '#0f172a', fontWeight: '700', fontSize: 15 },
 
-  statsContainer: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: 24, paddingVertical: 20, marginBottom: 32, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
-  statBox: { flex: 1, alignItems: 'center' },
-  statNumber: { fontSize: 24, fontWeight: '900', marginBottom: 4 },
-  statLabel: { fontSize: 11, color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  statDivider: { width: 1, backgroundColor: '#f1f5f9', marginVertical: 8 },
-
   section: { marginBottom: 32 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#0f172a', letterSpacing: -0.3 },
   seeAllText: { color: '#8b5cf6', fontWeight: '600', fontSize: 15 },
   
-  servicesScroll: { gap: 16, overflow: 'visible' },
-  serviceCard: { padding: 20, borderRadius: 24, width: 150 },
-  serviceIconWrap: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 16, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, elevation: 2 },
-  serviceTitle: { fontSize: 16, fontWeight: '700', color: '#0f172a', lineHeight: 22 },
+  catScroll: { gap: 16, paddingRight: 20 },
+  catItem: { alignItems: 'center', width: 72 },
+  catIconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center', marginBottom: 8, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  catEmoji: { fontSize: 28 },
+  catName: { fontSize: 12, fontWeight: '600', color: '#475569', textAlign: 'center' },
 
-  reviewsList: { gap: 16 },
-  reviewItem: { backgroundColor: '#ffffff', padding: 20, borderRadius: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f3e8ff', justifyContent: 'center', alignItems: 'center' },
-  avatarText: { color: '#8b5cf6', fontWeight: '700', fontSize: 16 },
-  reviewAuthor: { fontSize: 15, color: '#0f172a', fontWeight: '700', marginBottom: 4 },
-  reviewStars: { flexDirection: 'row', gap: 2 },
-  reviewComment: { fontSize: 15, color: '#475569', lineHeight: 24 },
+  uploadBannerWrap: { marginBottom: 32, shadowColor: '#0ea5e9', shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  uploadBanner: { flexDirection: 'row', alignItems: 'center', padding: 20, borderRadius: 24 },
+  uploadIconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.6)', justifyContent: 'center', alignItems: 'center' },
+  uploadTitle: { fontSize: 15, fontWeight: '700', color: '#0c4a6e', marginBottom: 4 },
+  uploadSub: { fontSize: 13, color: '#0284c7', fontWeight: '500' },
+
+  featScroll: { gap: 16, paddingRight: 20 },
+  featCard: { width: FEATURED_CARD_WIDTH, backgroundColor: '#ffffff', borderRadius: 20, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, overflow: 'hidden' },
+  featImgWrap: { width: '100%', height: FEATURED_CARD_WIDTH, backgroundColor: '#f8fafc' },
+  featImg: { width: '100%', height: '100%' },
+  featImgPH: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  featBody: { padding: 12 },
+  featName: { fontSize: 13, fontWeight: '700', color: '#0f172a', marginBottom: 4 },
+  featPrice: { fontSize: 13, color: '#8b5cf6', fontWeight: '700' },
+
   emptyText: { color: '#94a3b8', fontSize: 15, fontStyle: 'italic' },
 });
