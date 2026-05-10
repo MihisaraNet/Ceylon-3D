@@ -18,7 +18,7 @@
  * @module screens/account/MyAccountScreen
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, SafeAreaView, StatusBar } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -116,8 +116,15 @@ export default function MyAccountScreen() {
     } finally { setConfirming(null); }
   };
 
-  // Handle logout and clear both auth AND cart state
-  const handleLogout = () => {
+  // Handle logout
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        await logout();
+      }
+      return;
+    }
+
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -127,7 +134,6 @@ export default function MyAccountScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            try { await clearCart(); } catch (_) { /* silent */ }
             await logout();
           },
         },
