@@ -1,52 +1,23 @@
-/**
- * HomeScreen.jsx — Landing / Home Page
- *
- * The main entry screen of the LayerForge 3D app, displayed as the first tab.
- * Features a rich, branded layout with multiple sections.
- *
- * Sections:
- *   1. Hero Banner — Gradient background with tagline, Upload STL & Browse Shop CTAs
- *   2. Stats Row   — 500+ Orders, 99% Rating, 24h Delivery (overlapping card design)
- *   3. Services Grid — Four service cards: Prototyping, Manufacturing, Design, Consultation
- *   4. Quick Action Banner — "Ready to order?" gradient CTA linking to Browse
- *   5. About Card  — Company info with email, phone, and location
- *
- * Conditional elements:
- *   - Cart pill badge (top-right) if user has items in cart
- *   - Admin Dashboard button if user has ROLE_ADMIN
- *
- * @module screens/shop/HomeScreen
- */
 import React, { useState, useEffect } from 'react'; 
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  StatusBar, Platform, Animated, SafeAreaView, useWindowDimensions,
-  ActivityIndicator,
+  StatusBar, Platform, SafeAreaView, ActivityIndicator, Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../lib/api';
 
-const SERVICE_CARDS = [
-  { icon: 'cube-outline',             title: 'Rapid Prototyping',    desc: 'Fast turnaround, multiple materials', color: '#6366f1', bg: '#eef2ff' },
-  { icon: 'settings-outline',         title: 'Custom Manufacturing', desc: 'Quality control, production scaling', color: '#ec4899', bg: '#fdf2f8' },
-  { icon: 'flash-outline',            title: 'Design Services',      desc: '3D modeling & file preparation',     color: '#f59e0b', bg: '#fffbeb' },
-  { icon: 'checkmark-circle-outline', title: 'Consultation',         desc: 'Material selection & cost estimate', color: '#10b981', bg: '#ecfdf5' },
-];
-
-const STATS = [
-  { val: '500+', label: 'Orders', icon: 'bag-check-outline' },
-  { val: '99%',  label: 'Rating',  icon: 'star-outline' },
-  { val: '24h',  label: 'Delivery', icon: 'time-outline' },
+const SERVICES = [
+  { id: '1', title: 'Rapid Prototyping', icon: 'cube-outline' },
+  { id: '2', title: 'Custom Parts', icon: 'hardware-chip-outline' },
+  { id: '3', title: 'Design Consult', icon: 'brush-outline' },
 ];
 
 export default function HomeScreen() {
   const nav = useNavigation();
-  const { isAdmin } = useAuth();
-  const { totalItems } = useCart();
+  const { user, isAdmin } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
@@ -64,260 +35,138 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f0f1a' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#0f0f1a" />
-      <ScrollView
-        style={s.container}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
-        {/* ─── Hero ─── */}
-        <LinearGradient
-          colors={['#1e1b4b', '#312e81', '#4f46e5']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.hero}
-        >
-          <View style={s.heroInner}>
-            {/* Top row */}
-            <View style={s.heroTopRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={s.heroTag}>🖨️  LayerForge 3D Printing</Text>
-                <Text style={s.heroBadge}>Sri Lanka's Premier Service</Text>
-              </View>
-              {totalItems > 0 && (
-                <TouchableOpacity style={s.cartPill} onPress={() => nav.navigate('Cart')} activeOpacity={0.8}>
-                  <Ionicons name="cart" size={18} color="#f8fafc" />
-                  <Text style={s.cartPillText}>{totalItems}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            <Text style={s.heroTitle}>Where ideas{'\n'}become{'\n'}tangible.</Text>
-            <Text style={s.heroSub}>
-              Custom parts, prototypes & unique creations — delivered to your door.
-            </Text>
-
-            <View style={s.heroButtons}>
-              <TouchableOpacity style={s.btnPrimary} onPress={() => nav.navigate('Upload')} activeOpacity={0.85}>
-                <Ionicons name="cloud-upload-outline" size={18} color="#4f46e5" style={{ marginRight: 6 }} />
-                <Text style={s.btnPrimaryText}>Upload STL</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.btnSecondary} onPress={() => nav.navigate('Browse')} activeOpacity={0.85}>
-                <Ionicons name="grid-outline" size={18} color="#f8fafc" style={{ marginRight: 6 }} />
-                <Text style={s.btnSecondaryText}>Browse Shop</Text>
-              </TouchableOpacity>
-            </View>
-
-            {isAdmin && (
-              <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')} activeOpacity={0.85}>
-                <Ionicons name="shield-checkmark" size={16} color="#fbbf24" style={{ marginRight: 6 }} />
-                <Text style={s.adminBtnText}>Admin Dashboard</Text>
-                <Ionicons name="chevron-forward" size={14} color="#fbbf24" style={{ marginLeft: 4 }} />
-              </TouchableOpacity>
-            )}
+    <SafeAreaView style={s.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
+      <ScrollView style={s.container} showsVerticalScrollIndicator={false} contentContainerStyle={s.content}>
+        
+        {/* Header */}
+        <View style={s.header}>
+          <View>
+            <Text style={s.dateText}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</Text>
+            <Text style={s.greeting}>Hello, {user?.fullName?.split(' ')[0] || 'Guest'}.</Text>
           </View>
-        </LinearGradient>
-
-        {/* ─── Stats ─── */}
-        <View style={s.statsRow}>
-          {STATS.map(({ val, label, icon }) => (
-            <View key={label} style={s.statCard}>
-              <View style={s.statIconWrap}>
-                <Ionicons name={icon} size={20} color="#6366f1" />
-              </View>
-              <Text style={s.statVal}>{val}</Text>
-              <Text style={s.statLabel}>{label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ─── Services ─── */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Our Services</Text>
-          <Text style={s.sectionSub}>Everything you need for 3D printing</Text>
-        </View>
-
-        <View style={s.servicesGrid}>
-          {SERVICE_CARDS.map(({ icon, title, desc, color, bg }) => (
-            <View key={title} style={s.serviceCard}>
-              <View style={[s.serviceIconWrap, { backgroundColor: bg }]}>
-                <Ionicons name={icon} size={26} color={color} />
-              </View>
-              <Text style={s.serviceTitle}>{title}</Text>
-              <Text style={s.serviceDesc}>{desc}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ─── Quick Action Banner ─── */}
-        <TouchableOpacity style={s.actionBanner} onPress={() => nav.navigate('Browse')} activeOpacity={0.88}>
-          <LinearGradient colors={['#7c3aed', '#6366f1']} style={s.actionBannerInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.bannerTitle}>Ready to order?</Text>
-              <Text style={s.bannerSub}>Browse our full catalogue →</Text>
-            </View>
-            <Ionicons name="arrow-forward-circle" size={40} color="rgba(248,250,252,0.7)" />
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* ─── Latest Reviews ─── */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>What Customers Say</Text>
-          <Text style={s.sectionSub}>Real feedback from our community</Text>
-        </View>
-
-        <View style={s.reviewsContainer}>
-          {loadingReviews ? (
-            <ActivityIndicator color="#6366f1" style={{ marginVertical: 20 }} />
-          ) : reviews.length === 0 ? (
-            <View style={s.noReviews}>
-              <Text style={s.noReviewsText}>Be the first to leave a review!</Text>
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}
-            >
-              {reviews.map((rv) => (
-                <TouchableOpacity
-                  key={rv._id}
-                  style={s.reviewCard}
-                  activeOpacity={0.9}
-                  onPress={() => rv.productId && nav.navigate('ProductDetail', { productId: rv.productId._id })}
-                >
-                  <View style={s.revHeader}>
-                    <View style={s.revAvatar}>
-                      <Text style={s.revAvatarText}>{(rv.userName || '?')[0].toUpperCase()}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.revName} numberOfLines={1}>{rv.userName}</Text>
-                      <View style={s.starsRow}>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                          <Ionicons
-                            key={n}
-                            name={n <= rv.rating ? 'star' : 'star-outline'}
-                            size={10}
-                            color={n <= rv.rating ? '#f59e0b' : '#d1d5db'}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-                  <Text style={s.revComment} numberOfLines={3}>
-                    "{rv.comment || 'No comment provided.'}"
-                  </Text>
-                  {rv.productId && (
-                    <View style={s.revProductPill}>
-                      <Ionicons name="cube-outline" size={10} color="#6366f1" />
-                      <Text style={s.revProductText} numberOfLines={1}>{rv.productId.name}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+          {isAdmin && (
+            <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')}>
+              <Ionicons name="settings-outline" size={20} color="#0f172a" />
+            </TouchableOpacity>
           )}
         </View>
 
-        {/* ─── About ─── */}
-        <View style={s.aboutCard}>
-          <View style={s.aboutHeader}>
-            <View style={s.aboutIconWrap}>
-              <Ionicons name="business-outline" size={22} color="#6366f1" />
-            </View>
-            <Text style={s.aboutTitle}>About LayerForge 3D</Text>
+        {/* Hero Section */}
+        <View style={s.heroCard}>
+          <Text style={s.heroTitle}>Bring your ideas to reality.</Text>
+          <Text style={s.heroSub}>Premium 3D printing and prototyping services right at your fingertips.</Text>
+          
+          <View style={s.heroActionRow}>
+            <TouchableOpacity style={s.primaryBtn} onPress={() => nav.navigate('Upload')}>
+              <Text style={s.primaryBtnText}>Upload STL</Text>
+              <Ionicons name="arrow-forward" size={16} color="#ffffff" style={{ marginLeft: 6 }} />
+            </TouchableOpacity>
+            <TouchableOpacity style={s.secondaryBtn} onPress={() => nav.navigate('Browse')}>
+              <Text style={s.secondaryBtnText}>Explore Shop</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={s.aboutText}>
-            Based in Colombo, Sri Lanka, LayerForge 3D uses cutting-edge technology and premium materials to deliver outstanding results for individuals, startups, and enterprises.
-          </Text>
-          {[
-            { icon: 'mail-outline',     text: 'contact@layerforge3d.com' },
-            { icon: 'call-outline',     text: '+94 (077) 123 4567' },
-            { icon: 'location-outline', text: 'Colombo, Sri Lanka' },
-          ].map(({ icon, text }) => (
-            <View key={text} style={s.contactRow}>
-              <View style={s.contactIconWrap}><Ionicons name={icon} size={15} color="#6366f1" /></View>
-              <Text style={s.contactText}>{text}</Text>
-            </View>
-          ))}
         </View>
+
+        {/* Services */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Services</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.servicesScroll}>
+            {SERVICES.map((srv) => (
+              <View key={srv.id} style={s.serviceCard}>
+                <View style={s.serviceIconWrap}>
+                  <Ionicons name={srv.icon} size={22} color="#0f172a" />
+                </View>
+                <Text style={s.serviceTitle}>{srv.title}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Quick Stats */}
+        <View style={s.statsContainer}>
+          <View style={s.statBox}>
+            <Text style={s.statNumber}>24h</Text>
+            <Text style={s.statLabel}>Avg. Turnaround</Text>
+          </View>
+          <View style={s.statDivider} />
+          <View style={s.statBox}>
+            <Text style={s.statNumber}>99%</Text>
+            <Text style={s.statLabel}>Precision Rate</Text>
+          </View>
+          <View style={s.statDivider} />
+          <View style={s.statBox}>
+            <Text style={s.statNumber}>10+</Text>
+            <Text style={s.statLabel}>Materials</Text>
+          </View>
+        </View>
+
+        {/* Recent Feedback */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Recent Feedback</Text>
+          {loadingReviews ? (
+            <ActivityIndicator color="#0f172a" style={{ marginTop: 20 }} />
+          ) : reviews.length === 0 ? (
+            <Text style={s.emptyText}>No reviews yet.</Text>
+          ) : (
+            <View style={s.reviewsList}>
+              {reviews.slice(0, 3).map((rv) => (
+                <View key={rv._id} style={s.reviewItem}>
+                  <View style={s.reviewStars}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Ionicons key={n} name="star" size={12} color={n <= rv.rating ? '#10b981' : '#e2e8f0'} />
+                    ))}
+                  </View>
+                  <Text style={s.reviewComment}>"{rv.comment}"</Text>
+                  <Text style={s.reviewAuthor}>— {rv.userName}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const s = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: '#f5f5ff' },
+  safe: { flex: 1, backgroundColor: '#fafafa' },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? 20 : 10, paddingBottom: 100 },
+  
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 },
+  dateText: { fontSize: 12, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, fontWeight: '600' },
+  greeting: { fontSize: 28, color: '#0f172a', fontWeight: '800', letterSpacing: -0.5 },
+  adminBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
 
-  /* Hero */
-  hero:             {
-    paddingTop: Platform.select({ ios: 10, android: StatusBar.currentHeight || 20, default: 10 }),
-    paddingBottom: 32,
-    width: '100%'
-  },
-  heroInner:        { paddingHorizontal: 22, width: '100%' },
-  heroTopRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, width: '100%' },
-  heroTag:          { color: '#a5b4fc', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  heroBadge:        { color: 'rgba(165,180,252,0.7)', fontSize: 10, marginTop: 2 },
-  heroTitle:        { color: '#f8fafc', fontSize: Platform.OS === 'web' ? 26 : 34, fontWeight: '900', lineHeight: Platform.OS === 'web' ? 32 : 42, marginBottom: 14, letterSpacing: -1, width: '100%' },
-  heroSub:          { color: '#c7d2fe', fontSize: 12, lineHeight: 18, marginBottom: 26, width: '100%', flexShrink: 1 },
-  heroButtons:      { flexDirection: 'row', gap: 10, flexWrap: 'wrap', width: '100%' },
-  btnPrimary:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
-  btnPrimaryText:   { color: '#4f46e5', fontWeight: '800', fontSize: 14 },
-  btnSecondary:     { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(248,250,252,0.5)', borderRadius: 999, paddingHorizontal: 20, paddingVertical: 13 },
-  btnSecondaryText: { color: '#f8fafc', fontWeight: '700', fontSize: 14 },
-  adminBtn:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(15,23,42,0.25)', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10, marginTop: 16, alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(251,191,36,0.3)' },
-  adminBtnText:     { color: '#fbbf24', fontWeight: '700', fontSize: 13 },
-  cartPill:         { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(248,250,252,0.2)', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, gap: 6, borderWidth: 1, borderColor: 'rgba(248,250,252,0.3)' },
-  cartPillText:     { color: '#f8fafc', fontWeight: '800', fontSize: 14 },
+  heroCard: { backgroundColor: '#ffffff', borderRadius: 28, padding: 28, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 32 },
+  heroTitle: { fontSize: 32, fontWeight: '800', color: '#0f172a', lineHeight: 38, marginBottom: 12, letterSpacing: -1 },
+  heroSub: { fontSize: 15, color: '#64748b', lineHeight: 24, marginBottom: 24 },
+  heroActionRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16 },
+  primaryBtnText: { color: '#ffffff', fontWeight: '600', fontSize: 15 },
+  secondaryBtn: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 16, backgroundColor: '#f8fafc' },
+  secondaryBtnText: { color: '#0f172a', fontWeight: '600', fontSize: 15 },
 
-  /* Stats */
-  statsRow:         { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 16, marginTop: -20, backgroundColor: '#f8fafc', borderRadius: 20, paddingVertical: 20, shadowColor: '#6366f1', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
-  statCard:         { alignItems: 'center', gap: 4 },
-  statIconWrap:     { backgroundColor: '#eef2ff', borderRadius: 10, padding: 8, marginBottom: 2 },
-  statVal:          { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
-  statLabel:        { fontSize: 11, color: '#9ca3af', fontWeight: '600' },
+  section: { marginBottom: 32 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16, letterSpacing: -0.3 },
+  
+  servicesScroll: { gap: 12 },
+  serviceCard: { backgroundColor: '#ffffff', padding: 16, borderRadius: 20, width: 140, borderWidth: 1, borderColor: '#f1f5f9' },
+  serviceIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  serviceTitle: { fontSize: 14, fontWeight: '600', color: '#0f172a', lineHeight: 20 },
 
-  /* Section */
-  section:          { paddingHorizontal: 18, paddingTop: 28, paddingBottom: 6 },
-  sectionTitle:     { fontSize: 22, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  sectionSub:       { fontSize: 13, color: '#9ca3af', marginTop: 2 },
+  statsContainer: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: 24, paddingVertical: 24, marginBottom: 32, borderWidth: 1, borderColor: '#f1f5f9' },
+  statBox: { flex: 1, alignItems: 'center' },
+  statNumber: { fontSize: 20, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
+  statLabel: { fontSize: 11, color: '#64748b', fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
+  statDivider: { width: 1, backgroundColor: '#f1f5f9', marginVertical: 8 },
 
-  /* Services */
-  servicesGrid:     { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, gap: 10, marginBottom: 8 },
-  serviceCard:      { width: Platform.OS === 'web' ? '46%' : '47%', backgroundColor: '#f8fafc', borderRadius: 18, padding: 14, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3, gap: 6 },
-  serviceIconWrap:  { borderRadius: 12, padding: 10, alignSelf: 'flex-start' },
-  serviceTitle:     { fontSize: 13, fontWeight: '800', color: '#1e1b4b' },
-  serviceDesc:      { fontSize: 11, color: '#9ca3af', lineHeight: 16 },
-
-  /* Banner */
-  actionBanner:     { marginHorizontal: 16, marginVertical: 8, borderRadius: 20, overflow: 'hidden', shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 16, elevation: 8 },
-  actionBannerInner:{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 20 },
-  bannerTitle:      { color: '#f8fafc', fontSize: 18, fontWeight: '900' },
-  bannerSub:        { color: 'rgba(248,250,252,0.75)', fontSize: 13, marginTop: 2 },
-
-  /* About */
-  aboutCard:        { margin: 16, backgroundColor: '#f8fafc', borderRadius: 20, padding: 20, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
-  aboutHeader:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  aboutIconWrap:    { backgroundColor: '#eef2ff', borderRadius: 10, padding: 8 },
-  aboutTitle:       { fontSize: 18, fontWeight: '900', color: '#1e1b4b' },
-  aboutText:        { fontSize: 14, color: '#6b7280', lineHeight: 22, marginBottom: 16 },
-  contactRow:       { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 },
-  contactIconWrap:  { backgroundColor: '#eef2ff', borderRadius: 8, padding: 6 },
-  contactText:      { fontSize: 14, color: '#374151', fontWeight: '500' },
-
-  /* Reviews */
-  reviewsContainer: { marginBottom: 10 },
-  reviewCard:       { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, width: 240, gap: 10, shadowColor: '#6366f1', shadowOpacity: 0.08, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(99,102,241,0.05)' },
-  revHeader:        { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  revAvatar:        { width: 32, height: 32, borderRadius: 16, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#c7d2fe' },
-  revAvatarText:    { color: '#6366f1', fontSize: 14, fontWeight: '800' },
-  revName:          { fontSize: 13, fontWeight: '800', color: '#1e1b4b' },
-  starsRow:         { flexDirection: 'row', gap: 1 },
-  revComment:       { fontSize: 13, color: '#6b7280', lineHeight: 18, fontStyle: 'italic' },
-  revProductPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f8f7ff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start' },
-  revProductText:   { fontSize: 10, fontWeight: '700', color: '#6366f1' },
-  noReviews:        { paddingHorizontal: 20, paddingVertical: 10 },
-  noReviewsText:    { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
+  reviewsList: { gap: 16 },
+  reviewItem: { backgroundColor: '#ffffff', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#f1f5f9' },
+  reviewStars: { flexDirection: 'row', gap: 2, marginBottom: 12 },
+  reviewComment: { fontSize: 15, color: '#334155', lineHeight: 22, fontStyle: 'italic', marginBottom: 12 },
+  reviewAuthor: { fontSize: 13, color: '#94a3b8', fontWeight: '600' },
+  emptyText: { color: '#94a3b8', fontSize: 14 },
 });

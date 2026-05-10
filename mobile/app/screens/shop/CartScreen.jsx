@@ -1,26 +1,3 @@
-/**
- * CartScreen.jsx — Shopping Cart & Checkout Flow
- *
- * Displays the user's cart items with full checkout functionality.
- *
- * States:
- *   - Empty cart → Friendly empty state with "Browse Products" CTA
- *   - Loading    → Spinner while cart data is being fetched
- *   - Cart view  → List of items with quantity controls
- *   - Checkout   → Delivery details form (name, phone, address, city)
- *   - Success    → Order confirmation screen with "Continue Shopping" button
- *
- * Features:
- *   - Quantity adjustment (+/-) with server-side stock validation
- *   - Inline error messages per item when stock limits are exceeded
- *   - Remove individual items or clear entire cart
- *   - Order summary with subtotal, free delivery badge, and total
- *   - Cash on Delivery (COD) payment notice
- *   - Delivery form with client-side validation (phone format, required fields)
- *   - Color-coded accent bars on each cart item card
- *
- * @module screens/shop/CartScreen
- */
 import React, { useCallback, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
@@ -37,10 +14,6 @@ import CartItemCard from '../../components/CartItemCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../../lib/config';
 
-/* ── Accent colours per card row ───────────────────────────── */
-const ACCENTS = ['#f97316','#22c55e','#3b82f6','#a855f7','#f59e0b'];
-const accent  = (i) => ACCENTS[i % ACCENTS.length];
-
 export default function CartScreen() {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice, loading, reloadCart } = useCart();
   const { user } = useAuth();
@@ -54,10 +27,8 @@ export default function CartScreen() {
   });
   const [placing, setPlacing]   = useState(false);
   const [done,    setDone]       = useState(false);
-  const [qtyErr,  setQtyErr]     = useState({}); // { [cartItemId]: 'error string' }
-  // Ref-based guard to prevent double-submission on rapid taps (state update is async)
+  const [qtyErr,  setQtyErr]     = useState({});
   const placingRef = useRef(false);
-  // Optional payment proof image selected by the user at checkout
   const [receipt, setReceipt]   = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -70,11 +41,10 @@ export default function CartScreen() {
     }
   }, [reloadCart]);
 
-  /* ── Clear cart confirmation ────────────────────────── */
   const confirmClear = () => {
     Alert.alert(
-      'Clear Cart?',
-      'Are you sure you want to remove all items from your cart?',
+      'Clear Cart',
+      'Are you sure you want to remove all items?',
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Clear All', style: 'destructive', onPress: clearCart },
@@ -82,9 +52,6 @@ export default function CartScreen() {
     );
   };
 
-
-  /* ── Receipt image picker ────────────────────────────── */
-  // Pick optional payment proof image for checkout.
   const pickReceipt = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
@@ -100,52 +67,36 @@ export default function CartScreen() {
     }
   };
 
-
-  /* ── Quantity update with inline stock error display ─── */
-  // Handles + / - taps, and keeps server-side stock errors scoped to the changed item
   const handleQtyChange = async (cartItemId, newQty) => {
-    // Prevent the quantity from dropping below 1
     if (newQty < 1) return;
-    
-    // Clear any previous error messages for this specific item before trying
     setQtyErr(e => ({ ...e, [cartItemId]: null }));
-    
     try {
-      // Send the update to the server
       await updateQuantity(cartItemId, newQty);
     } catch (err) {
-      // If the server rejects the update (e.g., "Not enough stock"), display the exact error message
       const msg = err.response?.data?.error || err.message || 'Could not update quantity';
       setQtyErr(e => ({ ...e, [cartItemId]: msg }));
     }
   };
 
-  /* ── Place order ─────────────────────────────────────── */
-  // Validate inputs and submit final order payload.
   const handlePlaceOrder = async () => {
-    // Immediately block re-entry before any async state update (prevents double-tap submission)
     if (placingRef.current) return;
     placingRef.current = true;
 
     const { fullName, phone, address, city } = form;
     
-    // Required delivery fields.
     if (!fullName.trim()) { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your full name'); }
     if (!phone.trim())    { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your phone number'); }
     if (!address.trim())  { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your delivery address'); }
     if (!city.trim())     { placingRef.current = false; return Alert.alert('Missing Info', 'Please enter your city'); }
     
-    // Robust phone number validation
     if (!/^(?:0|94|\+94)[0-9]{9}$/.test(phone.replace(/[\s\-().]/g, ''))) {
       placingRef.current = false;
-      return Alert.alert('Invalid Phone', 'Enter a valid phone number (e.g., 0712345678 or +94712345678)');
+      return Alert.alert('Invalid Phone', 'Enter a valid phone number (e.g., 0712345678)');
     }
 
     setPlacing(true);
     try {
-      // Combine the delivery form fields into a single shipping address string
       const shipping   = `${fullName}\n${phone}\n${address}\n${city}`;
-      // Map the current cart items into the format required by the orders API
       const orderItems = items.map(i => ({ 
         productId: i.id, 
         productName: i.title, 
@@ -154,7 +105,6 @@ export default function CartScreen() {
       }));
 
       if (receipt) {
-        // If a receipt image was attached, send as multipart/form-data
         const fd = new FormData();
         fd.append('shippingAddress', shipping);
         fd.append('items',           JSON.stringify(orderItems));
@@ -170,10 +120,8 @@ export default function CartScreen() {
           throw new Error(data.error || 'Failed to place order');
         }
       } else {
-        // No receipt — send as regular JSON
         await api.post('/orders', { shippingAddress: shipping, items: orderItems });
       }
-      // On success, clear the local cart and show the confirmation screen
       await clearCart();
       setDone(true);
       setCheckout(false);
@@ -181,98 +129,76 @@ export default function CartScreen() {
       Alert.alert('Order Failed', err.response?.data?.error || err.message || 'Failed to place order');
     } finally {
       setPlacing(false);
-      placingRef.current = false; // Release the guard so the user can retry after a failure
+      placingRef.current = false;
     }
   };
 
-  /* ─── Success screen ─── */
   if (done) return (
     <SafeAreaView style={s.safe}>
       <View style={s.successScreen}>
         <View style={s.successCircle}>
-          <Ionicons name="checkmark-sharp" size={56} color="#f8fafc" />
+          <Ionicons name="checkmark-sharp" size={48} color="#0f172a" />
         </View>
-        <Text style={s.successTitle}>Order Placed! 🎉</Text>
+        <Text style={s.successTitle}>Order placed</Text>
         <Text style={s.successSub}>
-          Thank you! Your order has been received.{'\n'}We'll be in touch soon.
+          Thank you! We've received your order and will begin processing it shortly.
         </Text>
         <TouchableOpacity
           style={s.continuBtn}
           onPress={() => { setDone(false); nav.navigate('Browse'); }}
-          activeOpacity={0.88}
         >
-          <Ionicons name="storefront-outline" size={18} color="#f8fafc" style={{ marginRight: 6 }} />
           <Text style={s.continueText}>Continue Shopping</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 
-  /* ─── Loading ─── */
   if (loading) return (
     <SafeAreaView style={s.safe}>
       <View style={s.centred}>
-        <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={s.loadText}>Loading cart…</Text>
+        <ActivityIndicator size="large" color="#0f172a" />
       </View>
     </SafeAreaView>
   );
 
-  /* ─── Empty cart ─── */
   if (items.length === 0) return (
     <SafeAreaView style={s.safe}>
       <View style={s.topBar}>
-        <Text style={s.pageTitle}>My Cart</Text>
+        <Text style={s.pageTitle}>Cart</Text>
       </View>
       <View style={s.centred}>
         <View style={s.emptyIconBox}>
-          <Ionicons name="cart-outline" size={56} color="#6366f1" />
+          <Ionicons name="bag-outline" size={48} color="#94a3b8" />
         </View>
-        <Text style={s.emptyTitle}>Your cart is empty</Text>
-        <Text style={s.emptySub}>Browse products and add something you like!</Text>
-        <TouchableOpacity style={s.browseBtn} onPress={() => nav.navigate('Browse')} activeOpacity={0.88}>
-          <Ionicons name="grid-outline" size={16} color="#f8fafc" style={{ marginRight: 6 }} />
-          <Text style={s.browseBtnText}>Browse Products</Text>
+        <Text style={s.emptyTitle}>Your bag is empty.</Text>
+        <TouchableOpacity style={s.browseBtn} onPress={() => nav.navigate('Browse')}>
+          <Text style={s.browseBtnText}>Explore Shop</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 
-  /* ─── Main cart view ─── */
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
 
-      {/* Header */}
       <View style={s.topBar}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Text style={s.pageTitle}>My Cart</Text>
-          <View style={s.itemCountBubble}>
-            <Text style={s.itemCountText}>{items.length} item{items.length !== 1 ? 's' : ''}</Text>
-          </View>
-        </View>
+        <Text style={s.pageTitle}>Cart <Text style={s.itemCountText}>({items.length})</Text></Text>
+        <TouchableOpacity onPress={confirmClear}>
+          <Text style={s.clearText}>Clear</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#6366f1']}
-            tintColor="#6366f1"
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-
-        {/* ── Cart Items ── */}
-        <View style={{ paddingHorizontal: 16, gap: 12, paddingTop: 8 }}>
-          {items.map((item, idx) => (
+        <View style={s.itemsContainer}>
+          {items.map((item) => (
             <CartItemCard
               key={item.cartItemId?.toString()}
               item={item}
-              accentColor={accent(idx)}
               onQtyChange={handleQtyChange}
               onRemove={removeFromCart}
               qtyError={qtyErr[item.cartItemId]}
@@ -280,7 +206,6 @@ export default function CartScreen() {
           ))}
         </View>
 
-        {/* ── Order Summary ── */}
         <View style={s.summaryCard}>
           <Text style={s.summaryTitle}>Order Summary</Text>
           <View style={s.sumRow}>
@@ -289,48 +214,34 @@ export default function CartScreen() {
           </View>
           <View style={s.sumRow}>
             <Text style={s.sumLabel}>Delivery</Text>
-            <Text style={[s.sumVal, { color: '#22c55e', fontWeight: '800' }]}>FREE </Text>
+            <Text style={s.sumValFree}>Free</Text>
           </View>
           <View style={s.sumDivider} />
           <View style={s.sumRow}>
-            <Text style={s.totalLabel}>Total to Pay</Text>
+            <Text style={s.totalLabel}>Total</Text>
             <Text style={s.totalVal}>LKR {totalPrice.toFixed(2)}</Text>
           </View>
         </View>
 
-        {/* ── COD Notice ── */}
-        <View style={s.codBanner}>
-          <Text style={s.codIcon}>💵</Text>
-          <View>
-            <Text style={s.codTitle}>Cash on Delivery</Text>
-            <Text style={s.codSub}>Pay when your order arrives</Text>
-          </View>
-        </View>
-
-        {/* ── Checkout toggle ── */}
         {!checkout ? (
-          <TouchableOpacity style={s.checkoutBtn} onPress={() => setCheckout(true)} activeOpacity={0.88}>
-            <Ionicons name="bag-check-outline" size={20} color="#f8fafc" style={{ marginRight: 8 }} />
-            <Text style={s.checkoutBtnText}>Proceed to Checkout</Text>
+          <TouchableOpacity style={s.checkoutBtn} onPress={() => setCheckout(true)}>
+            <Text style={s.checkoutBtnText}>Checkout</Text>
           </TouchableOpacity>
         ) : (
           <View style={s.formCard}>
-            <Text style={s.formTitle}>📦 Delivery Details</Text>
+            <Text style={s.formTitle}>Delivery Details</Text>
 
             {[
-              { key: 'fullName', label: 'Full Name',        icon: 'person-outline',   keyboard: 'default' },
-              { key: 'phone',    label: 'Phone Number',     icon: 'call-outline',     keyboard: 'phone-pad' },
-              { key: 'address',  label: 'Delivery Address', icon: 'map-outline',      keyboard: 'default', multi: true },
-              { key: 'city',     label: 'City',             icon: 'location-outline', keyboard: 'default' },
-            ].map(({ key, label, icon, keyboard, multi }) => (
+              { key: 'fullName', label: 'Full Name',        keyboard: 'default' },
+              { key: 'phone',    label: 'Phone Number',     keyboard: 'phone-pad' },
+              { key: 'address',  label: 'Delivery Address', keyboard: 'default', multi: true },
+              { key: 'city',     label: 'City',             keyboard: 'default' },
+            ].map(({ key, label, keyboard, multi }) => (
               <View key={key} style={s.fieldRow}>
-                <View style={s.fieldIcon}>
-                  <Ionicons name={icon} size={16} color="#6366f1" />
-                </View>
                 <TextInput
-                  style={[s.fieldInput, multi && { minHeight: 68, textAlignVertical: 'top', paddingTop: 12 }]}
+                  style={[s.fieldInput, multi && { minHeight: 80, textAlignVertical: 'top' }]}
                   placeholder={label}
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor="#94a3b8"
                   value={form[key]}
                   onChangeText={v => setForm(f => ({ ...f, [key]: v }))}
                   keyboardType={keyboard}
@@ -339,53 +250,28 @@ export default function CartScreen() {
               </View>
             ))}
 
-            {/* ── Optional Payment Proof Image ── */}
-            <View style={[s.receiptBtn, receipt && s.receiptBtnDone]}>
-              <TouchableOpacity 
-                style={s.receiptBtnTouch} 
-                onPress={pickReceipt} 
-                activeOpacity={0.85}
-              >
-                <Ionicons
-                  name={receipt ? 'image' : 'camera-outline'}
-                  size={18}
-                  color={receipt ? '#22c55e' : '#6366f1'}
-                />
-                <Text style={[s.receiptBtnText, receipt && { color:'#22c55e' }]}>
-                  {receipt ? `✔ Receipt attached: ${receipt.name}` : 'Attach Payment Proof (optional)'}
-                </Text>
-              </TouchableOpacity>
-              
+            <TouchableOpacity style={[s.receiptBtn, receipt && s.receiptBtnDone]} onPress={pickReceipt}>
+              <Ionicons name={receipt ? "checkmark-circle" : "image-outline"} size={20} color={receipt ? "#10b981" : "#64748b"} />
+              <Text style={s.receiptBtnText}>
+                {receipt ? 'Receipt Attached' : 'Attach Payment Proof (Optional)'}
+              </Text>
               {receipt && (
-                <TouchableOpacity 
-                  style={s.removeReceiptBtn} 
-                  onPress={() => setReceipt(null)} 
-                  hitSlop={{ top:10, bottom:10, left:10, right:10 }}
-                >
-                  <Ionicons name="trash-outline" size={14} color="#ef4444" />
-                  <Text style={s.removeReceiptText}>Remove</Text>
+                <TouchableOpacity onPress={() => setReceipt(null)} style={{ marginLeft: 'auto' }}>
+                  <Text style={{ color: '#ef4444', fontSize: 12, fontWeight: '600' }}>Remove</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[s.placeBtn, placing && { opacity: 0.7 }]}
               onPress={handlePlaceOrder}
               disabled={placing}
-              activeOpacity={0.88}
             >
-              {placing ? (
-                <ActivityIndicator color="#f8fafc" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#f8fafc" style={{ marginRight: 8 }} />
-                  <Text style={s.placeBtnText}>Place Order</Text>
-                </>
-              )}
+              {placing ? <ActivityIndicator color="#ffffff" /> : <Text style={s.placeBtnText}>Place Order</Text>}
             </TouchableOpacity>
 
             <TouchableOpacity style={s.cancelBtn} onPress={() => setCheckout(false)}>
-              <Text style={s.cancelText}>← Back to Cart</Text>
+              <Text style={s.cancelText}>Back to Cart</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -395,84 +281,52 @@ export default function CartScreen() {
 }
 
 const s = StyleSheet.create({
-  safe:            { flex: 1, backgroundColor: '#f8f7ff' },
+  safe: { flex: 1, backgroundColor: '#fafafa' },
 
-  /* Header */
-  topBar:          { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 14 : 4, paddingBottom: 8 },
-  pageTitle:       { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  itemCountBubble: { backgroundColor: '#eef2ff', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1.5, borderColor: '#c7d2fe' },
-  itemCountText:   { color: '#4f46e5', fontSize: 13, fontWeight: '800' },
+  topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? 16 : 8, paddingBottom: 16 },
+  pageTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 },
+  itemCountText: { fontSize: 20, color: '#94a3b8', fontWeight: '600' },
+  clearText: { fontSize: 15, color: '#ef4444', fontWeight: '600' },
 
-  /* Clear Header Btn */
-  clearHeaderBtn:  { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fee2e2' },
-  clearHeaderText: { color: '#ef4444', fontSize: 12, fontWeight: '700' },
+  centred: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  emptyIconBox: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#0f172a', marginBottom: 24 },
+  browseBtn: { backgroundColor: '#0f172a', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16 },
+  browseBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
 
-  /* States */
-  centred:         { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12, paddingHorizontal: 24 },
-  loadText:        { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
-  emptyIconBox:    { backgroundColor: '#eef2ff', borderRadius: 28, padding: 24, marginBottom: 8 },
-  emptyTitle:      { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
-  emptySub:        { fontSize: 14, color: '#9ca3af', textAlign: 'center' },
-  browseBtn:       { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingHorizontal: 24, paddingVertical: 13, marginTop: 6 },
-  browseBtnText:   { color: '#f8fafc', fontWeight: '800', fontSize: 15 },
+  itemsContainer: { paddingHorizontal: 24, paddingTop: 8 },
 
-  /* Item card */
-  itemCard:        { flexDirection: 'row', borderRadius: 18, overflow: 'hidden', padding: 12, alignItems: 'flex-start', shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: 'rgba(15,23,42,0.04)' },
-  accentBar:       { width: 4, borderRadius: 99, marginRight: 10, alignSelf: 'stretch' },
-  itemImg:         { width: 72, height: 72, borderRadius: 12, marginRight: 10 },
-  imgPH:           { justifyContent: 'center', alignItems: 'center' },
-  itemBody:        { flex: 1, gap: 3 },
-  itemName:        { fontSize: 14, fontWeight: '800', color: '#1e1b4b', lineHeight: 19 },
-  itemPrice:       { fontSize: 12, color: '#6b7280', fontWeight: '600' },
-  qtyRow:          { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  qtyBtn:          { width: 30, height: 30, borderRadius: 8, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center' },
-  qtyVal:          { fontSize: 16, fontWeight: '900', color: '#1e1b4b', minWidth: 22, textAlign: 'center' },
-  removeBtn:       { marginLeft: 4, padding: 4 },
-  qtyErrText:      { fontSize: 11, color: '#ef4444', fontWeight: '600', marginTop: 2 },
-  lineTotal:       { fontSize: 12, fontWeight: '900', textAlign: 'right', lineHeight: 18, minWidth: 64 },
+  summaryCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 12, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  summaryTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 },
+  sumRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  sumLabel: { fontSize: 15, color: '#64748b' },
+  sumVal: { fontSize: 15, fontWeight: '600', color: '#0f172a' },
+  sumValFree: { fontSize: 15, fontWeight: '600', color: '#10b981' },
+  sumDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 },
+  totalLabel: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
+  totalVal: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
 
-  /* Summary */
-  summaryCard:     { backgroundColor: '#f8fafc', marginHorizontal: 16, marginTop: 16, borderRadius: 20, padding: 18, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
-  summaryTitle:    { fontSize: 16, fontWeight: '900', color: '#1e1b4b', marginBottom: 14 },
-  sumRow:          { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  sumLabel:        { fontSize: 14, color: '#6b7280' },
-  sumVal:          { fontSize: 14, fontWeight: '700', color: '#1e1b4b' },
-  sumDivider:      { height: 1, backgroundColor: '#f3f4f6', marginVertical: 10 },
-  totalLabel:      { fontSize: 17, fontWeight: '900', color: '#1e1b4b' },
-  totalVal:        { fontSize: 20, fontWeight: '900', color: '#6366f1' },
+  checkoutBtn: { backgroundColor: '#0f172a', marginHorizontal: 24, marginTop: 24, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  checkoutBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
 
-  /* COD */
-  codBanner:       { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#fffbeb', marginHorizontal: 16, marginTop: 14, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#fde68a' },
-  codIcon:         { fontSize: 28 },
-  codTitle:        { fontSize: 14, fontWeight: '800', color: '#92400e' },
-  codSub:          { fontSize: 12, color: '#b45309', marginTop: 2 },
+  formCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 24, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  formTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 20 },
+  fieldRow: { backgroundColor: '#f8fafc', borderRadius: 12, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 12 },
+  fieldInput: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: '#0f172a' },
+  
+  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#cbd5e1', borderRadius: 12, padding: 16, marginBottom: 24, backgroundColor: '#f8fafc' },
+  receiptBtnDone: { borderColor: '#10b981', backgroundColor: '#ecfdf5', borderStyle: 'solid' },
+  receiptBtnText: { fontSize: 14, fontWeight: '500', color: '#475569' },
+  
+  placeBtn: { backgroundColor: '#0f172a', borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  placeBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+  cancelBtn: { alignItems: 'center', marginTop: 16, paddingVertical: 8 },
+  cancelText: { color: '#64748b', fontSize: 15, fontWeight: '500' },
 
-  /* Checkout button */
-  checkoutBtn:     { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', marginHorizontal: 16, marginTop: 14, borderRadius: 16, paddingVertical: 16, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 },
-  checkoutBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
-
-  /* Form */
-  formCard:        { backgroundColor: '#f8fafc', marginHorizontal: 16, marginTop: 14, borderRadius: 20, padding: 18, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
-  formTitle:       { fontSize: 18, fontWeight: '900', color: '#1e1b4b', marginBottom: 16 },
-  fieldRow:        { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#f8f7ff', borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', marginBottom: 10, overflow: 'hidden' },
-  fieldIcon:       { paddingHorizontal: 14, paddingTop: 14 },
-  fieldInput:      { flex: 1, paddingVertical: 12, paddingRight: 14, fontSize: 15, color: '#1e1b4b' },
-  receiptBtn:      { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#6366f1', borderRadius: 12, paddingVertical: 13, paddingHorizontal: 16, backgroundColor: '#eef2ff', marginBottom: 12 },
-  receiptBtnTouch: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  receiptBtnDone:  { borderColor: '#22c55e', backgroundColor: '#f0fdf4' },
-  receiptBtnText:  { flex: 1, fontSize: 14, fontWeight: '700', color: '#6366f1' },
-  removeReceiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fef2f2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#fee2e2' },
-  removeReceiptText: { fontSize: 11, fontWeight: '700', color: '#ef4444' },
-  placeBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#22c55e', borderRadius: 14, paddingVertical: 15, marginTop: 6, shadowColor: '#22c55e', shadowOpacity: 0.35, shadowRadius: 10, elevation: 5 },
-  placeBtnText:    { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
-  cancelBtn:       { alignItems: 'center', padding: 14 },
-  cancelText:      { color: '#6b7280', fontSize: 14, fontWeight: '700' },
-
-  /* Success */
-  successScreen:   { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 28, gap: 14, backgroundColor: '#f8f7ff' },
-  successCircle:   { width: 110, height: 110, borderRadius: 55, backgroundColor: '#22c55e', justifyContent: 'center', alignItems: 'center', shadowColor: '#22c55e', shadowOpacity: 0.4, shadowRadius: 24, elevation: 10, marginBottom: 8 },
-  successTitle:    { fontSize: 30, fontWeight: '900', color: '#1e1b4b', textAlign: 'center' },
-  successSub:      { fontSize: 15, color: '#6b7280', textAlign: 'center', lineHeight: 22 },
-  continuBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 16, paddingHorizontal: 30, paddingVertical: 14, marginTop: 8 },
-  continueText:    { color: '#f8fafc', fontWeight: '900', fontSize: 15 },
+  successScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#fafafa' },
+  successCircle: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  successTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', textAlign: 'center', marginBottom: 12 },
+  successSub: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
+  continuBtn: { backgroundColor: '#0f172a', borderRadius: 16, paddingHorizontal: 32, paddingVertical: 16 },
+  continueText: { color: '#ffffff', fontWeight: '600', fontSize: 16 },
 });

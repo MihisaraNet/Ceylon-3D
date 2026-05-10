@@ -1,32 +1,9 @@
 /**
  * AppNavigator.jsx — Main Navigation Configuration
- *
- * Defines the entire navigation structure of the LayerForge 3D mobile app
- * using React Navigation (Native Stack + Bottom Tabs).
- *
- * Navigation architecture:
- *   - If user is NOT logged in → AuthStack (Login, Register screens)
- *   - If user IS logged in:
- *       → MainTabs (bottom tab navigator):
- *           Home     — Landing page with hero, services, stats
- *           Browse   — Product catalogue with search and categories
- *           Upload   — STL file upload wizard
- *           Cart     — Shopping cart with checkout flow
- *           Account  — User profile, order history, and STL orders
- *       → ProductDetail (modal stack screen)
- *       → AdminStack (admin-only screens):
- *           AdminDashboard, ManageProducts, StlOrdersAdmin,
- *           ShopOrdersAdmin, CostCalculator, AddEditProduct
- *
- * Features:
- *   - Cart badge on the Cart tab showing item count
- *   - Indigo (#6366f1) themed header and tab bar
- *   - Loading state shows null while auth is being restored
- *
- * @module navigation/AppNavigator
+ * Modern, simple, minimalist theme.
  */
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -64,12 +41,12 @@ const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
 
 const AdminStack = () => (
-  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#4f46e5' }, headerTintColor:'#f8fafc' }}>
-    <Stack.Screen name="AdminDashboard"  component={AdminDashboardScreen}  options={{ title:'Admin Dashboard' }} />
-    <Stack.Screen name="ManageProducts"  component={ManageProductsScreen}  options={{ title:'Manage Products' }} />
+  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#ffffff' }, headerTintColor:'#0f172a', headerShadowVisible: false, headerTitleStyle: { fontWeight: '700' } }}>
+    <Stack.Screen name="AdminDashboard"  component={AdminDashboardScreen}  options={{ title:'Dashboard' }} />
+    <Stack.Screen name="ManageProducts"  component={ManageProductsScreen}  options={{ title:'Products' }} />
     <Stack.Screen name="StlOrdersAdmin"  component={StlOrdersAdminScreen}  options={{ title:'STL Orders' }} />
     <Stack.Screen name="ShopOrdersAdmin" component={ShopOrdersAdminScreen} options={{ title:'Shop Orders' }} />
-    <Stack.Screen name="CostCalculator"  component={CostCalculatorScreen}  options={{ title:'Cost Calculator' }} />
+    <Stack.Screen name="CostCalculator"  component={CostCalculatorScreen}  options={{ title:'Calculator' }} />
     <Stack.Screen name="AddEditProduct"  component={AddEditProductScreen}  options={{ title:'Product' }} />
   </Stack.Navigator>
 );
@@ -80,65 +57,55 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          const icons = { Home: 'home', Browse: 'grid', Upload: 'cloud-upload', Cart: 'cart', Account: 'person' };
+          const icons = { Home: 'home', Browse: 'grid', Upload: 'add-circle', Cart: 'bag', Account: 'person' };
           return (
             <Ionicons
               name={focused ? icons[route.name] : `${icons[route.name]}-outline`}
-              size={focused ? size + 2 : size}
-              color={color}
+              size={focused && route.name === 'Upload' ? size + 10 : size}
+              color={focused && route.name === 'Upload' ? '#0f172a' : color}
             />
           );
         },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: '#0f172a',
+        tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
-          backgroundColor: '#f8fafc',
+          backgroundColor: '#ffffff',
           borderTopWidth: 1,
-          borderTopColor: '#f3f4f6',
+          borderTopColor: '#f1f5f9',
           height: Platform.OS === 'ios' ? 88 : 65,
           paddingBottom: Platform.OS === 'ios' ? 30 : 8,
           paddingTop: 8,
-          shadowColor: '#6366f1',
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          elevation: 10,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginTop: 1 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
         tabBarItemStyle: { paddingVertical: 2 },
-        headerStyle: { backgroundColor: '#1e1b4b' },
-        headerTintColor: '#f8fafc',
-        headerTitleStyle: { fontWeight: '800', fontSize: 18, letterSpacing: -0.3 },
+        headerStyle: { backgroundColor: '#ffffff' },
+        headerTintColor: '#0f172a',
+        headerTitleStyle: { fontWeight: '700', fontSize: 18, letterSpacing: -0.5 },
         headerShadowVisible: false,
       })}
     >
-      <Tab.Screen name="Home"    component={HomeScreen}      options={{ title: 'LayerForge 3D', headerShown: false }} />
-      <Tab.Screen name="Browse"  component={BrowseScreen}    options={{ title: 'Browse', headerShown: false }} />
-      <Tab.Screen name="Upload"  component={STLUploadScreen} options={{ title: 'Upload STL' }} />
-      <Tab.Screen name="Cart"    component={CartScreen}      options={{ title: 'Cart', headerShown: false, tabBarBadge: totalItems > 0 ? totalItems : undefined, tabBarBadgeStyle: { backgroundColor: '#ef4444', fontSize: 10, fontWeight: '800' } }} />
-      <Tab.Screen name="Account" component={MyAccountScreen} options={{ title: 'Account' }} />
+      <Tab.Screen name="Home"    component={HomeScreen}      options={{ title: 'Home', headerShown: false }} />
+      <Tab.Screen name="Browse"  component={BrowseScreen}    options={{ title: 'Explore', headerShown: false }} />
+      <Tab.Screen name="Upload"  component={STLUploadScreen} options={{ title: 'Upload', tabBarLabel: () => null }} />
+      <Tab.Screen name="Cart"    component={CartScreen}      options={{ title: 'Cart', headerShown: false, tabBarBadge: totalItems > 0 ? totalItems : undefined, tabBarBadgeStyle: { backgroundColor: '#0f172a', color: '#ffffff', fontSize: 10, fontWeight: '700' } }} />
+      <Tab.Screen name="Account" component={MyAccountScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 };
 
 const AuthStack = () => (
-  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#f8fafc' }}>
+  <Stack.Navigator screenOptions={{ headerStyle:{ backgroundColor:'#ffffff' }, headerTintColor:'#0f172a', headerShadowVisible: false }}>
     <Stack.Screen name="Login"    component={LoginScreen}    options={{ title:'Sign In' }} />
     <Stack.Screen name="Register" component={RegisterScreen} options={{ title:'Create Account' }} />
   </Stack.Navigator>
 );
 
-/**
- * AppStack — The main authenticated navigator.
- * Wraps MainTabs + modal screens (ProductDetail, AdminStack).
- * Kept in its own component so when 'user' becomes null, the entire
- * tree is unmounted and replaced cleanly with AuthStack.
- */
 const AppStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Main"          component={MainTabs} />
-    <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ headerShown:true, title:'Product', headerStyle:{ backgroundColor:'#6366f1' }, headerTintColor:'#f8fafc' }} />
+    <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ headerShown:true, title:'', headerStyle:{ backgroundColor:'#ffffff' }, headerTintColor:'#0f172a', headerShadowVisible: false }} />
     <Stack.Screen name="Review"        component={ReviewScreen}        options={{ headerShown:false }} />
     <Stack.Screen name="AdminStack"    component={AdminStack} />
   </Stack.Navigator>
@@ -146,12 +113,9 @@ const AppStack = () => (
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
-  // Wait for AsyncStorage session restore before rendering any navigator
   if (loading) return null;
   return (
     <NavigationContainer>
-      {/* Conditionally render completely separate navigators so React Navigation
-          fully resets its internal state when auth changes (fixes logout). */}
       {user ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
