@@ -62,11 +62,11 @@ const MainTabs = () => {
             <Ionicons
               name={focused ? icons[route.name] : `${icons[route.name]}-outline`}
               size={focused && route.name === 'Upload' ? size + 10 : size}
-              color={focused && route.name === 'Upload' ? '#0f172a' : color}
+              color={focused && route.name === 'Upload' ? '#8b5cf6' : color}
             />
           );
         },
-        tabBarActiveTintColor: '#0f172a',
+        tabBarActiveTintColor: '#8b5cf6',
         tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
           backgroundColor: '#ffffff',
@@ -78,7 +78,7 @@ const MainTabs = () => {
           elevation: 0,
           shadowOpacity: 0,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '700', marginTop: 2 },
         tabBarItemStyle: { paddingVertical: 2 },
         headerStyle: { backgroundColor: '#ffffff' },
         headerTintColor: '#0f172a',
@@ -89,7 +89,7 @@ const MainTabs = () => {
       <Tab.Screen name="Home"    component={HomeScreen}      options={{ title: 'Home', headerShown: false }} />
       <Tab.Screen name="Browse"  component={BrowseScreen}    options={{ title: 'Explore', headerShown: false }} />
       <Tab.Screen name="Upload"  component={STLUploadScreen} options={{ title: 'Upload', tabBarLabel: () => null }} />
-      <Tab.Screen name="Cart"    component={CartScreen}      options={{ title: 'Cart', headerShown: false, tabBarBadge: totalItems > 0 ? totalItems : undefined, tabBarBadgeStyle: { backgroundColor: '#0f172a', color: '#ffffff', fontSize: 10, fontWeight: '700' } }} />
+      <Tab.Screen name="Cart"    component={CartScreen}      options={{ title: 'Cart', headerShown: false, tabBarBadge: totalItems > 0 ? totalItems : undefined, tabBarBadgeStyle: { backgroundColor: '#ec4899', color: '#ffffff', fontSize: 10, fontWeight: '800' } }} />
       <Tab.Screen name="Account" component={MyAccountScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );

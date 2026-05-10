@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function CartItemCard({ 
   item, 
@@ -14,9 +15,9 @@ export default function CartItemCard({
       {item.image ? (
         <Image source={{ uri: item.image }} style={s.itemImg} resizeMode="cover" />
       ) : (
-        <View style={s.imgPH}>
-          <Ionicons name="cube-outline" size={24} color="#94a3b8" />
-        </View>
+        <LinearGradient colors={['#f3e8ff', '#e0e7ff']} style={s.imgPH}>
+          <Ionicons name="cube-outline" size={24} color="#8b5cf6" />
+        </LinearGradient>
       )}
 
       {/* Item Details */}
@@ -29,7 +30,7 @@ export default function CartItemCard({
             activeOpacity={0.6}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="close" size={18} color="#94a3b8" />
+            <Ionicons name="close-circle" size={20} color="#cbd5e1" />
           </TouchableOpacity>
         </View>
         
@@ -43,7 +44,7 @@ export default function CartItemCard({
             disabled={item.quantity <= 1}
             activeOpacity={0.6}
           >
-            <Ionicons name="remove" size={14} color={item.quantity <= 1 ? '#cbd5e1' : '#0f172a'} />
+            <Ionicons name="remove" size={14} color={item.quantity <= 1 ? '#cbd5e1' : '#8b5cf6'} />
           </TouchableOpacity>
           <Text style={s.qtyVal}>{item.quantity}</Text>
           <TouchableOpacity
@@ -51,7 +52,7 @@ export default function CartItemCard({
             onPress={() => onQtyChange(item.cartItemId, item.quantity + 1)}
             activeOpacity={0.6}
           >
-            <Ionicons name="add" size={14} color="#0f172a" />
+            <Ionicons name="add" size={14} color="#8b5cf6" />
           </TouchableOpacity>
         </View>
 
@@ -67,27 +68,29 @@ export default function CartItemCard({
 const s = StyleSheet.create({
   itemCard: { 
     flexDirection: 'row', 
-    borderRadius: 20, 
+    borderRadius: 24, 
     padding: 12, 
     alignItems: 'center', 
     backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    marginBottom: 12,
+    shadowColor: '#1a1a1a',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    marginBottom: 16,
   },
-  itemImg: { width: 80, height: 80, borderRadius: 12, marginRight: 14, backgroundColor: '#f8fafc' },
-  imgPH: { width: 80, height: 80, borderRadius: 12, marginRight: 14, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  itemImg: { width: 80, height: 80, borderRadius: 16, marginRight: 16, backgroundColor: '#f8fafc' },
+  imgPH: { width: 80, height: 80, borderRadius: 16, marginRight: 16, justifyContent: 'center', alignItems: 'center' },
   
   itemBody: { flex: 1, justifyContent: 'center' },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  itemName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#0f172a', lineHeight: 20 },
-  removeBtn: { padding: 4, marginLeft: 8 },
+  itemName: { flex: 1, fontSize: 15, fontWeight: '700', color: '#0f172a', lineHeight: 22 },
+  removeBtn: { padding: 4, marginLeft: 8, marginTop: -4, marginRight: -4 },
   
-  itemPrice: { fontSize: 13, color: '#64748b', fontWeight: '500', marginTop: 2, marginBottom: 8 },
+  itemPrice: { fontSize: 14, color: '#8b5cf6', fontWeight: '700', marginTop: 2, marginBottom: 10 },
   
-  qtyRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', alignSelf: 'flex-start', borderRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3e8ff', alignSelf: 'flex-start', borderRadius: 99 },
   qtyBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
-  qtyVal: { fontSize: 13, fontWeight: '700', color: '#0f172a', minWidth: 24, textAlign: 'center' },
+  qtyVal: { fontSize: 14, fontWeight: '700', color: '#0f172a', minWidth: 24, textAlign: 'center' },
   
-  qtyErrText: { fontSize: 11, color: '#ef4444', fontWeight: '500', marginTop: 4 },
+  qtyErrText: { fontSize: 12, color: '#ef4444', fontWeight: '600', marginTop: 4 },
 });

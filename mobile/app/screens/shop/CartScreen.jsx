@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCart } from '../../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
@@ -136,18 +137,17 @@ export default function CartScreen() {
   if (done) return (
     <SafeAreaView style={s.safe}>
       <View style={s.successScreen}>
-        <View style={s.successCircle}>
-          <Ionicons name="checkmark-sharp" size={48} color="#0f172a" />
-        </View>
+        <LinearGradient colors={['#10b981', '#34d399']} style={s.successCircle}>
+          <Ionicons name="checkmark-sharp" size={48} color="#ffffff" />
+        </LinearGradient>
         <Text style={s.successTitle}>Order placed</Text>
         <Text style={s.successSub}>
           Thank you! We've received your order and will begin processing it shortly.
         </Text>
-        <TouchableOpacity
-          style={s.continuBtn}
-          onPress={() => { setDone(false); nav.navigate('Browse'); }}
-        >
-          <Text style={s.continueText}>Continue Shopping</Text>
+        <TouchableOpacity style={s.continuBtnShadow} onPress={() => { setDone(false); nav.navigate('Browse'); }}>
+          <LinearGradient colors={['#8b5cf6', '#d946ef']} start={{x:0,y:0}} end={{x:1,y:1}} style={s.continuBtn}>
+            <Text style={s.continueText}>Continue Shopping</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -156,7 +156,7 @@ export default function CartScreen() {
   if (loading) return (
     <SafeAreaView style={s.safe}>
       <View style={s.centred}>
-        <ActivityIndicator size="large" color="#0f172a" />
+        <ActivityIndicator size="large" color="#8b5cf6" />
       </View>
     </SafeAreaView>
   );
@@ -167,12 +167,14 @@ export default function CartScreen() {
         <Text style={s.pageTitle}>Cart</Text>
       </View>
       <View style={s.centred}>
-        <View style={s.emptyIconBox}>
-          <Ionicons name="bag-outline" size={48} color="#94a3b8" />
-        </View>
+        <LinearGradient colors={['#f3e8ff', '#e0e7ff']} style={s.emptyIconBox}>
+          <Ionicons name="bag-outline" size={48} color="#8b5cf6" />
+        </LinearGradient>
         <Text style={s.emptyTitle}>Your bag is empty.</Text>
-        <TouchableOpacity style={s.browseBtn} onPress={() => nav.navigate('Browse')}>
-          <Text style={s.browseBtnText}>Explore Shop</Text>
+        <TouchableOpacity style={s.browseBtnShadow} onPress={() => nav.navigate('Browse')}>
+          <LinearGradient colors={['#8b5cf6', '#ec4899']} start={{x:0,y:0}} end={{x:1,y:1}} style={s.browseBtn}>
+            <Text style={s.browseBtnText}>Explore Shop</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -180,7 +182,7 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
 
       <View style={s.topBar}>
         <Text style={s.pageTitle}>Cart <Text style={s.itemCountText}>({items.length})</Text></Text>
@@ -192,7 +194,7 @@ export default function CartScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#8b5cf6']} />}
       >
         <View style={s.itemsContainer}>
           {items.map((item) => (
@@ -224,8 +226,10 @@ export default function CartScreen() {
         </View>
 
         {!checkout ? (
-          <TouchableOpacity style={s.checkoutBtn} onPress={() => setCheckout(true)}>
-            <Text style={s.checkoutBtnText}>Checkout</Text>
+          <TouchableOpacity style={s.checkoutBtnShadow} onPress={() => setCheckout(true)}>
+            <LinearGradient colors={['#8b5cf6', '#3b82f6']} start={{x:0,y:0}} end={{x:1,y:1}} style={s.checkoutBtn}>
+              <Text style={s.checkoutBtnText}>Checkout</Text>
+            </LinearGradient>
           </TouchableOpacity>
         ) : (
           <View style={s.formCard}>
@@ -251,8 +255,8 @@ export default function CartScreen() {
             ))}
 
             <TouchableOpacity style={[s.receiptBtn, receipt && s.receiptBtnDone]} onPress={pickReceipt}>
-              <Ionicons name={receipt ? "checkmark-circle" : "image-outline"} size={20} color={receipt ? "#10b981" : "#64748b"} />
-              <Text style={s.receiptBtnText}>
+              <Ionicons name={receipt ? "checkmark-circle" : "image-outline"} size={20} color={receipt ? "#10b981" : "#8b5cf6"} />
+              <Text style={[s.receiptBtnText, receipt && { color: '#10b981' }]}>
                 {receipt ? 'Receipt Attached' : 'Attach Payment Proof (Optional)'}
               </Text>
               {receipt && (
@@ -262,12 +266,10 @@ export default function CartScreen() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[s.placeBtn, placing && { opacity: 0.7 }]}
-              onPress={handlePlaceOrder}
-              disabled={placing}
-            >
-              {placing ? <ActivityIndicator color="#ffffff" /> : <Text style={s.placeBtnText}>Place Order</Text>}
+            <TouchableOpacity style={s.placeBtnShadow} onPress={handlePlaceOrder} disabled={placing}>
+              <LinearGradient colors={['#10b981', '#059669']} style={s.placeBtn}>
+                {placing ? <ActivityIndicator color="#ffffff" /> : <Text style={s.placeBtnText}>Place Order</Text>}
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity style={s.cancelBtn} onPress={() => setCheckout(false)}>
@@ -281,7 +283,7 @@ export default function CartScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fafafa' },
+  safe: { flex: 1, backgroundColor: '#f8fafc' },
 
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? 16 : 8, paddingBottom: 16 },
   pageTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 },
@@ -289,44 +291,48 @@ const s = StyleSheet.create({
   clearText: { fontSize: 15, color: '#ef4444', fontWeight: '600' },
 
   centred: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  emptyIconBox: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  emptyIconBox: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: '#0f172a', marginBottom: 24 },
-  browseBtn: { backgroundColor: '#0f172a', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16 },
-  browseBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
+  browseBtnShadow: { shadowColor: '#ec4899', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  browseBtn: { paddingHorizontal: 28, paddingVertical: 14, borderRadius: 99 },
+  browseBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
 
   itemsContainer: { paddingHorizontal: 24, paddingTop: 8 },
 
-  summaryCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 12, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  summaryCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 12, borderRadius: 24, padding: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
   summaryTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 },
   sumRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   sumLabel: { fontSize: 15, color: '#64748b' },
   sumVal: { fontSize: 15, fontWeight: '600', color: '#0f172a' },
-  sumValFree: { fontSize: 15, fontWeight: '600', color: '#10b981' },
+  sumValFree: { fontSize: 15, fontWeight: '700', color: '#10b981' },
   sumDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 },
   totalLabel: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
-  totalVal: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
+  totalVal: { fontSize: 18, fontWeight: '800', color: '#8b5cf6' },
 
-  checkoutBtn: { backgroundColor: '#0f172a', marginHorizontal: 24, marginTop: 24, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
-  checkoutBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+  checkoutBtnShadow: { marginHorizontal: 24, marginTop: 24, shadowColor: '#3b82f6', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  checkoutBtn: { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  checkoutBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
 
-  formCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 24, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  formCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 24, borderRadius: 24, padding: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
   formTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 20 },
   fieldRow: { backgroundColor: '#f8fafc', borderRadius: 12, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 12 },
   fieldInput: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: '#0f172a' },
   
-  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#cbd5e1', borderRadius: 12, padding: 16, marginBottom: 24, backgroundColor: '#f8fafc' },
+  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#c4b5fd', borderRadius: 12, padding: 16, marginBottom: 24, backgroundColor: '#f8fafc' },
   receiptBtnDone: { borderColor: '#10b981', backgroundColor: '#ecfdf5', borderStyle: 'solid' },
-  receiptBtnText: { fontSize: 14, fontWeight: '500', color: '#475569' },
+  receiptBtnText: { fontSize: 14, fontWeight: '600', color: '#8b5cf6' },
   
-  placeBtn: { backgroundColor: '#0f172a', borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
-  placeBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
+  placeBtnShadow: { shadowColor: '#10b981', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  placeBtn: { borderRadius: 16, paddingVertical: 16, alignItems: 'center', opacity: 1 },
+  placeBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
   cancelBtn: { alignItems: 'center', marginTop: 16, paddingVertical: 8 },
-  cancelText: { color: '#64748b', fontSize: 15, fontWeight: '500' },
+  cancelText: { color: '#64748b', fontSize: 15, fontWeight: '600' },
 
-  successScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#fafafa' },
-  successCircle: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  successScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#f8fafc' },
+  successCircle: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   successTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', textAlign: 'center', marginBottom: 12 },
   successSub: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
-  continuBtn: { backgroundColor: '#0f172a', borderRadius: 16, paddingHorizontal: 32, paddingVertical: 16 },
-  continueText: { color: '#ffffff', fontWeight: '600', fontSize: 16 },
+  continuBtnShadow: { shadowColor: '#8b5cf6', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  continuBtn: { borderRadius: 99, paddingHorizontal: 32, paddingVertical: 16 },
+  continueText: { color: '#ffffff', fontWeight: '700', fontSize: 16 },
 });
