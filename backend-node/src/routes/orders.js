@@ -15,7 +15,7 @@ const router = require('express').Router();
 const { verifyToken, requireAuth, requireAdmin } = require('../middleware/auth');
 const { validateOrder } = require('../middleware/validate');
 const { uploadImage } = require('../middleware/upload');
-const { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking } = require('../controllers/orderController');
+const { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking, getAdminAnalytics } = require('../controllers/orderController');
 
 // User endpoints (require authentication)
 router.post('/',                  verifyToken, requireAuth,  uploadImage.single('receipt'), validateOrder, placeOrder);   // Place order
@@ -23,6 +23,7 @@ router.get('/',                   verifyToken, requireAuth,  getMyOrders);      
 
 // Admin endpoints (require admin role)
 router.get('/admin',              verifyToken, requireAdmin, getAllOrders);                 // All orders
+router.get('/admin/analytics',    verifyToken, requireAdmin, getAdminAnalytics);           // Analytics data
 router.put('/admin/:id/status',   verifyToken, requireAdmin, updateOrderStatus);           // Update status
 router.put('/admin/:id/tracking', verifyToken, requireAdmin, updateTracking);              // Set tracking
 

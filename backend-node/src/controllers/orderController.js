@@ -14,7 +14,8 @@
  * @requires ../models/Order
  */
 
-const Order = require('../models/Order');
+const Order    = require('../models/Order');
+const StlOrder = require('../models/StlOrder');
 
 /**
  * Place a new shop order. Computes totalAmount server-side.
@@ -123,4 +124,89 @@ const updateTracking = async (req, res) => {
   }
 };
 
-module.exports = { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking };
+/**
+ * GET /orders/admin/analytics — Dashboard analytics for admin.
+ *
+ * Returns:
+ *   - monthlyRevenue: Array of { month, revenue } for the last 6 months (shop orders only)
+ *   - bestSellingProducts: Top-5 products by units sold
+ *   - activePrintJobs: Count of STL orders currently in PRINTING state
+ */
+const getAdminAnalytics = async (req, res) => {
+  try {
+    // ── 1. Monthly revenue for the last 6 months ────────────────────────────
+    // Calculate the start of the 6-month window (beginning of the month, 5 months ago)
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const revenueAgg = await Order.aggregate([
+      // Only consider orders placed in the last 6 months that were not cancelled
+      { $match: { createdAt: { $gte: sixMonthsAgo }, status: { $ne: 'CANCELLED' } } },
+      {
+        $group: {
+          // Group by year + month to get a monthly bucket
+          _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+          revenue: { $sum: '$totalAmount' },
+        },
+      },
+      // Sort ascending by date so charts render left-to-right chronologically
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+    ]);
+
+    // Build a full 6-month array, filling in 0 for months with no orders
+    const monthlyRevenue = [];
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const found = revenueAgg.find(
+        r => r._id.year === d.getFullYear() && r._id.month === (d.getMonth() + 1)
+      );
+      monthlyRevenue.push({
+        month:   monthNames[d.getMonth()],
+        revenue: found ? Math.round(found.revenue) : 0,
+      });
+    }
+
+    // ── 2. Best-selling products (top 5 by total units sold) ───────────────
+    const bestSellingAgg = await Order.aggregate([
+      // Ignore cancelled orders
+      { $match: { status: { $ne: 'CANCELLED' } } },
+      // Unwind items array so each item becomes its own document
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id:         '$items.productName',
+          totalSold:   { $sum: '$items.quantity' },
+          totalRevenue:{ $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+        },
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          _id: 0,
+          name:    '$_id',
+          sold:    '$totalSold',
+          revenue: { $round: ['$totalRevenue', 0] },
+        },
+      },
+    ]);
+
+    // ── 3. Active 3D print jobs ─────────────────────────────────────────────
+    // Count STL orders currently in an active processing state
+    const activePrintJobs = await StlOrder.countDocuments({
+      status: { $in: ['CONFIRMED', 'PRINTING', 'READY'] },
+    });
+
+    res.json({
+      monthlyRevenue,
+      bestSellingProducts: bestSellingAgg,
+      activePrintJobs,
+    });
+  } catch (err) {
+    console.error('[Analytics]', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { placeOrder, getMyOrders, getAllOrders, updateOrderStatus, updateTracking, getAdminAnalytics };
