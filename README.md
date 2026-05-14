@@ -133,3 +133,23 @@ The following features are planned for future development to further enhance the
 5. **Wishlist (Favorites) Feature**: Allow users to save favorite products or 3D models to purchase later.
 6. **Profile Editing & Address Management**: Allow users to update their default shipping address and reset passwords directly from the app.
 7. **Admin Analytics Dashboard**: Add visual charts to the Admin Dashboard showing monthly revenue, best-selling items, and order volume.
+
+---
+
+## 👥 Contributors
+
+This is a **2nd Year, 2nd Semester Group Project** by **Team ITP_IT_56** — SLIIT Undergraduates.
+
+| Student ID | Name |
+| :--- | :--- |
+| **IT24103160** | Yapa Y.L.S. |
+| **IT24104072** | Wasala W.L.M.P.D. |
+| **IT24102084** | Wittahachchi S.K. |
+| **IT24102402** | Munasinghe M.S.D. |
+| **IT24100883** | Karanayaka K.K.I.M. |
+
+---
+
+<p align="center">
+  🎓 Team ITP_IT_56 &nbsp;|&nbsp; SLIIT Undergraduates &nbsp;|&nbsp; 2nd Year · 2nd Semester Group Project
+</p>
