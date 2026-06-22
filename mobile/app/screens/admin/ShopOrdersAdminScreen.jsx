@@ -6,10 +6,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { ORDER_STATUSES } from '../../data/categories';
+import { useTheme } from '../../context/ThemeContext';
 
 const STATUS_OPTIONS = ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
 export default function ShopOrdersAdminScreen() {
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
@@ -47,7 +51,7 @@ export default function ShopOrdersAdminScreen() {
   };
 
   const renderItem = ({ item }) => {
-    const cfg = ORDER_STATUSES[item.status] || { label: item.status, color: '#6b7280' };
+    const cfg = ORDER_STATUSES[item.status] || { label: item.status, color: theme.textSecondary };
     const isOpen = expanded === item._id;
     const customerName = item.userId?.fullName || item.shippingAddress?.split('\n')[0] || 'Customer';
 
@@ -66,7 +70,7 @@ export default function ShopOrdersAdminScreen() {
           </View>
           <View style={s.headerRight}>
             <Text style={s.price}>LKR {item.totalAmount?.toFixed(2)}</Text>
-            <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#94a3b8" />
+            <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={theme.icon} />
           </View>
         </TouchableOpacity>
 
@@ -77,7 +81,7 @@ export default function ShopOrdersAdminScreen() {
               {item.items?.map((it, idx) => (
                 <View key={idx} style={s.orderItem}>
                   <View style={s.itemIconBg}>
-                    <Ionicons name="cube-outline" size={14} color="#6366f1" />
+                    <Ionicons name="cube-outline" size={14} color={theme.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={s.itemName}>{it.productName}</Text>
@@ -95,7 +99,7 @@ export default function ShopOrdersAdminScreen() {
             <Text style={s.sectionTitle}>Tracking Management</Text>
             {item.trackingNumber && (
               <View style={s.trackingBanner}>
-                <Ionicons name="airplane-outline" size={16} color="#6366f1" />
+                <Ionicons name="airplane-outline" size={16} color={theme.primary} />
                 <Text style={s.trackingValText}>Current: {item.trackingNumber}</Text>
               </View>
             )}
@@ -105,7 +109,7 @@ export default function ShopOrdersAdminScreen() {
                 value={trackingInputs[item._id] || ''}
                 onChangeText={v => setTrackingInputs(p => ({ ...p, [item._id]: v }))}
                 placeholder="New tracking ID"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={theme.icon}
               />
               <TouchableOpacity style={s.trackBtn} onPress={() => setTracking(item._id)}>
                 <Text style={s.trackBtnText}>Update</Text>
@@ -119,10 +123,10 @@ export default function ShopOrdersAdminScreen() {
               {STATUS_OPTIONS.map(st => (
                 <TouchableOpacity
                   key={st}
-                  style={[s.chip, item.status === st && { backgroundColor: '#6366f1', borderColor: '#6366f1' }]}
+                  style={[s.chip, item.status === st && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                   onPress={() => updateStatus(item._id, st)}
                 >
-                  <Text style={[s.chipText, item.status === st && { color: '#f8fafc' }]}>{st}</Text>
+                  <Text style={[s.chipText, item.status === st && { color: theme.primaryText }]}>{st}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -134,7 +138,7 @@ export default function ShopOrdersAdminScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <View style={s.headerContainer}>
         <Text style={s.title}>Shop Orders</Text>
         <View style={s.countBadge}><Text style={s.countText}>{orders.length}</Text></View>
@@ -142,7 +146,7 @@ export default function ShopOrdersAdminScreen() {
 
       {loading ? (
         <View style={s.loader}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : (
         <FlatList
@@ -158,50 +162,50 @@ export default function ShopOrdersAdminScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8f7ff' },
+const getStyles = (t) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: t.background },
   headerContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 15, paddingBottom: 10 },
-  title: { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  countBadge: { backgroundColor: '#eef2ff', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  countText: { fontSize: 13, fontWeight: '900', color: '#6366f1' },
+  title: { fontSize: 28, fontWeight: '900', color: t.text, letterSpacing: -0.5 },
+  countBadge: { backgroundColor: t.primary + '1A', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  countText: { fontSize: 13, fontWeight: '900', color: t.primary },
 
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  card: { backgroundColor: '#f8fafc', borderRadius: 24, overflow: 'hidden', shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 15, elevation: 3, borderWidth: 1, borderColor: 'rgba(15,23,42,0.02)' },
+  card: { backgroundColor: t.card, borderRadius: 24, overflow: 'hidden', shadowColor: t.text, shadowOpacity: 0.04, shadowRadius: 15, elevation: 3, borderWidth: 1, borderColor: t.border },
   cardExpanded: { shadowOpacity: 0.08, shadowRadius: 20, elevation: 6 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16 },
   headerLeft: { flex: 1, gap: 4 },
   idRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 2 },
-  orderId: { fontSize: 14, fontWeight: '800', color: '#64748b' },
+  orderId: { fontSize: 14, fontWeight: '800', color: t.textSecondary },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  customerName: { fontSize: 17, fontWeight: '800', color: '#1e1b4b' },
+  customerName: { fontSize: 17, fontWeight: '800', color: t.text },
   headerRight: { alignItems: 'flex-end', justifyContent: 'space-between', paddingVertical: 2 },
-  price: { fontSize: 16, fontWeight: '900', color: '#6366f1' },
+  price: { fontSize: 16, fontWeight: '900', color: t.primary },
 
-  details: { padding: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9', backgroundColor: '#f8fafc' },
-  sectionTitle: { fontSize: 12, fontWeight: '800', color: '#1e1b4b', textTransform: 'uppercase', marginBottom: 12, letterSpacing: 0.5 },
+  details: { padding: 16, borderTopWidth: 1, borderTopColor: t.background, backgroundColor: t.card },
+  sectionTitle: { fontSize: 12, fontWeight: '800', color: t.text, textTransform: 'uppercase', marginBottom: 12, letterSpacing: 0.5 },
   itemsList: { gap: 8, marginBottom: 20 },
-  orderItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f8fafc', padding: 10, borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0' },
-  itemIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center' },
-  itemName: { fontSize: 14, fontWeight: '700', color: '#1e1b4b' },
-  itemMeta: { fontSize: 12, color: '#64748b', fontWeight: '500' },
+  orderItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: t.card, padding: 10, borderRadius: 14, borderWidth: 1, borderColor: t.border },
+  itemIconBg: { width: 30, height: 30, borderRadius: 8, backgroundColor: t.background, justifyContent: 'center', alignItems: 'center' },
+  itemName: { fontSize: 14, fontWeight: '700', color: t.text },
+  itemMeta: { fontSize: 12, color: t.textSecondary, fontWeight: '500' },
 
-  addressBox: { backgroundColor: '#f8fafc', padding: 14, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#e2e8f0' },
-  addressLabel: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 },
-  addressText: { fontSize: 13, color: '#1e1b4b', fontWeight: '600', lineHeight: 18 },
+  addressBox: { backgroundColor: t.card, padding: 14, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: t.border },
+  addressLabel: { fontSize: 10, fontWeight: '800', color: t.icon, textTransform: 'uppercase', marginBottom: 4 },
+  addressText: { fontSize: 13, color: t.text, fontWeight: '600', lineHeight: 18 },
 
-  trackingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#eef2ff', padding: 10, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: '#c7d2fe' },
-  trackingValText: { fontSize: 13, fontWeight: '700', color: '#4338ca' },
+  trackingBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.primary + '1A', padding: 10, borderRadius: 12, marginBottom: 10, borderWidth: 1, borderColor: t.primary + '40' },
+  trackingValText: { fontSize: 13, fontWeight: '700', color: t.primary },
   trackInputRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
-  trackInput: { flex: 1, height: 45, backgroundColor: '#f8fafc', borderRadius: 12, paddingHorizontal: 15, borderWidth: 1.5, borderColor: '#e2e8f0', fontSize: 14, color: '#1e1b4b', fontWeight: '600' },
-  trackBtn: { backgroundColor: '#6366f1', paddingHorizontal: 15, borderRadius: 12, justifyContent: 'center' },
-  trackBtnText: { color: '#f8fafc', fontWeight: '800', fontSize: 13 },
+  trackInput: { flex: 1, height: 45, backgroundColor: t.background, borderRadius: 12, paddingHorizontal: 15, borderWidth: 1.5, borderColor: t.border, fontSize: 14, color: t.text, fontWeight: '600' },
+  trackBtn: { backgroundColor: t.primary, paddingHorizontal: 15, borderRadius: 12, justifyContent: 'center' },
+  trackBtnText: { color: t.primaryText, fontWeight: '800', fontSize: 13 },
 
-  divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 16 },
+  divider: { height: 1, backgroundColor: t.border, marginVertical: 16 },
 
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: '#e2e8f0' },
-  chipText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-  empty: { textAlign: 'center', color: '#94a3b8', marginTop: 100, fontSize: 16, fontWeight: '600' },
+  chip: { backgroundColor: t.background, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: t.border },
+  chipText: { fontSize: 12, fontWeight: '700', color: t.textSecondary },
+  empty: { textAlign: 'center', color: t.icon, marginTop: 100, fontSize: 16, fontWeight: '600' },
 });

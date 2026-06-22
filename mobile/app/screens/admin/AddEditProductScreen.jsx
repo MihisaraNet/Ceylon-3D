@@ -11,8 +11,11 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function AddEditProductScreen({ route }) {
+  const { theme } = useTheme();
+  const s = getStyles(theme);
   return (
     <View style={s.container}>
       {/* 
@@ -25,7 +28,7 @@ export default function AddEditProductScreen({ route }) {
   );
 }
 
-const s = StyleSheet.create({
-  container: { flex:1, justifyContent:'center', alignItems:'center', padding:24 },
-  text:      { fontSize:16, color:'#6b7280', textAlign:'center' },
+const getStyles = (t) => StyleSheet.create({
+  container: { flex:1, justifyContent:'center', alignItems:'center', padding:24, backgroundColor: t.background },
+  text:      { fontSize:16, color: t.textSecondary, textAlign:'center' },
 });

@@ -27,6 +27,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const isEmail   = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
@@ -37,16 +38,16 @@ const pwRules   = (p) => ({
 });
 
 /* ── Inline field wrapper ────────────────────────────────── */
-const Field = ({ label, icon, error, children }) => (
+const Field = ({ label, icon, error, children, f, theme }) => (
   <View style={f.group}>
     <Text style={f.label}>{label}</Text>
     <View style={[f.row, error && f.rowErr]}>
-      <Ionicons name={icon} size={17} color={error ? '#ef4444' : '#9ca3af'} style={f.icon} />
+      <Ionicons name={icon} size={17} color={error ? theme.error : theme.icon} style={f.icon} />
       {children}
     </View>
     {!!error && (
       <View style={f.errRow}>
-        <Ionicons name="alert-circle-outline" size={13} color="#ef4444" />
+        <Ionicons name="alert-circle-outline" size={13} color={theme.error} />
         <Text style={f.errText}>{error}</Text>
       </View>
     )}
@@ -54,15 +55,19 @@ const Field = ({ label, icon, error, children }) => (
 );
 
 /* ── Password strength rule row ─────────────────────────── */
-const RuleRow = ({ ok, text }) => (
+const RuleRow = ({ ok, text, pw, theme }) => (
   <View style={pw.row}>
-    <Ionicons name={ok ? 'checkmark-circle' : 'ellipse-outline'} size={14} color={ok ? '#22c55e' : '#d1d5db'} />
+    <Ionicons name={ok ? 'checkmark-circle' : 'ellipse-outline'} size={14} color={ok ? theme.success : theme.border} />
     <Text style={[pw.txt, ok && pw.ok]}>{text}</Text>
   </View>
 );
 
 export default function RegisterScreen({ navigation }) {
   const { login } = useAuth();
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
+  const f = getFieldStyles(theme);
+  const pw = getPwStyles(theme);
   const [fullName, setFullName] = useState('');
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -141,7 +146,7 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <ScrollView contentContainerStyle={s.container} keyboardShouldPersistTaps="handled">
 
         {/* Brand */}
@@ -156,17 +161,17 @@ export default function RegisterScreen({ navigation }) {
         {/* Server error banner */}
         {!!serverErr && (
           <View style={s.serverErrBanner}>
-            <Ionicons name="warning-outline" size={16} color="#ef4444" />
+            <Ionicons name="warning-outline" size={16} color={theme.error} />
             <Text style={s.serverErrText}>{serverErr}</Text>
           </View>
         )}
 
         {/* Full name */}
-        <Field label="Full Name" icon="person-outline" error={errors.fullName}>
+        <Field label="Full Name" icon="person-outline" error={errors.fullName} f={f} theme={theme}>
           <TextInput
             style={f.input}
             placeholder="Your full name"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.icon}
             value={fullName}
             onChangeText={v => { setFullName(v); clearErr('fullName'); }}
             returnKeyType="next"
@@ -175,12 +180,12 @@ export default function RegisterScreen({ navigation }) {
         </Field>
 
         {/* Email */}
-        <Field label="Email address" icon="mail-outline" error={errors.email}>
+        <Field label="Email address" icon="mail-outline" error={errors.email} f={f} theme={theme}>
           <TextInput
             ref={emailRef}
             style={f.input}
             placeholder="you@example.com"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.icon}
             value={email}
             onChangeText={v => { setEmail(v); clearErr('email'); }}
             keyboardType="email-address"
@@ -191,12 +196,12 @@ export default function RegisterScreen({ navigation }) {
         </Field>
 
         {/* Password */}
-        <Field label="Password" icon="lock-closed-outline" error={errors.password}>
+        <Field label="Password" icon="lock-closed-outline" error={errors.password} f={f} theme={theme}>
           <TextInput
             ref={pwRef}
             style={[f.input, { flex: 1 }]}
             placeholder="Create a strong password"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.icon}
             value={password}
             onChangeText={v => { setPassword(v); clearErr('password'); }}
             secureTextEntry={!showPw}
@@ -204,7 +209,7 @@ export default function RegisterScreen({ navigation }) {
             onSubmitEditing={handleRegister}
           />
           <TouchableOpacity onPress={() => setShowPw(p => !p)} style={{ padding: 12 }}>
-            <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color="#9ca3af" />
+            <Ionicons name={showPw ? 'eye-off-outline' : 'eye-outline'} size={18} color={theme.icon} />
           </TouchableOpacity>
         </Field>
 
@@ -219,19 +224,19 @@ export default function RegisterScreen({ navigation }) {
             <Text style={pw.strengthLabel}>
               {allRules ? '✅ Strong password' : '⚠ Weak password'}
             </Text>
-            <RuleRow ok={rules.length}    text="At least 8 characters" />
-            <RuleRow ok={rules.uppercase} text="At least one uppercase letter (A–Z)" />
-            <RuleRow ok={rules.special}   text="At least one special character (!@#$…)" />
+            <RuleRow ok={rules.length}    text="At least 8 characters" pw={pw} theme={theme} />
+            <RuleRow ok={rules.uppercase} text="At least one uppercase letter (A–Z)" pw={pw} theme={theme} />
+            <RuleRow ok={rules.special}   text="At least one special character (!@#$…)" pw={pw} theme={theme} />
           </View>
         )}
 
         {/* Submit */}
         <TouchableOpacity style={s.btn} onPress={handleRegister} disabled={loading} activeOpacity={0.88}>
           {loading ? (
-            <ActivityIndicator color="#f8fafc" />
+            <ActivityIndicator color={theme.primaryText} />
           ) : (
             <>
-              <Ionicons name="person-add-outline" size={20} color="#f8fafc" style={{ marginRight: 6 }} />
+              <Ionicons name="person-add-outline" size={20} color={theme.primaryText} style={{ marginRight: 6 }} />
               <Text style={s.btnText}>Create Account</Text>
             </>
           )}
@@ -268,48 +273,48 @@ export default function RegisterScreen({ navigation }) {
 }
 
 /* Shared field styles */
-const f = StyleSheet.create({
+const getFieldStyles = (t) => StyleSheet.create({
   group:  { marginBottom: 14 },
-  label:  { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
-  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, overflow: 'hidden' },
-  rowErr: { borderColor: '#ef4444', backgroundColor: '#fff5f5' },
+  label:  { fontSize: 13, fontWeight: '700', color: t.text, marginBottom: 6 },
+  row:    { flexDirection: 'row', alignItems: 'center', backgroundColor: t.card, borderWidth: 1.5, borderColor: t.border, borderRadius: 14, overflow: 'hidden' },
+  rowErr: { borderColor: t.error, backgroundColor: t.error + '10' },
   icon:   { paddingLeft: 13, paddingRight: 4 },
-  input:  { flex: 1, height: 50, fontSize: 15, color: '#1e1b4b', paddingHorizontal: 8 },
+  input:  { flex: 1, height: 50, fontSize: 15, color: t.text, paddingHorizontal: 8 },
   errRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  errText:{ fontSize: 12, color: '#ef4444', fontWeight: '600' },
+  errText:{ fontSize: 12, color: t.error, fontWeight: '600' },
 });
 
 /* Password strength styles */
-const pw = StyleSheet.create({
-  box:         { backgroundColor: '#f8f7ff', borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: '#e5e7eb' },
+const getPwStyles = (t) => StyleSheet.create({
+  box:         { backgroundColor: t.background, borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: t.border },
   barRow:      { flexDirection: 'row', gap: 6, marginBottom: 8 },
   bar:         { flex: 1, height: 4, borderRadius: 99 },
-  barOk:       { backgroundColor: '#22c55e' },
-  barBad:      { backgroundColor: '#e5e7eb' },
-  strengthLabel:{ fontSize: 12, fontWeight: '700', color: '#6b7280', marginBottom: 8 },
+  barOk:       { backgroundColor: t.success },
+  barBad:      { backgroundColor: t.border },
+  strengthLabel:{ fontSize: 12, fontWeight: '700', color: t.textSecondary, marginBottom: 8 },
   row:         { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  txt:         { fontSize: 13, color: '#9ca3af' },
-  ok:          { color: '#22c55e', fontWeight: '600' },
+  txt:         { fontSize: 13, color: t.icon },
+  ok:          { color: t.success, fontWeight: '600' },
 });
 
-const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8f7ff' },
+const getStyles = (t) => StyleSheet.create({
+  safe:           { flex: 1, backgroundColor: t.background },
   container:      { flexGrow: 1, padding: 24, justifyContent: 'center' },
   brand:          { alignItems: 'center', marginBottom: 28 },
-  logoBox:        { width: 72, height: 72, borderRadius: 20, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 16, elevation: 6 },
-  logo:           { fontSize: 30, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  tagline:        { fontSize: 15, color: '#9ca3af', marginTop: 4 },
-  serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 12, padding: 12, marginBottom: 14 },
-  serverErrText:  { color: '#ef4444', fontSize: 13, fontWeight: '600', flex: 1 },
-  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 14, paddingVertical: 15, marginTop: 8, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
-  btnText:        { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
+  logoBox:        { width: 72, height: 72, borderRadius: 20, backgroundColor: t.primary, justifyContent: 'center', alignItems: 'center', marginBottom: 12, shadowColor: t.primary, shadowOpacity: 0.4, shadowRadius: 16, elevation: 6 },
+  logo:           { fontSize: 30, fontWeight: '900', color: t.text, letterSpacing: -0.5 },
+  tagline:        { fontSize: 15, color: t.textSecondary, marginTop: 4 },
+  serverErrBanner:{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.error + '15', borderWidth: 1, borderColor: t.error + '40', borderRadius: 12, padding: 12, marginBottom: 14 },
+  serverErrText:  { color: t.error, fontSize: 13, fontWeight: '600', flex: 1 },
+  btn:            { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: t.primary, borderRadius: 14, paddingVertical: 15, marginTop: 8, shadowColor: t.primary, shadowOpacity: 0.4, shadowRadius: 12, elevation: 5 },
+  btnText:        { color: t.primaryText, fontSize: 16, fontWeight: '900' },
   separatorContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  separatorLine:  { flex: 1, height: 1, backgroundColor: '#e5e7eb' },
-  separatorText:  { marginHorizontal: 12, fontSize: 13, color: '#9ca3af', fontWeight: '700' },
+  separatorLine:  { flex: 1, height: 1, backgroundColor: t.border },
+  separatorText:  { marginHorizontal: 12, fontSize: 13, color: t.icon, fontWeight: '700' },
   socialRow:      { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-  socialBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 14, paddingVertical: 14 },
-  socialBtnText:  { color: '#374151', fontSize: 15, fontWeight: '700', marginLeft: 8 },
+  socialBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: t.card, borderWidth: 1, borderColor: t.border, borderRadius: 14, paddingVertical: 14 },
+  socialBtnText:  { color: t.text, fontSize: 15, fontWeight: '700', marginLeft: 8 },
   link:           { alignItems: 'center', marginTop: 32 },
-  linkText:       { color: '#9ca3af', fontSize: 14 },
-  linkBold:       { color: '#6366f1', fontWeight: '800' },
+  linkText:       { color: t.textSecondary, fontSize: 14 },
+  linkBold:       { color: t.primary, fontWeight: '800' },
 });

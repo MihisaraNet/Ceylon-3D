@@ -23,12 +23,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../lib/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CHART_W = SCREEN_W - 64; // card padding on both sides
 
 /* ─── Stat Card ──────────────────────────────────────────────────────────── */
-const StatCard = ({ icon, label, value, color, onPress }) => (
+const StatCard = ({ icon, label, value, color, onPress, s }) => (
   <TouchableOpacity style={[s.statCard, { borderTopColor: color }]} onPress={onPress} activeOpacity={0.8}>
     <View style={[s.statIconWrap, { backgroundColor: color + '1A' }]}>
       <Ionicons name={icon} size={22} color={color} />
@@ -39,7 +40,7 @@ const StatCard = ({ icon, label, value, color, onPress }) => (
 );
 
 /* ─── Section Header ─────────────────────────────────────────────────────── */
-const SectionHeader = ({ icon, title, color }) => (
+const SectionHeader = ({ icon, title, color, s }) => (
   <View style={s.sectionHeaderRow}>
     <View style={[s.sectionIconWrap, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={16} color={color} />
@@ -49,7 +50,7 @@ const SectionHeader = ({ icon, title, color }) => (
 );
 
 /* ─── Monthly Revenue Bar Chart ──────────────────────────────────────────── */
-const RevenueChart = ({ data }) => {
+const RevenueChart = ({ data, s, theme }) => {
   const maxRev = Math.max(...data.map(d => d.revenue), 1);
   const anim = useRef(data.map(() => new Animated.Value(0))).current;
 
@@ -70,7 +71,7 @@ const RevenueChart = ({ data }) => {
 
   return (
     <View style={s.chartCard}>
-      <SectionHeader icon="bar-chart-outline" title="Monthly Revenue (LKR)" color="#6366f1" />
+      <SectionHeader icon="bar-chart-outline" title="Monthly Revenue (LKR)" color={theme.primary} s={s} />
       <View style={s.barChartArea}>
         {data.map((item, i) => {
           const ratio = item.revenue / maxRev;
@@ -102,7 +103,7 @@ const RevenueChart = ({ data }) => {
 };
 
 /* ─── Best Selling Products Horizontal Bar Chart ─────────────────────────── */
-const BestSellersChart = ({ data }) => {
+const BestSellersChart = ({ data, s, theme }) => {
   const maxSold = Math.max(...data.map(d => d.sold), 1);
   const anim = useRef(data.map(() => new Animated.Value(0))).current;
 
@@ -123,7 +124,7 @@ const BestSellersChart = ({ data }) => {
 
   return (
     <View style={s.chartCard}>
-      <SectionHeader icon="trophy-outline" title="Best-Selling Products (Units)" color="#8b5cf6" />
+      <SectionHeader icon="trophy-outline" title="Best-Selling Products (Units)" color="#8b5cf6" s={s} />
       {data.length === 0 ? (
         <Text style={s.emptyMsg}>No sales data yet</Text>
       ) : (
@@ -157,7 +158,7 @@ const BestSellersChart = ({ data }) => {
 };
 
 /* ─── Active Print Jobs KPI Card ─────────────────────────────────────────── */
-const ActivePrintJobsCard = ({ count, onPress }) => {
+const ActivePrintJobsCard = ({ count, onPress, s, theme }) => {
   const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -204,6 +205,8 @@ const ActivePrintJobsCard = ({ count, onPress }) => {
 /* ─── Main Screen ────────────────────────────────────────────────────────── */
 export default function AdminDashboardScreen() {
   const nav = useNavigation();
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
 
   const [stats, setStats]           = useState({ stlOrders: 0, shopOrders: 0, products: 0, pendingQuotes: 0 });
   const [analytics, setAnalytics]   = useState(null);
@@ -263,8 +266,8 @@ export default function AdminDashboardScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={handleRefresh}
-          colors={['#6366f1']}
-          tintColor="#6366f1"
+          colors={[theme.primary]}
+          tintColor={theme.primary}
         />
       }
     >
@@ -283,44 +286,45 @@ export default function AdminDashboardScreen() {
 
       {/* KPI Cards */}
       {loading ? (
-        <ActivityIndicator color="#6366f1" style={{ marginTop: 40 }} />
+        <ActivityIndicator color={theme.primary} style={{ marginTop: 40 }} />
       ) : (
         <View style={s.statsGrid}>
-          <StatCard icon="print-outline"     label="STL Orders"     value={stats.stlOrders}     color="#8b5cf6" onPress={() => nav.navigate('StlOrdersAdmin')} />
-          <StatCard icon="cart-outline"      label="Shop Orders"    value={stats.shopOrders}    color="#3b82f6" onPress={() => nav.navigate('ShopOrdersAdmin')} />
-          <StatCard icon="cube-outline"      label="Products"       value={stats.products}      color="#10b981" onPress={() => nav.navigate('ManageProducts')} />
-          <StatCard icon="hourglass-outline" label="Pending Quotes" value={stats.pendingQuotes} color="#f59e0b" onPress={() => nav.navigate('StlOrdersAdmin')} />
+          <StatCard icon="print-outline"     label="STL Orders"     value={stats.stlOrders}     color="#8b5cf6" onPress={() => nav.navigate('StlOrdersAdmin')} s={s} />
+          <StatCard icon="cart-outline"      label="Shop Orders"    value={stats.shopOrders}    color="#3b82f6" onPress={() => nav.navigate('ShopOrdersAdmin')} s={s} />
+          <StatCard icon="cube-outline"      label="Products"       value={stats.products}      color="#10b981" onPress={() => nav.navigate('ManageProducts')} s={s} />
+          <StatCard icon="hourglass-outline" label="Pending Quotes" value={stats.pendingQuotes} color="#f59e0b" onPress={() => nav.navigate('StlOrdersAdmin')} s={s} />
         </View>
       )}
 
       {/* ── Analytics Section ─────────────────────────────────── */}
       <View style={s.analyticsSectionHeader}>
-        <Ionicons name="analytics-outline" size={20} color="#6366f1" />
+        <Ionicons name="analytics-outline" size={20} color={theme.primary} />
         <Text style={s.analyticsSectionTitle}>Analytics</Text>
       </View>
 
       {analyticsLoading ? (
         <View style={s.analyticsLoader}>
-          <ActivityIndicator color="#6366f1" />
+          <ActivityIndicator color={theme.primary} />
           <Text style={s.analyticsLoaderText}>Loading analytics…</Text>
         </View>
       ) : analytics ? (
         <View style={s.analyticsContent}>
           {/* Monthly Revenue Chart */}
-          <RevenueChart data={analytics.monthlyRevenue} />
+          <RevenueChart data={analytics.monthlyRevenue} s={s} theme={theme} />
 
           {/* Best Selling Products */}
-          <BestSellersChart data={analytics.bestSellingProducts} />
+          <BestSellersChart data={analytics.bestSellingProducts} s={s} theme={theme} />
 
           {/* Active Print Jobs */}
           <ActivePrintJobsCard
             count={analytics.activePrintJobs}
             onPress={() => nav.navigate('StlOrdersAdmin')}
+            s={s} theme={theme}
           />
         </View>
       ) : (
         <View style={s.analyticsError}>
-          <Ionicons name="cloud-offline-outline" size={32} color="#9ca3af" />
+          <Ionicons name="cloud-offline-outline" size={32} color={theme.icon} />
           <Text style={s.analyticsErrorText}>Analytics unavailable</Text>
         </View>
       )}
@@ -340,7 +344,7 @@ export default function AdminDashboardScreen() {
               <Ionicons name={a.icon} size={22} color={a.color} />
             </View>
             <Text style={s.actionLabel}>{a.label}</Text>
-            <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+            <Ionicons name="chevron-forward" size={16} color={theme.icon} />
           </TouchableOpacity>
         ))}
       </View>
@@ -349,8 +353,8 @@ export default function AdminDashboardScreen() {
 }
 
 /* ─── Styles ─────────────────────────────────────────────────────────────── */
-const s = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: '#f3f4f6' },
+const getStyles = (t) => StyleSheet.create({
+  container:    { flex: 1, backgroundColor: t.background },
 
   /* Header */
   header:       { padding: 24, paddingTop: 36, paddingBottom: 28 },
@@ -361,44 +365,44 @@ const s = StyleSheet.create({
 
   /* KPI Grid */
   statsGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16 },
-  statCard:     { flex: 1, minWidth: '45%', backgroundColor: '#ffffff', borderRadius: 14, padding: 14, borderTopWidth: 3, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  statCard:     { flex: 1, minWidth: '45%', backgroundColor: t.card, borderRadius: 14, padding: 14, borderTopWidth: 3, shadowColor: t.primary, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   statIconWrap: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  statVal:      { fontSize: 26, fontWeight: '900', color: '#111827', marginBottom: 2 },
-  statLabel:    { fontSize: 12, color: '#6b7280', fontWeight: '600' },
+  statVal:      { fontSize: 26, fontWeight: '900', color: t.text, marginBottom: 2 },
+  statLabel:    { fontSize: 12, color: t.textSecondary, fontWeight: '600' },
 
   /* Analytics section header */
   analyticsSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 4, marginBottom: 10 },
-  analyticsSectionTitle:  { fontSize: 17, fontWeight: '800', color: '#111827' },
+  analyticsSectionTitle:  { fontSize: 17, fontWeight: '800', color: t.text },
 
   analyticsContent: { paddingHorizontal: 16, gap: 14 },
   analyticsLoader:  { alignItems: 'center', paddingVertical: 32, gap: 10 },
-  analyticsLoaderText: { color: '#9ca3af', fontSize: 13 },
+  analyticsLoaderText: { color: t.textSecondary, fontSize: 13 },
   analyticsError:   { alignItems: 'center', paddingVertical: 28, gap: 8 },
-  analyticsErrorText: { color: '#9ca3af', fontSize: 13 },
+  analyticsErrorText: { color: t.textSecondary, fontSize: 13 },
 
   /* Chart card shell */
-  chartCard:    { backgroundColor: '#ffffff', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  chartCard:    { backgroundColor: t.card, borderRadius: 16, padding: 16, shadowColor: t.text, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
 
   /* Section header row inside charts */
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   sectionIconWrap:  { width: 28, height: 28, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  sectionTitle:     { fontSize: 14, fontWeight: '700', color: '#374151' },
+  sectionTitle:     { fontSize: 14, fontWeight: '700', color: t.text },
 
   /* Revenue bar chart */
   barChartArea: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 6, paddingTop: 8 },
   barCol:       { alignItems: 'center', gap: 4 },
-  barRevLabel:  { fontSize: 9, color: '#9ca3af', fontWeight: '600', marginBottom: 2 },
-  barLabel:     { fontSize: 10, color: '#6b7280', fontWeight: '600', marginTop: 4 },
-  barBaseline:  { height: 1, backgroundColor: '#e5e7eb', marginTop: 6 },
+  barRevLabel:  { fontSize: 9, color: t.textSecondary, fontWeight: '600', marginBottom: 2 },
+  barLabel:     { fontSize: 10, color: t.icon, fontWeight: '600', marginTop: 4 },
+  barBaseline:  { height: 1, backgroundColor: t.border, marginTop: 6 },
 
   /* Horizontal bar chart */
   hBarRow:      { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  hBarLabel:    { fontSize: 11, color: '#374151', fontWeight: '600' },
-  hBarVal:      { width: 28, textAlign: 'right', fontSize: 12, color: '#6b7280', fontWeight: '700' },
-  emptyMsg:     { textAlign: 'center', color: '#9ca3af', paddingVertical: 16, fontSize: 13 },
+  hBarLabel:    { fontSize: 11, color: t.textSecondary, fontWeight: '600' },
+  hBarVal:      { width: 28, textAlign: 'right', fontSize: 12, color: t.icon, fontWeight: '700' },
+  emptyMsg:     { textAlign: 'center', color: t.textSecondary, paddingVertical: 16, fontSize: 13 },
 
   /* Active print jobs */
-  printJobsCard:    { borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center', overflow: 'hidden', shadowColor: '#4f46e5', shadowOpacity: 0.25, shadowRadius: 12, elevation: 5 },
+  printJobsCard:    { borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center', overflow: 'hidden', shadowColor: t.primary, shadowOpacity: 0.25, shadowRadius: 12, elevation: 5 },
   printJobsLeft:    { flex: 1, gap: 4 },
   printJobsLabel:   { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)' },
   printJobsCount:   { fontSize: 44, fontWeight: '900', color: '#ffffff', lineHeight: 52 },
@@ -407,9 +411,9 @@ const s = StyleSheet.create({
   pulseDot:     { width: 8, height: 8, borderRadius: 4, backgroundColor: '#a5f3fc' },
 
   /* Quick Actions */
-  quickActionsTitle: { fontSize: 17, fontWeight: '800', color: '#111827', paddingHorizontal: 16, marginTop: 20, marginBottom: 10 },
+  quickActionsTitle: { fontSize: 17, fontWeight: '800', color: t.text, paddingHorizontal: 16, marginTop: 20, marginBottom: 10 },
   actions:      { paddingHorizontal: 16, gap: 8 },
-  actionBtn:    { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 14, padding: 14, gap: 12, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
+  actionBtn:    { flexDirection: 'row', alignItems: 'center', backgroundColor: t.card, borderRadius: 14, padding: 14, gap: 12, shadowColor: t.text, shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
   actionIcon:   { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  actionLabel:  { flex: 1, fontSize: 15, fontWeight: '600', color: '#111827' },
+  actionLabel:  { flex: 1, fontSize: 15, fontWeight: '600', color: t.text },
 });

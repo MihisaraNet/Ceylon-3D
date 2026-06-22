@@ -18,44 +18,49 @@
  * @module screens/account/MyAccountScreen
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, SafeAreaView, StatusBar, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, SafeAreaView, StatusBar, Platform, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { ORDER_STATUSES, STL_STATUSES } from '../../data/categories';
 
-const Section = ({ title, children }) => (
+const Section = ({ title, children, theme }) => {
+  const s = getStyles(theme);
+  return (
   <View style={s.section}>
     <Text style={s.sectionTitle}>{title}</Text>
     {children}
   </View>
-);
+)};
 
-const StatusBadge = ({ status, map }) => {
-  const cfg = map[status] || { label: status, color: '#6b7280' };
+const StatusBadge = ({ status, map, theme }) => {
+  const s = getStyles(theme);
+  const cfg = map[status] || { label: status, color: theme.icon };
   return <View style={[s.badge, { backgroundColor: cfg.color + '20' }]}>
     <Text style={[s.badgeText, { color: cfg.color }]}>{cfg.label}</Text>
   </View>;
 };
 
-const ProgressStep = ({ currentStatus, steps, map }) => {
+const ProgressStep = ({ currentStatus, steps, map, theme }) => {
+  const s = getStyles(theme);
   const currentIndex = steps.indexOf(currentStatus);
   return (
     <View style={s.stepContainer}>
       {steps.map((st, i) => {
         const isDone = i <= currentIndex;
         const isLast = i === steps.length - 1;
-        const cfg = map[st] || { color: '#cbd5e1', label: st };
+        const cfg = map[st] || { color: theme.border, label: st };
         return (
           <View key={st} style={[s.stepWrapper, !isLast && { flex: 1 }]}>
             <View style={s.stepLineWrapper}>
               <View style={[s.stepCircle, isDone && { backgroundColor: cfg.color }]}>
                 {i < currentIndex ? (
-                  <Ionicons name="checkmark" size={12} color="#f8fafc" />
+                  <Ionicons name="checkmark" size={12} color={theme.primaryText} />
                 ) : (
-                  <View style={[s.stepDot, isDone && { backgroundColor: '#f8fafc' }]} />
+                  <View style={[s.stepDot, isDone && { backgroundColor: theme.primaryText }]} />
                 )}
               </View>
               {!isLast && <View style={[s.line, i < currentIndex && { backgroundColor: cfg.color }]} />}
@@ -71,6 +76,8 @@ const ProgressStep = ({ currentStatus, steps, map }) => {
 export default function MyAccountScreen() {
   const { user, logout, isAdmin } = useAuth();
   const { clearCart } = useCart();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const s = getStyles(theme);
   const nav = useNavigation();
   const [shopOrders, setShopOrders]  = useState([]);
   const [stlOrders, setStlOrders]    = useState([]);
@@ -151,8 +158,8 @@ export default function MyAccountScreen() {
   const stlSteps  = ['PENDING_QUOTE', 'QUOTED', 'CONFIRMED', 'PRINTING', 'READY', 'DELIVERED'];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#1e1b4b' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#1e1b4b" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.headerBg }}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.headerBg} />
       <ScrollView
         style={s.container}
         refreshControl={
@@ -166,7 +173,7 @@ export default function MyAccountScreen() {
       >
       {/* Header */}
       <View style={s.header}>
-        <View style={s.avatar}><Ionicons name="person" size={36} color="#f8fafc" /></View>
+        <View style={s.avatar}><Ionicons name="person" size={36} color={theme.text} /></View>
         <View>
           <Text style={s.name}>{user?.fullName}</Text>
           <Text style={s.email}>{user?.email}</Text>
@@ -176,7 +183,7 @@ export default function MyAccountScreen() {
 
       {isAdmin && (
         <TouchableOpacity style={s.adminBtn} onPress={() => nav.navigate('AdminStack')}>
-          <Ionicons name="shield-checkmark" size={18} color="#f8fafc" />
+          <Ionicons name="shield-checkmark" size={18} color={theme.primaryText} />
           <Text style={s.adminBtnText}>  Open Admin Dashboard</Text>
         </TouchableOpacity>
       )}
@@ -185,7 +192,7 @@ export default function MyAccountScreen() {
       <View style={s.tabRow}>
         {tabs.map(t => (
           <TouchableOpacity key={t.key} style={[s.tab, activeTab===t.key && s.tabActive]} onPress={() => setActiveTab(t.key)}>
-            <Ionicons name={t.icon} size={16} color={activeTab===t.key?'#6366f1':'#6b7280'} />
+            <Ionicons name={t.icon} size={16} color={activeTab===t.key?theme.primary:theme.icon} />
             <Text style={[s.tabText, activeTab===t.key && s.tabTextActive]} numberOfLines={1}>{t.label}</Text>
           </TouchableOpacity>
         ))}
@@ -193,21 +200,21 @@ export default function MyAccountScreen() {
 
       {/* Orders */}
       {activeTab==='orders' && (
-        <Section title="Shop Orders">
-          {loading ? <ActivityIndicator color="#6366f1" /> : shopOrders.length===0 ? (
+        <Section title="Shop Orders" theme={theme}>
+          {loading ? <ActivityIndicator color={theme.primary} /> : shopOrders.length===0 ? (
             <Text style={s.empty}>No orders yet</Text>
           ) : shopOrders.map(o => (
             <TouchableOpacity key={o._id} style={s.orderCard} onPress={() => setExpanded(expanded===o._id?null:o._id)}>
               <View style={s.orderHeader}>
                 <Text style={s.orderId}>Order #{o._id.slice(-6).toUpperCase()}</Text>
-                <StatusBadge status={o.status} map={ORDER_STATUSES} />
+                <StatusBadge status={o.status} map={ORDER_STATUSES} theme={theme} />
               </View>
               <Text style={s.orderTotal}>LKR {o.totalAmount?.toFixed(2)}</Text>
               <Text style={s.orderDate}>{new Date(o.createdAt).toLocaleDateString()}</Text>
               {expanded===o._id && (
                 <View style={s.orderDetails}>
                   <Text style={s.trackingTitle}>Live Status Tracking</Text>
-                  <ProgressStep currentStatus={o.status} steps={shopSteps} map={ORDER_STATUSES} />
+                  <ProgressStep currentStatus={o.status} steps={shopSteps} map={ORDER_STATUSES} theme={theme} />
                   
                   <View style={s.divider} />
                   
@@ -218,17 +225,17 @@ export default function MyAccountScreen() {
                       </Text>
                       {o.status === 'DELIVERED' && item.productId && (
                         <TouchableOpacity 
-                          style={{ backgroundColor: '#eef2ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 10, borderWidth: 1, borderColor: '#c7d2fe' }}
+                          style={{ backgroundColor: theme.card, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 10, borderWidth: 1, borderColor: theme.primary }}
                           onPress={() => nav.navigate('Review', { productId: item.productId, productName: item.productName })}
                         >
-                          <Text style={{ fontSize: 12, color: '#6366f1', fontWeight: '700' }}>Review</Text>
+                          <Text style={{ fontSize: 12, color: theme.primary, fontWeight: '700' }}>Review</Text>
                         </TouchableOpacity>
                       )}
                     </View>
                   ))}
                   {o.trackingNumber && (
                     <View style={s.trackingBox}>
-                      <Ionicons name="airplane-outline" size={14} color="#6366f1" />
+                      <Ionicons name="airplane-outline" size={14} color={theme.primary} />
                       <Text style={s.trackingText}>Tracking ID: {o.trackingNumber}</Text>
                     </View>
                   )}
@@ -241,21 +248,21 @@ export default function MyAccountScreen() {
       )}
 
       {activeTab==='3d' && (
-        <Section title="3D Print Orders">
-          {loading ? <ActivityIndicator color="#6366f1" /> : stlOrders.length===0 ? (
+        <Section title="3D Print Orders" theme={theme}>
+          {loading ? <ActivityIndicator color={theme.primary} /> : stlOrders.length===0 ? (
             <Text style={s.empty}>No 3D print orders yet</Text>
           ) : stlOrders.map(o => (
             <TouchableOpacity key={o._id} style={s.orderCard} onPress={() => setExpanded(expanded===o._id?null:o._id)}>
               <View style={s.orderHeader}>
                 <Text style={s.orderId}>#{o._id.slice(-6).toUpperCase()}</Text>
-                <StatusBadge status={o.status} map={STL_STATUSES} />
+                <StatusBadge status={o.status} map={STL_STATUSES} theme={theme} />
               </View>
               <Text style={s.orderInfo}>{o.material} — Qty: {o.quantity}</Text>
               {o.estimatedPrice && <Text style={s.orderTotal}>LKR {o.estimatedPrice?.toFixed(2)}</Text>}
               {expanded===o._id && (
                 <View style={s.orderDetails}>
                   <Text style={s.trackingTitle}>Production Roadmap</Text>
-                  <ProgressStep currentStatus={o.status} steps={stlSteps} map={STL_STATUSES} />
+                  <ProgressStep currentStatus={o.status} steps={stlSteps} map={STL_STATUSES} theme={theme} />
 
                   <View style={s.divider} />
 
@@ -280,7 +287,7 @@ export default function MyAccountScreen() {
       )}
 
       {activeTab==='profile' && (
-        <Section title="Profile">
+        <Section title="Profile" theme={theme}>
           <View style={s.profileCard}>
             <Text style={s.profileLabel}>Name</Text>
             <Text style={s.profileVal}>{user?.fullName}</Text>
@@ -288,6 +295,20 @@ export default function MyAccountScreen() {
             <Text style={s.profileVal}>{user?.email}</Text>
             <Text style={s.profileLabel}>Role</Text>
             <Text style={s.profileVal}>{user?.roles?.join(', ')}</Text>
+            
+            <Text style={s.profileLabel}>Theme</Text>
+            <View style={s.themeToggleBtn}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name={isDarkMode ? 'moon' : 'sunny'} size={18} color={theme.primary} />
+                <Text style={s.themeToggleText}>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</Text>
+              </View>
+              <Switch
+                value={isDarkMode}
+                onValueChange={toggleTheme}
+                trackColor={{ false: theme.border, true: theme.primary + '80' }}
+                thumbColor={isDarkMode ? theme.primary : '#f4f3f4'}
+              />
+            </View>
           </View>
         </Section>
       )}
@@ -303,53 +324,55 @@ export default function MyAccountScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  container:    { flex:1, backgroundColor:'#f9fafb' },
-  header:       { flexDirection:'row', alignItems:'center', backgroundColor:'#1e1b4b', paddingHorizontal:20, paddingTop:16, paddingBottom:32, gap:16 },
-  avatar:       { width:60, height:60, borderRadius:30, backgroundColor:'rgba(248,250,252,0.15)', justifyContent:'center', alignItems:'center' },
-  name:         { fontSize:18, fontWeight:'800', color:'#f8fafc', flexShrink:1 },
-  email:        { fontSize:13, color:'rgba(248,250,252,0.6)', flexShrink:1 },
-  adminTag:     { backgroundColor:'#fbbf24', borderRadius:999, paddingHorizontal:8, paddingVertical:2, marginTop:4, alignSelf:'flex-start', fontSize:11, fontWeight:'700', color:'#78350f' },
-  adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor:'#4338ca', margin:16, marginTop:-16, borderRadius:12, padding:14, justifyContent:'center' },
-  adminBtnText: { color:'#f8fafc', fontWeight:'700', fontSize:15 },
-  tabRow:       { flexDirection:'row', backgroundColor:'#f8fafc', marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4, marginTop:-16, shadowColor: '#1a1a1a', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+const getStyles = (t) => StyleSheet.create({
+  container:    { flex:1, backgroundColor: t.background },
+  header:       { flexDirection:'row', alignItems:'center', backgroundColor: t.headerBg, paddingHorizontal:20, paddingTop:16, paddingBottom:32, gap:16 },
+  avatar:       { width:60, height:60, borderRadius:30, backgroundColor: t.glassBg, justifyContent:'center', alignItems:'center' },
+  name:         { fontSize:18, fontWeight:'800', color: t.text, flexShrink:1 },
+  email:        { fontSize:13, color: t.textSecondary, flexShrink:1 },
+  adminTag:     { backgroundColor: t.warning + '30', borderRadius:999, paddingHorizontal:8, paddingVertical:2, marginTop:4, alignSelf:'flex-start', fontSize:11, fontWeight:'700', color: t.warning },
+  adminBtn:     { flexDirection:'row', alignItems:'center', backgroundColor: t.primary, margin:16, marginTop:-16, borderRadius:12, padding:14, justifyContent:'center' },
+  adminBtnText: { color: t.primaryText, fontWeight:'700', fontSize:15 },
+  tabRow:       { flexDirection:'row', backgroundColor: t.card, marginHorizontal:16, marginBottom:8, borderRadius:12, padding:4, marginTop:-16, shadowColor: '#1a1a1a', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
   tab:          { flex:1, minWidth:0, flexDirection:'row', alignItems:'center', justifyContent:'center', paddingVertical:10, paddingHorizontal:4, borderRadius:10, gap:4 },
-  tabActive:    { backgroundColor:'#f8f7ff' },
-  tabText:      { fontSize:12, color:'#6b7280', fontWeight:'700', flexShrink:1 },
-  tabTextActive:{ color:'#6366f1' },
+  tabActive:    { backgroundColor: t.background },
+  tabText:      { fontSize:12, color: t.icon, fontWeight:'700', flexShrink:1 },
+  tabTextActive:{ color: t.primary },
   section:      { padding:16, paddingTop:8 },
-  sectionTitle: { fontSize:18, fontWeight:'800', color:'#111827', marginBottom:12 },
-  empty:        { color:'#9ca3af', textAlign:'center', padding:24, marginTop: 40 },
-  orderCard:    { backgroundColor:'#f8fafc', borderRadius:20, padding:16, marginBottom:12, shadowColor:'#1a1a1a', shadowOpacity:0.04, shadowRadius:10, elevation:2, borderWidth: 1, borderColor: '#f1f5f9' },
+  sectionTitle: { fontSize:18, fontWeight:'800', color: t.text, marginBottom:12 },
+  empty:        { color: t.icon, textAlign:'center', padding:24, marginTop: 40 },
+  orderCard:    { backgroundColor: t.card, borderRadius:20, padding:16, marginBottom:12, shadowColor:'#1a1a1a', shadowOpacity:0.04, shadowRadius:10, elevation:2, borderWidth: 1, borderColor: t.border },
   orderHeader:  { flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:4 },
-  orderId:      { fontSize:14, fontWeight:'800', color:'#64748b' },
+  orderId:      { fontSize:14, fontWeight:'800', color: t.textSecondary },
   badge:        { borderRadius:999, paddingHorizontal:10, paddingVertical:4 },
   badgeText:    { fontSize:10, fontWeight:'900', textTransform: 'uppercase' },
-  orderTotal:   { fontSize:18, fontWeight:'900', color:'#1e1b4b' },
-  orderInfo:    { fontSize:14, color:'#64748b', fontWeight: '600', marginBottom:2 },
-  orderDate:    { fontSize:12, color:'#94a3b8', marginTop:2 },
+  orderTotal:   { fontSize:18, fontWeight:'900', color: t.text },
+  orderInfo:    { fontSize:14, color: t.textSecondary, fontWeight: '600', marginBottom:2 },
+  orderDate:    { fontSize:12, color: t.icon, marginTop:2 },
   
-  orderDetails: { borderTopWidth:1, borderTopColor:'#f1f5f9', marginTop:15, paddingTop:15 },
-  trackingTitle:{ fontSize:11, fontWeight:'900', color:'#94a3b8', textTransform:'uppercase', marginBottom:15, letterSpacing: 0.5 },
+  orderDetails: { borderTopWidth:1, borderTopColor: t.border, marginTop:15, paddingTop:15 },
+  trackingTitle:{ fontSize:11, fontWeight:'900', color: t.textSecondary, textTransform:'uppercase', marginBottom:15, letterSpacing: 0.5 },
   stepContainer:{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   stepWrapper:  { alignItems: 'center' },
   stepLineWrapper: { flexDirection: 'row', alignItems: 'center', width: '100%' },
-  stepCircle:   { width: 22, height: 22, borderRadius: 11, backgroundColor: '#cbd5e1', justifyContent: 'center', alignItems: 'center', zIndex: 1 },
-  stepDot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: '#94a3b8' },
-  line:         { height: 3, backgroundColor: '#cbd5e1', flex: 1, marginHorizontal: -5 },
-  stepLabel:    { fontSize: 9, color: '#94a3b8', marginTop: 6, textAlign: 'center' },
+  stepCircle:   { width: 22, height: 22, borderRadius: 11, backgroundColor: t.border, justifyContent: 'center', alignItems: 'center', zIndex: 1 },
+  stepDot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: t.icon },
+  line:         { height: 3, backgroundColor: t.border, flex: 1, marginHorizontal: -5 },
+  stepLabel:    { fontSize: 9, color: t.icon, marginTop: 6, textAlign: 'center' },
   
-  divider:      { height: 1, backgroundColor: '#f1f5f9', marginVertical: 15 },
-  orderItem:    { fontSize: 13, color:'#475569', fontWeight: '500', marginBottom: 6 },
-  trackingBox:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f0f9ff', padding: 10, borderRadius: 10, marginTop: 10, borderWidth: 1, borderColor: '#bae6fd' },
-  trackingText: { fontSize: 13, color: '#0369a1', fontWeight: '700' },
-  shipAddr:     { fontSize: 13, color:'#64748b', marginTop: 10, lineHeight: 18 },
+  divider:      { height: 1, backgroundColor: t.border, marginVertical: 15 },
+  orderItem:    { fontSize: 13, color: t.text, fontWeight: '500', marginBottom: 6 },
+  trackingBox:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.glassBg, padding: 10, borderRadius: 10, marginTop: 10, borderWidth: 1, borderColor: t.glassBorder },
+  trackingText: { fontSize: 13, color: t.text, fontWeight: '700' },
+  shipAddr:     { fontSize: 13, color: t.textSecondary, marginTop: 10, lineHeight: 18 },
   
-  confirmBtn:   { backgroundColor:'#22c55e', borderRadius:14, padding:15, alignItems:'center', marginTop:15, shadowColor: '#22c55e', shadowOpacity: 0.2, shadowRadius: 10, elevation: 4 },
-  confirmBtnText:{ color:'#f8fafc', fontWeight:'800', fontSize:15 },
-  profileCard:  { backgroundColor:'#f8fafc', borderRadius:20, padding:20, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
-  profileLabel: { fontSize:11, color:'#94a3b8', fontWeight:'800', textTransform: 'uppercase', marginTop:15, marginBottom:4 },
-  profileVal:   { fontSize:16, color:'#1e1b4b', fontWeight:'700' },
-  logoutBtn:    { flexDirection:'row', alignItems:'center', justifyContent:'center', margin:20, backgroundColor:'#f8fafc', borderWidth:1.5, borderColor:'#fee2e2', borderRadius:16, padding:16 },
-  logoutText:   { color:'#ef4444', fontSize:15, fontWeight:'800' },
+  confirmBtn:   { backgroundColor: t.success, borderRadius:14, padding:15, alignItems:'center', marginTop:15, shadowColor: t.success, shadowOpacity: 0.2, shadowRadius: 10, elevation: 4 },
+  confirmBtnText:{ color: t.primaryText, fontWeight:'800', fontSize:15 },
+  profileCard:  { backgroundColor: t.card, borderRadius:20, padding:20, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  profileLabel: { fontSize:11, color: t.icon, fontWeight:'800', textTransform: 'uppercase', marginTop:15, marginBottom:4 },
+  profileVal:   { fontSize:16, color: t.text, fontWeight:'700' },
+  themeToggleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 15, paddingVertical: 5 },
+  themeToggleText: { fontSize: 15, color: t.primary, fontWeight: '700' },
+  logoutBtn:    { flexDirection:'row', alignItems:'center', justifyContent:'center', margin:20, backgroundColor: t.card, borderWidth:1.5, borderColor: t.error, borderRadius:16, padding:16 },
+  logoutText:   { color: t.error, fontSize:15, fontWeight:'800' },
 });

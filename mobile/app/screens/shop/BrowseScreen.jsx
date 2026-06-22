@@ -4,7 +4,7 @@ import {
   StyleSheet, ActivityIndicator, Image, RefreshControl,
   StatusBar, Platform, Alert, SafeAreaView, Dimensions
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../lib/api';
@@ -12,14 +12,16 @@ import { getImageUri } from '../../lib/config';
 import { CATEGORIES } from '../../data/categories';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48 - 16) / 2; // padding 24 on sides, 16 gap
 
-function ProductCard({ item, onPress, onAddToCart, isAdding }) {
+function ProductCard({ item, onPress, onAddToCart, isAdding, theme }) {
   const [imgErr, setImgErr] = useState(false);
   const imgUri  = getImageUri(item.imagePath);
   const inStock = item.stock === null || item.stock === undefined || item.stock > 0;
+  const s = getStyles(theme);
 
   return (
     <TouchableOpacity activeOpacity={0.9} style={s.card} onPress={onPress}>
@@ -28,7 +30,7 @@ function ProductCard({ item, onPress, onAddToCart, isAdding }) {
           <Image source={{ uri: imgUri }} style={s.img} onError={() => setImgErr(true)} />
         ) : (
           <View style={s.imgPlaceholder}>
-            <Ionicons name="cube-outline" size={32} color="#cbd5e1" />
+            <Ionicons name="cube-outline" size={32} color={theme.icon} />
           </View>
         )}
         {!inStock && (
@@ -73,15 +75,18 @@ function ProductCard({ item, onPress, onAddToCart, isAdding }) {
 
 export default function BrowseScreen() {
   const nav = useNavigation();
+  const route = useRoute();
   const { totalItems, addToCart } = useCart();
   const { user } = useAuth();
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const s = getStyles(theme);
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(route.params?.initialCategory || '');
   const [addingId, setAddingId] = useState(null);
 
   const load = useCallback(async (isRefresh = false) => {
@@ -124,37 +129,42 @@ export default function BrowseScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
       {/* Header */}
       <View style={s.header}>
         <Text style={s.headerTitle}>Explore</Text>
-        <TouchableOpacity style={s.cartBtn} onPress={() => nav.navigate('Cart')}>
-          <Ionicons name="cart-outline" size={24} color="#0f172a" />
-          {totalItems > 0 && (
-            <LinearGradient
-              colors={['#ec4899', '#f43f5e']}
-              style={s.cartBadge}
-            >
-              <Text style={s.cartBadgeText}>{totalItems}</Text>
-            </LinearGradient>
-          )}
-        </TouchableOpacity>
+        <View style={s.headerActions}>
+          <TouchableOpacity style={s.cartBtn} onPress={toggleTheme}>
+            <Ionicons name={isDarkMode ? 'sunny-outline' : 'moon-outline'} size={20} color={theme.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={s.cartBtn} onPress={() => nav.navigate('Cart')}>
+            <Ionicons name="cart-outline" size={24} color={theme.text} />
+            {totalItems > 0 && (
+              <LinearGradient
+                colors={['#ec4899', '#f43f5e']}
+                style={s.cartBadge}
+              >
+                <Text style={s.cartBadgeText}>{totalItems}</Text>
+              </LinearGradient>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search */}
       <View style={s.searchWrap}>
-        <Ionicons name="search" size={20} color="#8b5cf6" />
+        <Ionicons name="search" size={20} color={theme.primary} />
         <TextInput
           style={s.searchInput}
           placeholder="Search products..."
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={theme.icon}
           value={search}
           onChangeText={setSearch}
         />
         {!!search && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={18} color="#cbd5e1" />
+            <Ionicons name="close-circle" size={18} color={theme.icon} />
           </TouchableOpacity>
         )}
       </View>
@@ -221,6 +231,7 @@ export default function BrowseScreen() {
               onPress={() => nav.navigate('ProductDetail', { productId: item._id })}
               onAddToCart={() => handleQuickAdd(item)}
               isAdding={addingId === item._id}
+              theme={theme}
             />
           )}
           ListEmptyComponent={
@@ -234,47 +245,48 @@ export default function BrowseScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+const getStyles = (t) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: t.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? 16 : 8, paddingBottom: 16 },
-  headerTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 },
-  cartBtn: { position: 'relative', width: 44, height: 44, borderRadius: 22, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
-  cartBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#ffffff' },
-  cartBadgeText: { color: '#ffffff', fontSize: 10, fontWeight: '800' },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: t.text, letterSpacing: -0.5 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cartBtn: { position: 'relative', width: 44, height: 44, borderRadius: 22, backgroundColor: t.card, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: t.border },
+  cartBadge: { position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: t.card },
+  cartBadgeText: { color: t.primaryText, fontSize: 10, fontWeight: '800' },
 
-  searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', marginHorizontal: 24, borderRadius: 16, paddingHorizontal: 16, height: 50, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, marginBottom: 16 },
-  searchInput: { flex: 1, marginLeft: 12, fontSize: 15, color: '#0f172a' },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.card, marginHorizontal: 24, borderRadius: 16, paddingHorizontal: 16, height: 50, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, marginBottom: 16, borderWidth: 1, borderColor: t.border },
+  searchInput: { flex: 1, marginLeft: 12, fontSize: 15, color: t.text },
 
   catContainer: { height: 44, marginBottom: 16 },
   catRow: { paddingHorizontal: 24, gap: 8 },
-  catPill: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 99, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#f1f5f9' },
-  catPillActiveShadow: { shadowColor: '#d946ef', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  catPill: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 99, backgroundColor: t.card, borderWidth: 1, borderColor: t.border },
+  catPillActiveShadow: { shadowColor: t.primary, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   catPillActiveBg: { borderWidth: 0, paddingHorizontal: 19, paddingVertical: 11 },
-  catPillText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
-  catPillTextActive: { color: '#ffffff', fontWeight: '700' },
+  catPillText: { fontSize: 13, fontWeight: '600', color: t.textSecondary },
+  catPillTextActive: { color: t.primaryText, fontWeight: '700' },
 
   listContent: { paddingHorizontal: 24, paddingBottom: 40 },
   listRow: { justifyContent: 'space-between', marginBottom: 16 },
 
   /* Card */
-  card: { width: CARD_WIDTH, backgroundColor: '#ffffff', borderRadius: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, overflow: 'hidden' },
-  imgWrap: { width: '100%', height: CARD_WIDTH, backgroundColor: '#f8fafc' },
+  card: { width: CARD_WIDTH, backgroundColor: t.card, borderRadius: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2, overflow: 'hidden', borderWidth: 1, borderColor: t.border },
+  imgWrap: { width: '100%', height: CARD_WIDTH, backgroundColor: t.background },
   img: { width: '100%', height: '100%', resizeMode: 'cover' },
   imgPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  outOverlay: { position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.7)', justifyContent: 'center', alignItems: 'center' },
-  outText: { color: '#0f172a', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  outOverlay: { position: 'absolute', inset: 0, backgroundColor: t.glassBg, justifyContent: 'center', alignItems: 'center' },
+  outText: { color: t.text, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   
   cardBody: { padding: 16 },
-  productName: { fontSize: 14, fontWeight: '700', color: '#0f172a', marginBottom: 4 },
-  priceLabel: { fontSize: 13, color: '#8b5cf6', fontWeight: '700', marginBottom: 16 },
+  productName: { fontSize: 14, fontWeight: '700', color: t.text, marginBottom: 4 },
+  priceLabel: { fontSize: 13, color: t.primary, fontWeight: '700', marginBottom: 16 },
   
   addBtn: { width: '100%', paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
-  addBtnDisabled: { backgroundColor: '#e2e8f0' },
-  addBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  addBtnDisabled: { backgroundColor: t.border },
+  addBtnText: { color: t.primaryText, fontSize: 13, fontWeight: '700' },
 
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60 },
-  errText: { color: '#ef4444', marginBottom: 16 },
-  retryBtn: { backgroundColor: '#8b5cf6', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
-  retryText: { color: '#ffffff', fontWeight: '600' },
-  emptyText: { color: '#94a3b8', fontSize: 15 },
+  errText: { color: t.error, marginBottom: 16 },
+  retryBtn: { backgroundColor: t.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
+  retryText: { color: t.primaryText, fontWeight: '600' },
+  emptyText: { color: t.icon, fontSize: 15 },
 });

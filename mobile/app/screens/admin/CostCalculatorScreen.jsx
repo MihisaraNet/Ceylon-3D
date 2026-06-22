@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * CostCalculatorScreen.jsx — Admin Tool for Price Estimation
@@ -15,17 +16,20 @@ import api from '../../lib/api';
  */
 
 /* ── Inline Helper: Field Component ──────────────────────── */
-const Field = ({ label, icon, children }) => (
+const Field = ({ label, icon, children, s, theme }) => (
   <View style={s.fieldGroup}>
     <Text style={s.label}>{label}</Text>
     <View style={s.inputRow}>
-      <Ionicons name={icon} size={18} color="#6366f1" style={s.fieldIcon} />
+      <Ionicons name={icon} size={18} color={theme.primary} style={s.fieldIcon} />
       {children}
     </View>
   </View>
 );
 
 export default function CostCalculatorScreen() {
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
+
   const [form, setForm] = useState({
     printTimeHours: '0',
     printTimeMinutes: '0',
@@ -78,7 +82,7 @@ export default function CostCalculatorScreen() {
         <Text style={s.resultLabel}>{label}</Text>
         {info && (
           <TouchableOpacity onPress={() => Alert.alert(label, info)}>
-            <Ionicons name="information-circle-outline" size={14} color="#9ca3af" />
+            <Ionicons name="information-circle-outline" size={14} color={theme.icon} />
           </TouchableOpacity>
         )}
       </View>
@@ -90,11 +94,11 @@ export default function CostCalculatorScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <View style={s.header}>
         <Text style={s.title}>Cost Calculator</Text>
         <TouchableOpacity onPress={resetForm} style={s.resetBtn}>
-          <Ionicons name="refresh-outline" size={16} color="#6366f1" />
+          <Ionicons name="refresh-outline" size={16} color={theme.primary} />
           <Text style={s.resetText}>Reset</Text>
         </TouchableOpacity>
       </View>
@@ -108,36 +112,39 @@ export default function CostCalculatorScreen() {
         <View style={s.card}>
           <View style={s.timeRow}>
             <View style={{ flex: 1 }}>
-              <Field label="Hours" icon="time-outline">
+              <Field label="Hours" icon="time-outline" s={s} theme={theme}>
                 <TextInput
                   style={s.input}
                   value={form.printTimeHours}
                   onChangeText={v => setForm(p => ({ ...p, printTimeHours: v }))}
                   keyboardType="numeric"
                   placeholder="0"
+                  placeholderTextColor={theme.icon}
                 />
               </Field>
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Minutes" icon="timer-outline">
+              <Field label="Minutes" icon="timer-outline" s={s} theme={theme}>
                 <TextInput
                   style={s.input}
                   value={form.printTimeMinutes}
                   onChangeText={v => setForm(p => ({ ...p, printTimeMinutes: v }))}
                   keyboardType="numeric"
                   placeholder="0"
+                  placeholderTextColor={theme.icon}
                 />
               </Field>
             </View>
           </View>
 
-          <Field label="Weight (grams)" icon="scale-outline">
+          <Field label="Weight (grams)" icon="scale-outline" s={s} theme={theme}>
             <TextInput
               style={s.input}
               value={form.weightGrams}
               onChangeText={v => setForm(p => ({ ...p, weightGrams: v }))}
               keyboardType="numeric"
               placeholder="100"
+              placeholderTextColor={theme.icon}
             />
           </Field>
 
@@ -161,7 +168,7 @@ export default function CostCalculatorScreen() {
             activeOpacity={0.7}
           >
             <View style={[s.checkbox, form.supportStructures && s.checkboxActive]}>
-              {form.supportStructures && <Ionicons name="checkmark" size={14} color="#f8fafc" />}
+              {form.supportStructures && <Ionicons name="checkmark" size={14} color={theme.primaryText} />}
             </View>
             <Text style={s.supportLabel}>Include Support Structures (+LKR 100)</Text>
           </TouchableOpacity>
@@ -173,10 +180,10 @@ export default function CostCalculatorScreen() {
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#f8fafc" />
+              <ActivityIndicator color={theme.primaryText} />
             ) : (
               <>
-                <Ionicons name="calculator-outline" size={20} color="#f8fafc" style={{ marginRight: 8 }} />
+                <Ionicons name="calculator-outline" size={20} color={theme.primaryText} style={{ marginRight: 8 }} />
                 <Text style={s.calcBtnText}>Calculate Breakdown</Text>
               </>
             )}
@@ -187,7 +194,7 @@ export default function CostCalculatorScreen() {
         {result && (
           <View style={s.resultCard}>
             <View style={s.resultHeader}>
-              <Ionicons name="receipt-outline" size={20} color="#1e1b4b" />
+              <Ionicons name="receipt-outline" size={20} color={theme.text} />
               <Text style={s.resultTitle}>Price Breakdown</Text>
             </View>
             
@@ -200,7 +207,7 @@ export default function CostCalculatorScreen() {
               
               <View style={s.divider} />
               
-              <ResultRow label="Total Net Cost" val={result.totalCost} bold color="#1e1b4b" info="Total internal cost to produce the print." />
+              <ResultRow label="Total Net Cost" val={result.totalCost} bold color={theme.text} info="Total internal cost to produce the print." />
             </View>
 
             <View style={s.sellingBox}>
@@ -217,48 +224,48 @@ export default function CostCalculatorScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8f7ff' },
+const getStyles = (t) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: t.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 15, paddingBottom: 10 },
-  title: { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  resetBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eef2ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: '#c7d2fe' },
-  resetText: { color: '#4f46e5', fontSize: 13, fontWeight: '800' },
+  title: { fontSize: 28, fontWeight: '900', color: t.text, letterSpacing: -0.5 },
+  resetBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: t.glassBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: t.glassBorder },
+  resetText: { color: t.primary, fontSize: 13, fontWeight: '800' },
   container: { flex: 1 },
   
-  card: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 20, shadowColor: '#1a1a1a', shadowOpacity: 0.05, shadowRadius: 15, elevation: 5, borderWidth: 1, borderColor: 'rgba(15,23,42,0.03)' },
+  card: { backgroundColor: t.card, borderRadius: 24, padding: 20, shadowColor: t.text, shadowOpacity: 0.05, shadowRadius: 15, elevation: 5, borderWidth: 1, borderColor: t.border },
   timeRow: { flexDirection: 'row', gap: 15 },
   fieldGroup: { marginBottom: 18 },
-  label: { fontSize: 13, fontWeight: '800', color: '#4b5563', marginBottom: 8, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8f7ff', borderRadius: 14, borderWidth: 1.5, borderColor: '#e5e7eb', overflow: 'hidden' },
+  label: { fontSize: 13, fontWeight: '800', color: t.textSecondary, marginBottom: 8, marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.background, borderRadius: 14, borderWidth: 1.5, borderColor: t.border, overflow: 'hidden' },
   fieldIcon: { paddingHorizontal: 12 },
-  input: { flex: 1, height: 50, fontSize: 16, color: '#1e1b4b', fontWeight: '600' },
+  input: { flex: 1, height: 50, fontSize: 16, color: t.text, fontWeight: '600' },
   
   matRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  matChip: { flex: 1, backgroundColor: '#f3f4f6', borderRadius: 12, paddingVertical: 12, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
-  matChipActive: { backgroundColor: '#eef2ff', borderColor: '#6366f1' },
-  matChipText: { fontSize: 14, fontWeight: '700', color: '#6b7280' },
-  matChipTextActive: { color: '#6366f1' },
+  matChip: { flex: 1, backgroundColor: t.background, borderRadius: 12, paddingVertical: 12, alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
+  matChipActive: { backgroundColor: t.primary + '1A', borderColor: t.primary },
+  matChipText: { fontSize: 14, fontWeight: '700', color: t.textSecondary },
+  matChipTextActive: { color: t.primary },
   
-  supportRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 10, backgroundColor: '#f8f7ff', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#e5e7eb' },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#6366f1', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
-  checkboxActive: { backgroundColor: '#6366f1' },
-  supportLabel: { fontSize: 14, color: '#1e1b4b', fontWeight: '700' },
+  supportRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 10, backgroundColor: t.background, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: t.border },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: t.primary, justifyContent: 'center', alignItems: 'center', backgroundColor: t.card },
+  checkboxActive: { backgroundColor: t.primary },
+  supportLabel: { fontSize: 14, color: t.text, fontWeight: '700' },
   
-  calcBtn: { flexDirection: 'row', backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
-  calcBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
+  calcBtn: { flexDirection: 'row', backgroundColor: t.primary, borderRadius: 16, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', shadowColor: t.primary, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
+  calcBtnText: { color: t.primaryText, fontSize: 16, fontWeight: '900' },
   
-  resultCard: { marginTop: 20, backgroundColor: '#f8fafc', borderRadius: 24, overflow: 'hidden', shadowColor: '#1a1a1a', shadowOpacity: 0.08, shadowRadius: 20, elevation: 10, borderWidth: 1, borderColor: 'rgba(15,23,42,0.03)' },
-  resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 20, backgroundColor: '#f8f7ff', borderBottomWidth: 1, borderBottomColor: '#f1f1f1' },
-  resultTitle: { fontSize: 18, fontWeight: '900', color: '#1e1b4b' },
+  resultCard: { marginTop: 20, backgroundColor: t.card, borderRadius: 24, overflow: 'hidden', shadowColor: t.text, shadowOpacity: 0.08, shadowRadius: 20, elevation: 10, borderWidth: 1, borderColor: t.border },
+  resultHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 20, backgroundColor: t.background, borderBottomWidth: 1, borderBottomColor: t.border },
+  resultTitle: { fontSize: 18, fontWeight: '900', color: t.text },
   breakdownBox: { padding: 20 },
   resultRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  resultLabel: { fontSize: 14, color: '#6b7280', fontWeight: '500' },
-  resultVal: { fontSize: 15, color: '#374151', fontWeight: '700' },
+  resultLabel: { fontSize: 14, color: t.textSecondary, fontWeight: '500' },
+  resultVal: { fontSize: 15, color: t.text, fontWeight: '700' },
   resultValBold: { fontSize: 17, fontWeight: '900' },
-  divider: { height: 1, backgroundColor: '#f1f1f1', marginVertical: 12 },
+  divider: { height: 1, backgroundColor: t.border, marginVertical: 12 },
   
-  sellingBox: { backgroundColor: '#1e1b4b', padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sellingLabel: { fontSize: 14, color: '#a5b4fc', fontWeight: '800' },
-  sellingSub: { fontSize: 11, color: 'rgba(248,250,252,0.5)', marginTop: 2 },
-  sellingVal: { fontSize: 22, color: '#f8fafc', fontWeight: '900' },
+  sellingBox: { backgroundColor: t.text, padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sellingLabel: { fontSize: 14, color: t.background, fontWeight: '800' },
+  sellingSub: { fontSize: 11, color: t.icon, marginTop: 2 },
+  sellingVal: { fontSize: 22, color: t.background, fontWeight: '900' },
 });

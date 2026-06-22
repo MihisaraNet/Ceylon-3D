@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
 import { getImageUri } from '../../lib/config';
 import { useCart } from '../../context/CartContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { CATEGORIES } from '../../data/categories';
 
@@ -44,6 +45,8 @@ export default function ProductDetailScreen({ route }) {
   const { productId } = route.params;
   const { addToCart, totalItems } = useCart();
   const nav = useNavigation();
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -119,17 +122,17 @@ export default function ProductDetailScreen({ route }) {
 
   /* ── Loading & not-found states ──────────────────────── */
   if (loading) return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f7ff', justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator size="large" color="#6366f1" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color={theme.primary} />
     </SafeAreaView>
   );
 
   if (!product) return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f7ff', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-      <Ionicons name="alert-circle-outline" size={60} color="#d1d5db" />
-      <Text style={{ color: '#9ca3af', fontSize: 16, fontWeight: '700' }}>Product not found</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+      <Ionicons name="alert-circle-outline" size={60} color={theme.icon} />
+      <Text style={{ color: theme.textSecondary, fontSize: 16, fontWeight: '700' }}>Product not found</Text>
       <TouchableOpacity onPress={() => nav.goBack()} style={{ padding: 10 }}>
-        <Text style={{ color: '#6366f1', fontWeight: '700' }}>← Go back</Text>
+        <Text style={{ color: theme.primary, fontWeight: '700' }}>← Go back</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -143,7 +146,7 @@ export default function ProductDetailScreen({ route }) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 
@@ -184,11 +187,11 @@ export default function ProductDetailScreen({ route }) {
             <Ionicons
               name="cube-outline"
               size={13}
-              color={!inStock ? '#ef4444' : lowStock ? '#d97706' : '#16a34a'}
+              color={!inStock ? theme.error : lowStock ? theme.warning : theme.success}
             />
             <Text style={[
               s.stockText,
-              !inStock ? { color: '#ef4444' } : lowStock ? { color: '#d97706' } : { color: '#16a34a' }
+              !inStock ? { color: theme.error } : lowStock ? { color: theme.warning } : { color: theme.success }
             ]}>
               {!inStock
                 ? 'Out of Stock'
@@ -248,7 +251,7 @@ export default function ProductDetailScreen({ route }) {
             </View>
 
             {revLoading ? (
-              <ActivityIndicator color="#6366f1" style={{ marginVertical: 12 }} />
+              <ActivityIndicator color={theme.primary} style={{ marginVertical: 12 }} />
             ) : reviews.length === 0 ? (
               <View style={s.noRevWrap}>
                 <Ionicons name="chatbubble-outline" size={32} color="#d1d5db" />
@@ -269,7 +272,7 @@ export default function ProductDetailScreen({ route }) {
                             key={n}
                             name={n <= rv.rating ? 'star' : 'star-outline'}
                             size={12}
-                            color={n <= rv.rating ? '#f59e0b' : '#d1d5db'}
+                            color={n <= rv.rating ? '#f59e0b' : theme.icon}
                           />
                         ))}
                       </View>
@@ -292,7 +295,7 @@ export default function ProductDetailScreen({ route }) {
         {/* Cart shortcut badge */}
         {totalItems > 0 && (
           <TouchableOpacity style={s.viewCartBtn} onPress={() => nav.navigate('Cart')} activeOpacity={0.8}>
-            <Ionicons name="cart" size={22} color="#6366f1" />
+            <Ionicons name="cart" size={22} color={theme.primary} />
             <View style={s.cartBadge}>
               <Text style={s.cartBadgeText}>{totalItems}</Text>
             </View>
@@ -308,16 +311,16 @@ export default function ProductDetailScreen({ route }) {
             </View>
           )}
           <TouchableOpacity
-            style={[s.addBtn, { backgroundColor: inStock ? color : '#d1d5db' }, !inStock && { shadowOpacity: 0 }]}
+            style={[s.addBtn, { backgroundColor: inStock ? color : theme.border }, !inStock && { shadowOpacity: 0 }]}
             onPress={handleAdd}
             disabled={adding || !inStock}
             activeOpacity={0.88}
           >
             {adding ? (
-              <ActivityIndicator color="#f8fafc" />
+              <ActivityIndicator color={theme.primaryText} />
             ) : (
               <>
-                <Ionicons name={inStock ? 'cart-outline' : 'ban-outline'} size={20} color="#f8fafc" />
+                <Ionicons name={inStock ? 'cart-outline' : 'ban-outline'} size={20} color={theme.primaryText} />
                 <Text style={s.addBtnText}>
                   {!inStock ? 'Out of Stock' : `Add ${qty > 1 ? qty + ' × ' : ''}to Cart`}
                 </Text>
@@ -330,69 +333,69 @@ export default function ProductDetailScreen({ route }) {
   );
 }
 
-const s = StyleSheet.create({
-  safe:           { flex: 1, backgroundColor: '#f8f7ff' },
+const getStyles = (t) => StyleSheet.create({
+  safe:           { flex: 1, backgroundColor: t.background },
 
   /* Hero */
   heroWrap:       { position: 'relative' },
   heroImg:        { width: '100%', aspectRatio: 1.1 },
   heroPlaceholder:{ width: '100%', aspectRatio: 1.1, justifyContent: 'center', alignItems: 'center' },
   soldOverlay:    { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.45)', justifyContent: 'center', alignItems: 'center' },
-  soldText:       { color: '#f8fafc', fontSize: 22, fontWeight: '900', letterSpacing: 1 },
+  soldText:       { color: t.primaryText, fontSize: 22, fontWeight: '900', letterSpacing: 1 },
 
   /* Body */
   body:           { padding: 20, gap: 12 },
   catPill:        { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
   catPillText:    { fontSize: 13, fontWeight: '700' },
-  productName:    { fontSize: 26, fontWeight: '900', color: '#1e1b4b', lineHeight: 32 },
+  productName:    { fontSize: 26, fontWeight: '900', color: t.text, lineHeight: 32 },
   price:          { fontSize: 32, fontWeight: '900' },
 
   /* Stock */
   stockBadge:     { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
-  stockIn:        { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
-  stockLow:       { backgroundColor: '#fffbeb', borderColor: '#fcd34d' },
-  stockOut:       { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
+  stockIn:        { backgroundColor: t.success + '10', borderColor: t.success + '40' },
+  stockLow:       { backgroundColor: t.accent + '10', borderColor: t.accent + '40' },
+  stockOut:       { backgroundColor: t.error + '10', borderColor: t.error + '40' },
   stockText:      { fontSize: 13, fontWeight: '700' },
 
   /* Desc */
-  descBox:        { backgroundColor: '#f8fafc', borderRadius: 16, padding: 14 },
-  descTitle:      { fontSize: 13, fontWeight: '800', color: '#6b7280', marginBottom: 6 },
-  descText:       { fontSize: 15, color: '#374151', lineHeight: 24 },
+  descBox:        { backgroundColor: t.card, borderRadius: 16, padding: 14 },
+  descTitle:      { fontSize: 13, fontWeight: '800', color: t.textSecondary, marginBottom: 6 },
+  descText:       { fontSize: 15, color: t.text, lineHeight: 24 },
 
   /* Qty */
   qtySection:     { gap: 10 },
-  qtyLabel:       { fontSize: 15, fontWeight: '800', color: '#1e1b4b' },
+  qtyLabel:       { fontSize: 15, fontWeight: '800', color: t.text },
   qtyControls:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  qtyBtn:         { width: 38, height: 38, borderRadius: 10, borderWidth: 2, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
-  qtyBtnDisabled: { borderColor: '#e5e7eb', backgroundColor: '#f9fafb' },
-  qtyNum:         { fontSize: 22, fontWeight: '900', color: '#1e1b4b', minWidth: 32, textAlign: 'center' },
+  qtyBtn:         { width: 38, height: 38, borderRadius: 10, borderWidth: 2, justifyContent: 'center', alignItems: 'center', backgroundColor: t.card },
+  qtyBtnDisabled: { borderColor: t.border, backgroundColor: t.background },
+  qtyNum:         { fontSize: 22, fontWeight: '900', color: t.text, minWidth: 32, textAlign: 'center' },
   totalPill:      { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, marginLeft: 4 },
   totalPillText:  { fontSize: 14, fontWeight: '800' },
 
   /* Bottom bar */
-  bottomBar:      { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#f8fafc', flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingBottom: Platform.OS === 'ios' ? 28 : 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6', shadowColor: '#1a1a1a', shadowOpacity: 0.08, shadowRadius: 10, elevation: 8 },
-  viewCartBtn:    { backgroundColor: '#eef2ff', borderRadius: 14, padding: 14, borderWidth: 1.5, borderColor: '#c7d2fe', position: 'relative' },
-  cartBadge:      { position: 'absolute', top: -5, right: -5, backgroundColor: '#ef4444', borderRadius: 999, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#f8fafc' },
-  cartBadgeText:  { color: '#f8fafc', fontSize: 10, fontWeight: '900' },
-  errBanner:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#fef2f2', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
-  errText:        { color: '#ef4444', fontSize: 12, fontWeight: '700', flex: 1 },
-  addBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, paddingVertical: 15, shadowColor: '#6366f1', shadowOpacity: 0.35, shadowRadius: 12, elevation: 6 },
-  addBtnText:     { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
+  bottomBar:      { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: t.card, flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 16, paddingBottom: Platform.OS === 'ios' ? 28 : 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: t.border, shadowColor: '#1a1a1a', shadowOpacity: 0.08, shadowRadius: 10, elevation: 8 },
+  viewCartBtn:    { backgroundColor: t.glassBg, borderRadius: 14, padding: 14, borderWidth: 1.5, borderColor: t.glassBorder, position: 'relative' },
+  cartBadge:      { position: 'absolute', top: -5, right: -5, backgroundColor: t.error, borderRadius: 999, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: t.card },
+  cartBadgeText:  { color: t.primaryText, fontSize: 10, fontWeight: '900' },
+  errBanner:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: t.error + '20', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  errText:        { color: t.error, fontSize: 12, fontWeight: '700', flex: 1 },
+  addBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, paddingVertical: 15, shadowColor: t.primary, shadowOpacity: 0.35, shadowRadius: 12, elevation: 6 },
+  addBtnText:     { color: t.primaryText, fontSize: 16, fontWeight: '900' },
 
   /* Reviews */
   revSection:     { marginTop: 10, gap: 16 },
   revHeader:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  revTitle:       { fontSize: 18, fontWeight: '900', color: '#1e1b4b' },
-  revSummaryPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#fffbeb', borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: '#fde68a' },
-  revSummaryText: { fontSize: 13, fontWeight: '800', color: '#92400e' },
+  revTitle:       { fontSize: 18, fontWeight: '900', color: t.text },
+  revSummaryPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: t.glassBg, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: t.glassBorder },
+  revSummaryText: { fontSize: 13, fontWeight: '800', color: t.text },
   noRevWrap:      { alignItems: 'center', paddingVertical: 30, gap: 8 },
-  noRevText:      { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
-  revCard:        { backgroundColor: '#f8fafc', borderRadius: 16, padding: 14, gap: 8, shadowColor: '#1a1a1a', shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
+  noRevText:      { color: t.icon, fontSize: 14, fontWeight: '600' },
+  revCard:        { backgroundColor: t.card, borderRadius: 16, padding: 14, gap: 8, shadowColor: '#1a1a1a', shadowOpacity: 0.03, shadowRadius: 8, elevation: 1 },
   revCardTop:     { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  revAvatar:      { width: 32, height: 32, borderRadius: 16, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#c7d2fe' },
-  revAvatarText:  { color: '#6366f1', fontSize: 14, fontWeight: '800' },
-  revName:        { fontSize: 14, fontWeight: '800', color: '#1e1b4b' },
+  revAvatar:      { width: 32, height: 32, borderRadius: 16, backgroundColor: t.glassBg, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: t.glassBorder },
+  revAvatarText:  { color: t.primary, fontSize: 14, fontWeight: '800' },
+  revName:        { fontSize: 14, fontWeight: '800', color: t.text },
   starsRow:       { flexDirection: 'row', gap: 1, marginTop: 1 },
-  revDate:        { fontSize: 11, color: '#9ca3af', fontWeight: '600' },
-  revComment:     { fontSize: 14, color: '#4b5563', lineHeight: 20 },
+  revDate:        { fontSize: 11, color: t.textSecondary, fontWeight: '600' },
+  revComment:     { fontSize: 14, color: t.text, lineHeight: 20 },
 });

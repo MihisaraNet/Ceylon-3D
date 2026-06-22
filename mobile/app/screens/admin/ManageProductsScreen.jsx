@@ -23,19 +23,20 @@ import api from '../../lib/api';
 import { getImageUri, API_BASE_URL } from '../../lib/config';
 import { CATEGORIES } from '../../data/categories';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../context/ThemeContext';
 
 const EMPTY_FORM = { name: '', description: '', price: '', stock: '', category: 'custom', imageUri: null, imageMime: null, imageName: null };
 const EMPTY_ERRS = { name: '', price: '', stock: '' };
 
 /* ── Inline Helpers ── */
-const FieldErr = ({ msg }) => msg ? (
+const FieldErr = ({ msg, s, theme }) => msg ? (
   <View style={s.errRow}>
-    <Ionicons name="alert-circle-outline" size={12} color="#ef4444" />
+    <Ionicons name="alert-circle-outline" size={12} color={theme.error} />
     <Text style={s.errText}>{msg}</Text>
   </View>
 ) : null;
 
-const StockBadge = ({ count }) => {
+const StockBadge = ({ count, s }) => {
   const isLow = count > 0 && count <= 5;
   const isOut = count <= 0;
   
@@ -52,6 +53,9 @@ const StockBadge = ({ count }) => {
 };
 
 export default function ManageProductsScreen() {
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -236,7 +240,7 @@ export default function ManageProductsScreen() {
             <Image source={{ uri: imgUri }} style={s.thumb} />
           ) : (
             <View style={[s.thumb, s.thumbPH]}>
-              <Ionicons name="cube-outline" size={24} color="#9ca3af" />
+              <Ionicons name="cube-outline" size={24} color={theme.icon} />
             </View>
           )}
           <View style={s.cardInfo}>
@@ -249,14 +253,14 @@ export default function ManageProductsScreen() {
         </View>
 
         <View style={s.cardBottom}>
-          <StockBadge count={item.stock} />
+          <StockBadge count={item.stock} s={s} />
           <View style={s.actions}>
             {/* Action buttons for Edit and Delete */}
             <TouchableOpacity onPress={() => openEdit(item)} style={s.iconBtn} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="pencil-sharp" size={18} color="#6366f1" />
+              <Ionicons name="pencil-sharp" size={18} color={theme.primary} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(item._id)} style={[s.iconBtn, { backgroundColor: '#fef2f2' }]} activeOpacity={0.6} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+            <TouchableOpacity onPress={() => handleDelete(item._id)} style={[s.iconBtn, { backgroundColor: theme.error + '1A' }]} activeOpacity={0.6} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="trash-outline" size={18} color={theme.error} />
             </TouchableOpacity>
           </View>
         </View>
@@ -266,7 +270,7 @@ export default function ManageProductsScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <View style={s.header}>
         <View>
           <Text style={s.title}>Products</Text>
@@ -275,13 +279,13 @@ export default function ManageProductsScreen() {
           </View>
         </View>
         <TouchableOpacity style={s.addBtn} onPress={openAdd} activeOpacity={0.85}>
-          <Ionicons name="add" size={24} color="#f8fafc" />
+          <Ionicons name="add" size={24} color={theme.primaryText} />
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={s.centred}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={theme.primary} />
           <Text style={s.loadText}>Loading catalogue…</Text>
         </View>
       ) : (
@@ -293,7 +297,7 @@ export default function ManageProductsScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={s.emptyBox}>
-              <Ionicons name="cube-outline" size={64} color="#e5e7eb" />
+              <Ionicons name="cube-outline" size={64} color={theme.border} />
               <Text style={s.emptyText}>No products found</Text>
             </View>
           }
@@ -306,7 +310,7 @@ export default function ManageProductsScreen() {
           <View style={s.modalHeader}>
             <Text style={s.modalTitle}>{editing ? 'Edit Product' : 'Add New Product'}</Text>
             <TouchableOpacity onPress={() => setModal(false)} style={s.closeBtn}>
-              <Ionicons name="close" size={24} color="#374151" />
+              <Ionicons name="close" size={24} color={theme.text} />
             </TouchableOpacity>
           </View>
 
@@ -318,7 +322,7 @@ export default function ManageProductsScreen() {
                 <Image source={{ uri: getImageUri(editing.imagePath) }} style={s.imgPreview} />
               ) : (
                 <View style={s.imgPHLarge}>
-                  <Ionicons name="cloud-upload-outline" size={40} color="#6366f1" />
+                  <Ionicons name="cloud-upload-outline" size={40} color={theme.primary} />
                   <Text style={s.imgPHText}>Upload Product Image</Text>
                 </View>
               )}
@@ -328,7 +332,7 @@ export default function ManageProductsScreen() {
                 style={s.imgRemoveBtn} 
                 onPress={() => setForm(f => ({ ...f, imageUri: null, imageMime: null, imageName: null }))}
               >
-                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                <Ionicons name="trash-outline" size={16} color={theme.error} />
                 <Text style={s.imgRemoveText}>Remove Selected</Text>
               </TouchableOpacity>
             )}
@@ -341,9 +345,9 @@ export default function ManageProductsScreen() {
               value={form.name}
               onChangeText={v => setForm(p => ({ ...p, name: v }))}
               placeholder="e.g. High Detail Resin Statuette"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={theme.icon}
             />
-            <FieldErr msg={fErr.name} />
+            <FieldErr msg={fErr.name} s={s} theme={theme} />
 
             <View style={s.formRow}>
               <View style={{ flex: 1 }}>
@@ -354,8 +358,9 @@ export default function ManageProductsScreen() {
                   onChangeText={v => setForm(p => ({ ...p, price: v }))}
                   keyboardType="decimal-pad"
                   placeholder="0.00"
+                  placeholderTextColor={theme.icon}
                 />
-                <FieldErr msg={fErr.price} />
+                <FieldErr msg={fErr.price} s={s} theme={theme} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.label}>Stock</Text>
@@ -365,8 +370,9 @@ export default function ManageProductsScreen() {
                   onChangeText={v => setForm(p => ({ ...p, stock: v }))}
                   keyboardType="numeric"
                   placeholder="0"
+                  placeholderTextColor={theme.icon}
                 />
-                <FieldErr msg={fErr.stock} />
+                <FieldErr msg={fErr.stock} s={s} theme={theme} />
               </View>
             </View>
 
@@ -378,7 +384,7 @@ export default function ManageProductsScreen() {
                   style={[s.catChip, form.category === c.id && s.catChipActive]}
                   onPress={() => setForm(f => ({ ...f, category: c.id }))}
                 >
-                  <Text style={[s.catChipText, form.category === c.id && { color: '#f8fafc' }]}>{c.name}</Text>
+                  <Text style={[s.catChipText, form.category === c.id && { color: theme.primaryText }]}>{c.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -391,10 +397,11 @@ export default function ManageProductsScreen() {
               multiline
               numberOfLines={4}
               placeholder="Tell customers about this product..."
+              placeholderTextColor={theme.icon}
             />
 
             <TouchableOpacity style={s.saveBtn} onPress={handleSave} disabled={saving}>
-              {saving ? <ActivityIndicator color="#f8fafc" /> : <Text style={s.saveBtnText}>{editing ? 'Update Product' : 'Create Product'}</Text>}
+              {saving ? <ActivityIndicator color={theme.primaryText} /> : <Text style={s.saveBtnText}>{editing ? 'Update Product' : 'Create Product'}</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -403,65 +410,65 @@ export default function ManageProductsScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8f7ff' },
+const getStyles = (t) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: t.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 15, paddingBottom: 10 },
-  title: { fontSize: 28, fontWeight: '900', color: '#1e1b4b', letterSpacing: -0.5 },
-  countBox: { backgroundColor: '#eef2ff', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 2 },
-  countText: { fontSize: 11, fontWeight: '800', color: '#6366f1', textTransform: 'uppercase' },
-  addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center', shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 8, elevation: 4 },
+  title: { fontSize: 28, fontWeight: '900', color: t.text, letterSpacing: -0.5 },
+  countBox: { backgroundColor: t.primary + '1A', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 2 },
+  countText: { fontSize: 11, fontWeight: '800', color: t.primary, textTransform: 'uppercase' },
+  addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: t.primary, justifyContent: 'center', alignItems: 'center', shadowColor: t.primary, shadowOpacity: 0.4, shadowRadius: 8, elevation: 4 },
   
   centred: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10 },
-  loadText: { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
+  loadText: { color: t.textSecondary, fontSize: 14, fontWeight: '600' },
   
-  card: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 12, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(15,23,42,0.02)' },
+  card: { backgroundColor: t.card, borderRadius: 20, padding: 12, shadowColor: t.text, shadowOpacity: 0.04, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: t.border },
   cardTop: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   thumb: { width: 80, height: 80, borderRadius: 12 },
-  thumbPH: { backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center' },
+  thumbPH: { backgroundColor: t.background, justifyContent: 'center', alignItems: 'center' },
   cardInfo: { flex: 1, justifyContent: 'center', gap: 2 },
-  catBadge: { backgroundColor: '#f1f5f9', alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 2 },
-  catBadgeText: { fontSize: 9, fontWeight: '900', color: '#64748b' },
-  rowName: { fontSize: 16, fontWeight: '800', color: '#1e1b4b' },
-  rowPrice: { fontSize: 14, fontWeight: '700', color: '#6366f1' },
+  catBadge: { backgroundColor: t.background, alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 2 },
+  catBadgeText: { fontSize: 9, fontWeight: '900', color: t.textSecondary },
+  rowName: { fontSize: 16, fontWeight: '800', color: t.text },
+  rowPrice: { fontSize: 14, fontWeight: '700', color: t.primary },
   
-  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#f8fafc', paddingTop: 10 },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: t.background, paddingTop: 10 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   badgeDot: { width: 6, height: 6, borderRadius: 3 },
   badgeText: { fontSize: 11, fontWeight: '800' },
   actions: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#eef2ff', justifyContent: 'center', alignItems: 'center' },
+  iconBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: t.background, justifyContent: 'center', alignItems: 'center' },
   
   emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100, gap: 10 },
-  emptyText: { fontSize: 16, color: '#9ca3af', fontWeight: '600' },
+  emptyText: { fontSize: 16, color: t.textSecondary, fontWeight: '600' },
 
-  modalContainer: { flex: 1, backgroundColor: '#f8fafc' },
+  modalContainer: { flex: 1, backgroundColor: t.background },
   modalContent: { padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 22, fontWeight: '900', color: '#1e1b4b' },
-  closeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: t.text },
+  closeBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: t.card, justifyContent: 'center', alignItems: 'center' },
   
   imgPickerContainer: { marginBottom: 24, alignItems: 'center' },
-  imgPicker: { width: '100%', height: 180, borderRadius: 20, backgroundColor: '#f8f7ff', borderWidth: 2, borderStyle: 'dashed', borderColor: '#c7d2fe', overflow: 'hidden' },
+  imgPicker: { width: '100%', height: 180, borderRadius: 20, backgroundColor: t.card, borderWidth: 2, borderStyle: 'dashed', borderColor: t.border, overflow: 'hidden' },
   imgPHLarge: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10 },
-  imgPHText: { color: '#6366f1', fontSize: 14, fontWeight: '700' },
+  imgPHText: { color: t.primary, fontSize: 14, fontWeight: '700' },
   imgPreview: { width: '100%', height: '100%', resizeMode: 'cover' },
-  imgRemoveBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2', marginTop: 10 },
-  imgRemoveText: { fontSize: 12, fontWeight: '700', color: '#ef4444' },
+  imgRemoveBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: t.error + '1A', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: t.error + '40', marginTop: 10 },
+  imgRemoveText: { fontSize: 12, fontWeight: '700', color: t.error },
   
   form: { gap: 16 },
   formRow: { flexDirection: 'row', gap: 12 },
-  label: { fontSize: 13, fontWeight: '800', color: '#4b5563', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: -8, marginLeft: 4 },
-  input: { backgroundColor: '#f8f7ff', borderRadius: 14, borderWidth: 1.5, borderColor: '#e5e7eb', padding: 14, fontSize: 16, color: '#1e1b4b', fontWeight: '600' },
-  inputErr: { borderColor: '#ef4444', backgroundColor: '#fef2f2' },
+  label: { fontSize: 13, fontWeight: '800', color: t.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: -8, marginLeft: 4 },
+  input: { backgroundColor: t.card, borderRadius: 14, borderWidth: 1.5, borderColor: t.border, padding: 14, fontSize: 16, color: t.text, fontWeight: '600' },
+  inputErr: { borderColor: t.error, backgroundColor: t.error + '1A' },
   textArea: { height: 100, textAlignVertical: 'top' },
   errRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: -12, marginLeft: 4 },
-  errText: { fontSize: 11, color: '#ef4444', fontWeight: '600' },
+  errText: { fontSize: 11, color: t.error, fontWeight: '600' },
   
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 4 },
-  catChip: { backgroundColor: '#f1f5f9', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  catChipActive: { backgroundColor: '#6366f1' },
-  catChipText: { fontSize: 13, fontWeight: '700', color: '#475569' },
+  catChip: { backgroundColor: t.card, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  catChipActive: { backgroundColor: t.primary },
+  catChipText: { fontSize: 13, fontWeight: '700', color: t.textSecondary },
   
-  saveBtn: { backgroundColor: '#6366f1', borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginTop: 10, shadowColor: '#6366f1', shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
-  saveBtnText: { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
+  saveBtn: { backgroundColor: t.primary, borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginTop: 10, shadowColor: t.primary, shadowOpacity: 0.3, shadowRadius: 10, elevation: 6 },
+  saveBtnText: { color: t.primaryText, fontSize: 16, fontWeight: '900' },
 });

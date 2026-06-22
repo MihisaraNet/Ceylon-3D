@@ -11,6 +11,7 @@ import { useCart } from '../../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import CartItemCard from '../../components/CartItemCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../../lib/config';
@@ -18,6 +19,8 @@ import { API_BASE_URL } from '../../lib/config';
 export default function CartScreen() {
   const { items, removeFromCart, updateQuantity, clearCart, totalPrice, loading, reloadCart } = useCart();
   const { user } = useAuth();
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
   const nav = useNavigation();
   const [checkout, setCheckout] = useState(false);
   const [form, setForm] = useState({
@@ -136,6 +139,7 @@ export default function CartScreen() {
 
   if (done) return (
     <SafeAreaView style={s.safe}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <View style={s.successScreen}>
         <LinearGradient colors={['#10b981', '#34d399']} style={s.successCircle}>
           <Ionicons name="checkmark-sharp" size={48} color="#ffffff" />
@@ -155,14 +159,16 @@ export default function CartScreen() {
 
   if (loading) return (
     <SafeAreaView style={s.safe}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <View style={s.centred}>
-        <ActivityIndicator size="large" color="#8b5cf6" />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     </SafeAreaView>
   );
 
   if (items.length === 0) return (
     <SafeAreaView style={s.safe}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
       <View style={s.topBar}>
         <Text style={s.pageTitle}>Cart</Text>
       </View>
@@ -182,7 +188,7 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
       <View style={s.topBar}>
         <Text style={s.pageTitle}>Cart <Text style={s.itemCountText}>({items.length})</Text></Text>
@@ -204,6 +210,7 @@ export default function CartScreen() {
               onQtyChange={handleQtyChange}
               onRemove={removeFromCart}
               qtyError={qtyErr[item.cartItemId]}
+              theme={theme}
             />
           ))}
         </View>
@@ -245,7 +252,7 @@ export default function CartScreen() {
                 <TextInput
                   style={[s.fieldInput, multi && { minHeight: 80, textAlignVertical: 'top' }]}
                   placeholder={label}
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={theme.icon}
                   value={form[key]}
                   onChangeText={v => setForm(f => ({ ...f, [key]: v }))}
                   keyboardType={keyboard}
@@ -256,12 +263,12 @@ export default function CartScreen() {
 
             <TouchableOpacity style={[s.receiptBtn, receipt && s.receiptBtnDone]} onPress={pickReceipt}>
               <Ionicons name={receipt ? "checkmark-circle" : "document-attach-outline"} size={20} color={receipt ? "#10b981" : "#8b5cf6"} />
-              <Text style={[s.receiptBtnText, receipt && { color: '#10b981' }]}>
+              <Text style={[s.receiptBtnText, receipt && { color: theme.success }]}>
                 {receipt ? 'Receipt Attached' : 'Attach Payment Proof (Optional)'}
               </Text>
               {receipt && (
                 <TouchableOpacity onPress={() => setReceipt(null)} style={{ marginLeft: 'auto' }}>
-                  <Text style={{ color: '#ef4444', fontSize: 12, fontWeight: '600' }}>Remove</Text>
+                  <Text style={{ color: theme.error, fontSize: 12, fontWeight: '600' }}>Remove</Text>
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
@@ -282,57 +289,57 @@ export default function CartScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f8fafc' },
+const getStyles = (t) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: t.background },
 
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? 16 : 8, paddingBottom: 16 },
-  pageTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 },
-  itemCountText: { fontSize: 20, color: '#94a3b8', fontWeight: '600' },
-  clearText: { fontSize: 15, color: '#ef4444', fontWeight: '600' },
+  pageTitle: { fontSize: 28, fontWeight: '800', color: t.text, letterSpacing: -0.5 },
+  itemCountText: { fontSize: 20, color: t.textSecondary, fontWeight: '600' },
+  clearText: { fontSize: 15, color: t.error, fontWeight: '600' },
 
   centred: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  emptyIconBox: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#0f172a', marginBottom: 24 },
-  browseBtnShadow: { shadowColor: '#ec4899', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  emptyIconBox: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 24, backgroundColor: t.glassBg },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: t.text, marginBottom: 24 },
+  browseBtnShadow: { shadowColor: t.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   browseBtn: { paddingHorizontal: 28, paddingVertical: 14, borderRadius: 99 },
-  browseBtnText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+  browseBtnText: { color: t.primaryText, fontSize: 15, fontWeight: '700' },
 
   itemsContainer: { paddingHorizontal: 24, paddingTop: 8 },
 
-  summaryCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 12, borderRadius: 24, padding: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
-  summaryTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 },
+  summaryCard: { backgroundColor: t.card, marginHorizontal: 24, marginTop: 12, borderRadius: 24, padding: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  summaryTitle: { fontSize: 18, fontWeight: '700', color: t.text, marginBottom: 16 },
   sumRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  sumLabel: { fontSize: 15, color: '#64748b' },
-  sumVal: { fontSize: 15, fontWeight: '600', color: '#0f172a' },
-  sumValFree: { fontSize: 15, fontWeight: '700', color: '#10b981' },
-  sumDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 },
-  totalLabel: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
-  totalVal: { fontSize: 18, fontWeight: '800', color: '#8b5cf6' },
+  sumLabel: { fontSize: 15, color: t.textSecondary },
+  sumVal: { fontSize: 15, fontWeight: '600', color: t.text },
+  sumValFree: { fontSize: 15, fontWeight: '700', color: t.success },
+  sumDivider: { height: 1, backgroundColor: t.border, marginVertical: 16 },
+  totalLabel: { fontSize: 18, fontWeight: '800', color: t.text },
+  totalVal: { fontSize: 18, fontWeight: '800', color: t.primary },
 
-  checkoutBtnShadow: { marginHorizontal: 24, marginTop: 24, shadowColor: '#3b82f6', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  checkoutBtnShadow: { marginHorizontal: 24, marginTop: 24, shadowColor: t.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   checkoutBtn: { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
-  checkoutBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+  checkoutBtnText: { color: t.primaryText, fontSize: 16, fontWeight: '700' },
 
-  formCard: { backgroundColor: '#ffffff', marginHorizontal: 24, marginTop: 24, borderRadius: 24, padding: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
-  formTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 20 },
-  fieldRow: { backgroundColor: '#f8fafc', borderRadius: 12, borderWidth: 1, borderColor: '#f1f5f9', marginBottom: 12 },
-  fieldInput: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: '#0f172a' },
+  formCard: { backgroundColor: t.card, marginHorizontal: 24, marginTop: 24, borderRadius: 24, padding: 24, shadowColor: '#1a1a1a', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  formTitle: { fontSize: 18, fontWeight: '700', color: t.text, marginBottom: 20 },
+  fieldRow: { backgroundColor: t.background, borderRadius: 12, borderWidth: 1, borderColor: t.border, marginBottom: 12 },
+  fieldInput: { paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: t.text },
   
-  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: '#c4b5fd', borderRadius: 12, padding: 16, marginBottom: 24, backgroundColor: '#f8fafc' },
-  receiptBtnDone: { borderColor: '#10b981', backgroundColor: '#ecfdf5', borderStyle: 'solid' },
-  receiptBtnText: { fontSize: 14, fontWeight: '600', color: '#8b5cf6' },
+  receiptBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderStyle: 'dashed', borderColor: t.primary, borderRadius: 12, padding: 16, marginBottom: 24, backgroundColor: t.glassBg },
+  receiptBtnDone: { borderColor: t.success, backgroundColor: t.glassBg, borderStyle: 'solid' },
+  receiptBtnText: { fontSize: 14, fontWeight: '600', color: t.primary },
   
-  placeBtnShadow: { shadowColor: '#10b981', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  placeBtnShadow: { shadowColor: t.success, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   placeBtn: { borderRadius: 16, paddingVertical: 16, alignItems: 'center', opacity: 1 },
-  placeBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+  placeBtnText: { color: t.primaryText, fontSize: 16, fontWeight: '700' },
   cancelBtn: { alignItems: 'center', marginTop: 16, paddingVertical: 8 },
-  cancelText: { color: '#64748b', fontSize: 15, fontWeight: '600' },
+  cancelText: { color: t.textSecondary, fontSize: 15, fontWeight: '600' },
 
-  successScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#f8fafc' },
+  successScreen: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: t.background },
   successCircle: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  successTitle: { fontSize: 28, fontWeight: '800', color: '#0f172a', textAlign: 'center', marginBottom: 12 },
-  successSub: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
-  continuBtnShadow: { shadowColor: '#8b5cf6', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  successTitle: { fontSize: 28, fontWeight: '800', color: t.text, textAlign: 'center', marginBottom: 12 },
+  successSub: { fontSize: 15, color: t.textSecondary, textAlign: 'center', lineHeight: 24, marginBottom: 32 },
+  continuBtnShadow: { shadowColor: t.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   continuBtn: { borderRadius: 99, paddingHorizontal: 32, paddingVertical: 16 },
-  continueText: { color: '#ffffff', fontWeight: '700', fontSize: 16 },
+  continueText: { color: t.primaryText, fontWeight: '700', fontSize: 16 },
 });

@@ -15,13 +15,14 @@
  *
  * @module lib/config
  */
-// Production backend hosted on Render.
-// Override via EXPO_PUBLIC_API_URL env var for local dev (e.g. your machine's LAN IP).
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://threedink-studio.onrender.com';
+// Local development backend
+// Override via EXPO_PUBLIC_API_URL env var for different servers
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
 export const API_ROOT_URL = API_BASE_URL;
 
 export const getImageUri = (imagePath) => {
   if (!imagePath) return null;
   if (imagePath.startsWith('http')) return imagePath;
-  return `${API_ROOT_URL}${imagePath}`;
+  const separator = imagePath.startsWith('/') ? '' : '/';
+  return `${API_ROOT_URL}${separator}${imagePath}`;
 };

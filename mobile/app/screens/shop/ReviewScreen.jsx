@@ -25,6 +25,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import api from '../../lib/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const STAR_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 const STAR_COLORS = ['', '#ef4444', '#f97316', '#f59e0b', '#22c55e', '#6366f1'];
@@ -32,6 +33,8 @@ const STAR_COLORS = ['', '#ef4444', '#f97316', '#f59e0b', '#22c55e', '#6366f1'];
 export default function ReviewScreen({ route }) {
   const { productId, productName } = route.params ?? {};
   const nav = useNavigation();
+  const { theme, isDarkMode } = useTheme();
+  const s = getStyles(theme);
 
   const [rating,    setRating]    = useState(0);
   const [comment,   setComment]   = useState('');
@@ -98,12 +101,12 @@ export default function ReviewScreen({ route }) {
 
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8f7ff" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity onPress={() => nav.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="chevron-back" size={26} color="#1e1b4b" />
+          <Ionicons name="chevron-back" size={26} color={theme.text} />
         </TouchableOpacity>
         <Text style={s.headerTitle}>Write a Review</Text>
         <View style={{ width: 26 }} />
@@ -142,7 +145,7 @@ export default function ReviewScreen({ route }) {
                   <Ionicons
                     name={star <= rating ? 'star' : 'star-outline'}
                     size={44}
-                    color={star <= rating ? (STAR_COLORS[rating] || '#f59e0b') : '#d1d5db'}
+                    color={star <= rating ? (STAR_COLORS[rating] || '#f59e0b') : theme.icon}
                   />
                 </Animated.View>
               </TouchableOpacity>
@@ -165,7 +168,7 @@ export default function ReviewScreen({ route }) {
           <TextInput
             style={s.commentInput}
             placeholder="Share your thoughts about this product…"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.icon}
             multiline
             maxLength={1000}
             value={comment}
@@ -183,10 +186,10 @@ export default function ReviewScreen({ route }) {
           activeOpacity={0.88}
         >
           {submitting ? (
-            <ActivityIndicator color="#f8fafc" />
+            <ActivityIndicator color={theme.primaryText} />
           ) : (
             <>
-              <Ionicons name="send-outline" size={18} color="#f8fafc" style={{ marginRight: 8 }} />
+              <Ionicons name="send-outline" size={18} color={theme.primaryText} style={{ marginRight: 8 }} />
               <Text style={s.submitText}>Submit Review</Text>
             </>
           )}
@@ -200,23 +203,23 @@ export default function ReviewScreen({ route }) {
   );
 }
 
-const s = StyleSheet.create({
-  safe:             { flex: 1, backgroundColor: '#f8f7ff' },
+const getStyles = (t) => StyleSheet.create({
+  safe:             { flex: 1, backgroundColor: t.background },
 
   /* Header */
   header:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 14 : 4, paddingBottom: 10 },
-  headerTitle:      { fontSize: 20, fontWeight: '900', color: '#1e1b4b' },
+  headerTitle:      { fontSize: 20, fontWeight: '900', color: t.text },
 
   /* Product banner */
-  productBanner:    { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#eef2ff', marginHorizontal: 16, marginBottom: 14, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#c7d2fe' },
-  productIconWrap:  { backgroundColor: '#f8fafc', borderRadius: 12, padding: 10 },
-  bannerLabel:      { fontSize: 11, fontWeight: '700', color: '#6366f1', letterSpacing: 0.5 },
-  bannerName:       { fontSize: 16, fontWeight: '900', color: '#1e1b4b', marginTop: 2 },
+  productBanner:    { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: t.glassBg, marginHorizontal: 16, marginBottom: 14, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: t.glassBorder },
+  productIconWrap:  { backgroundColor: t.card, borderRadius: 12, padding: 10 },
+  bannerLabel:      { fontSize: 11, fontWeight: '700', color: t.primary, letterSpacing: 0.5 },
+  bannerName:       { fontSize: 16, fontWeight: '900', color: t.text, marginTop: 2 },
 
   /* Card */
-  card:             { backgroundColor: '#f8fafc', marginHorizontal: 16, marginBottom: 14, borderRadius: 20, padding: 20, shadowColor: '#6366f1', shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
-  cardTitle:        { fontSize: 17, fontWeight: '900', color: '#1e1b4b', marginBottom: 4 },
-  cardSub:          { fontSize: 13, color: '#9ca3af', marginBottom: 18 },
+  card:             { backgroundColor: t.card, marginHorizontal: 16, marginBottom: 14, borderRadius: 20, padding: 20, shadowColor: t.primary, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
+  cardTitle:        { fontSize: 17, fontWeight: '900', color: t.text, marginBottom: 4 },
+  cardSub:          { fontSize: 13, color: t.textSecondary, marginBottom: 18 },
 
   /* Stars */
   starsRow:         { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 16 },
@@ -224,22 +227,22 @@ const s = StyleSheet.create({
   ratingLabelText:  { fontSize: 15, fontWeight: '800' },
 
   /* Comment */
-  commentInput:     { backgroundColor: '#f8f7ff', borderRadius: 14, borderWidth: 1.5, borderColor: '#e5e7eb', padding: 14, fontSize: 15, color: '#1e1b4b', minHeight: 110 },
-  charCount:        { fontSize: 11, color: '#9ca3af', textAlign: 'right', marginTop: 6, fontWeight: '600' },
+  commentInput:     { backgroundColor: t.background, borderRadius: 14, borderWidth: 1.5, borderColor: t.border, padding: 14, fontSize: 15, color: t.text, minHeight: 110 },
+  charCount:        { fontSize: 11, color: t.textSecondary, textAlign: 'right', marginTop: 6, fontWeight: '600' },
 
   /* Submit */
-  submitBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#6366f1', marginHorizontal: 16, borderRadius: 16, paddingVertical: 16, shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 },
-  submitText:       { color: '#f8fafc', fontSize: 16, fontWeight: '900' },
+  submitBtn:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: t.primary, marginHorizontal: 16, borderRadius: 16, paddingVertical: 16, shadowColor: t.primary, shadowOpacity: 0.4, shadowRadius: 12, elevation: 6 },
+  submitText:       { color: t.primaryText, fontSize: 16, fontWeight: '900' },
   skipBtn:          { alignItems: 'center', paddingVertical: 14 },
-  skipText:         { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
+  skipText:         { color: t.textSecondary, fontSize: 14, fontWeight: '600' },
 
   /* Success */
   successWrap:      { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 28, gap: 14 },
-  successCircle:    { width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center', shadowColor: '#6366f1', shadowOpacity: 0.4, shadowRadius: 24, elevation: 10, marginBottom: 8 },
-  successTitle:     { fontSize: 28, fontWeight: '900', color: '#1e1b4b', textAlign: 'center' },
-  successSub:       { fontSize: 15, color: '#6b7280', textAlign: 'center', lineHeight: 22 },
-  doneBtn:          { flexDirection: 'row', alignItems: 'center', backgroundColor: '#6366f1', borderRadius: 16, paddingHorizontal: 30, paddingVertical: 14, marginTop: 8 },
-  doneBtnText:      { color: '#f8fafc', fontWeight: '900', fontSize: 15 },
+  successCircle:    { width: 100, height: 100, borderRadius: 50, backgroundColor: t.primary, justifyContent: 'center', alignItems: 'center', shadowColor: t.primary, shadowOpacity: 0.4, shadowRadius: 24, elevation: 10, marginBottom: 8 },
+  successTitle:     { fontSize: 28, fontWeight: '900', color: t.text, textAlign: 'center' },
+  successSub:       { fontSize: 15, color: t.textSecondary, textAlign: 'center', lineHeight: 22 },
+  doneBtn:          { flexDirection: 'row', alignItems: 'center', backgroundColor: t.primary, borderRadius: 16, paddingHorizontal: 30, paddingVertical: 14, marginTop: 8 },
+  doneBtnText:      { color: t.primaryText, fontWeight: '900', fontSize: 15 },
   browseLink:       { paddingVertical: 10 },
-  browseLinkText:   { color: '#6366f1', fontWeight: '700', fontSize: 14 },
+  browseLinkText:   { color: t.primary, fontWeight: '700', fontSize: 14 },
 });

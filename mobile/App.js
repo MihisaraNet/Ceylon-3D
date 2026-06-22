@@ -20,15 +20,18 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from './app/context/AuthContext';
 import { CartProvider } from './app/context/CartContext';
+import { ThemeProvider } from './app/context/ThemeContext';
 import AppNavigator from './app/navigation/AppNavigator';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <StatusBar style="light" />
-        <AppNavigator />
-      </CartProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <CartProvider>
+          <StatusBar style="auto" />
+          <AppNavigator />
+        </CartProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
