@@ -16,7 +16,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, SafeAreaView, StatusBar, Alert,
+  ScrollView, ActivityIndicator, SafeAreaView, StatusBar, Alert, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
@@ -56,6 +56,12 @@ export default function LoginScreen({ navigation }) {
   const [serverErr,setServerErr]= useState('');
   const pwRef = useRef(null);
 
+  // Auth Flow Modals State
+  const [modalMode, setModalMode] = useState(null); // 'VERIFY' | 'FORGOT' | 'RESET' | null
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+
   /* ── Client validation ──────────────────────────────── */
   // Validate required fields before sending auth request.
   const validate = () => {
@@ -88,6 +94,12 @@ export default function LoginScreen({ navigation }) {
     } catch (err) {
       const res = err.response?.data;
       
+      if (err.response?.status === 403 && res?.isVerified === false) {
+        // Intercept login to show verification modal
+        setModalMode('VERIFY');
+        return;
+      }
+      
       // Map backend field errors when available.
       if (res?.errors) setErrors(res.errors);
       
@@ -99,6 +111,53 @@ export default function LoginScreen({ navigation }) {
   };
 
   const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));
+
+  /* ── Modal Handlers ───────────────────────────────────── */
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) return Alert.alert('Error', 'Enter a 6-digit OTP');
+    setModalLoading(true);
+    try {
+      const { data } = await api.post('/auth/verify-email', { email: email.trim().toLowerCase(), otp: otpCode });
+      setModalMode(null);
+      await login(data.token, data.user);
+    } catch (err) {
+      Alert.alert('Verification Failed', err.response?.data?.error || 'Invalid OTP');
+    } finally { setModalLoading(false); }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await api.post('/auth/resend-otp', { email: email.trim().toLowerCase() });
+      Alert.alert('Sent', 'A new OTP has been sent to your email.');
+    } catch (err) { Alert.alert('Error', err.response?.data?.error || 'Failed to resend OTP'); }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!isEmail(email)) return Alert.alert('Email Required', 'Please enter your email address in the login field first.');
+    setModalLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email: email.trim().toLowerCase() });
+      setModalMode('RESET');
+      setOtpCode('');
+      Alert.alert('Email Sent', 'We sent a password reset code to your email.');
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'Failed to send reset code');
+    } finally { setModalLoading(false); }
+  };
+
+  const handleResetPassword = async () => {
+    if (!otpCode || otpCode.length !== 6) return Alert.alert('Error', 'Enter a 6-digit OTP');
+    if (!newPassword || newPassword.length < 8) return Alert.alert('Error', 'New password must be at least 8 chars');
+    setModalLoading(true);
+    try {
+      await api.post('/auth/reset-password', { email: email.trim().toLowerCase(), otp: otpCode, newPassword });
+      setModalMode(null);
+      setPassword(newPassword);
+      Alert.alert('Success', 'Password reset successfully. You can now sign in.');
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'Failed to reset password');
+    } finally { setModalLoading(false); }
+  };
 
   return (
     <SafeAreaView style={s.safe}>
@@ -167,7 +226,13 @@ export default function LoginScreen({ navigation }) {
             <Text style={s.rememberText}>Remember me</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity onPress={() => Alert.alert('Reset Password', 'Please contact support at support@layerforge.com to reset your password.')}>
+          <TouchableOpacity onPress={() => {
+            if (!isEmail(email)) {
+              Alert.alert('Email Required', 'Please enter your email address above to reset your password.');
+            } else {
+              setModalMode('FORGOT');
+            }
+          }}>
             <Text style={s.forgotText}>Forgot password?</Text>
           </TouchableOpacity>
         </View>
@@ -209,6 +274,75 @@ export default function LoginScreen({ navigation }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* Auth Modals (Verify / Forgot / Reset) */}
+      <Modal visible={modalMode !== null} transparent animationType="fade">
+        <View style={s.modalOverlay}>
+          <View style={s.modalContent}>
+            <View style={s.modalHeader}>
+              <Ionicons 
+                name={modalMode === 'VERIFY' ? "mail-unread-outline" : "key-outline"} 
+                size={32} color={theme.primary} 
+              />
+              <Text style={s.modalTitle}>
+                {modalMode === 'VERIFY' ? 'Verify Email' : modalMode === 'FORGOT' ? 'Reset Password' : 'New Password'}
+              </Text>
+              <Text style={s.modalSub}>
+                {modalMode === 'VERIFY' ? `Enter the 6-digit code sent to ${email}` : 
+                 modalMode === 'FORGOT' ? `We'll send a code to ${email}` : 
+                 `Enter the reset code and your new password`}
+              </Text>
+            </View>
+
+            {modalMode !== 'FORGOT' && (
+              <TextInput
+                style={s.otpInput}
+                placeholder="000000"
+                placeholderTextColor={theme.icon}
+                keyboardType="number-pad"
+                maxLength={6}
+                value={otpCode}
+                onChangeText={setOtpCode}
+                autoFocus={modalMode === 'VERIFY'}
+              />
+            )}
+
+            {modalMode === 'RESET' && (
+              <TextInput
+                style={[s.otpInput, { fontSize: 16, letterSpacing: 0, paddingVertical: 14 }]}
+                placeholder="New Password (min 8 chars)"
+                placeholderTextColor={theme.icon}
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+            )}
+
+            <TouchableOpacity 
+              style={s.btn} 
+              onPress={modalMode === 'VERIFY' ? handleVerifyOtp : modalMode === 'FORGOT' ? handleForgotPassword : handleResetPassword} 
+              disabled={modalLoading}
+            >
+              {modalLoading ? <ActivityIndicator color={theme.primaryText} /> : (
+                <Text style={s.btnText}>
+                  {modalMode === 'VERIFY' ? 'Verify & Login' : modalMode === 'FORGOT' ? 'Send Code' : 'Update Password'}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {(modalMode === 'VERIFY' || modalMode === 'RESET') && (
+              <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={handleResendOtp}>
+                <Text style={{ color: theme.primary, fontWeight: '700' }}>Resend Code</Text>
+              </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={() => setModalMode(null)}>
+              <Text style={{ color: theme.textSecondary }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -251,4 +385,12 @@ const getStyles = (t) => StyleSheet.create({
   link:           { alignItems: 'center', marginTop: 32 },
   linkText:       { color: t.textSecondary, fontSize: 14 },
   linkBold:       { color: t.primary, fontWeight: '800' },
+
+  /* Modal Styles */
+  modalOverlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 24 },
+  modalContent:   { backgroundColor: t.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 10 },
+  modalHeader:    { alignItems: 'center', marginBottom: 24 },
+  modalTitle:     { fontSize: 24, fontWeight: '900', color: t.text, marginTop: 12 },
+  modalSub:       { fontSize: 14, color: t.textSecondary, textAlign: 'center', marginTop: 8 },
+  otpInput:       { backgroundColor: t.background, borderWidth: 1, borderColor: t.border, borderRadius: 14, fontSize: 32, fontWeight: '900', color: t.text, textAlign: 'center', letterSpacing: 10, paddingVertical: 16, marginBottom: 16 },
 });

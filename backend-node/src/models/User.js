@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema({
   
   // Array of roles assigned to the user. Defaults to ['ROLE_USER']. Admins will include 'ROLE_ADMIN'.
   roles:    { type: [String], default: ['ROLE_USER'] },
+  
+  // Email verification and OTP fields
+  isVerified:   { type: Boolean, default: false },
+  otp:          { type: String }, // Hashed OTP for security
+  otpExpiresAt: { type: Date },
 }, { 
   // Automatically track when the user account was created. Updates are not automatically timestamped.
   timestamps: { createdAt: 'createdAt', updatedAt: false } 

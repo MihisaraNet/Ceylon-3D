@@ -2,22 +2,30 @@
  * routes/auth.js — Authentication Routes
  *
  * Defines the public API endpoints for user authentication:
- *   POST /auth/register — Create a new account (validated by validateRegister middleware)
- *   POST /auth/login    — Sign in to an existing account (validated by validateLogin middleware)
- *
- * These routes are public (no auth middleware required).
+ *   POST /auth/register
+ *   POST /auth/login
+ *   POST /auth/verify-email
+ *   POST /auth/resend-otp
+ *   POST /auth/forgot-password
+ *   POST /auth/reset-password
  *
  * @module routes/auth
  */
 
 const router = require('express').Router();
-const { register, login } = require('../controllers/authController');
+const { 
+  register, login, verifyEmail, resendOTP, forgotPassword, resetPassword 
+} = require('../controllers/authController');
 const { validateRegister, validateLogin } = require('../middleware/validate');
 
-// Register a new user — validates input then creates account
+// Existing Routes
 router.post('/register', validateRegister, register);
-
-// Log in an existing user — validates input then returns JWT
 router.post('/login',    validateLogin,    login);
+
+// New OTP / Email Auth Routes
+router.post('/verify-email', verifyEmail);
+router.post('/resend-otp', resendOTP);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 module.exports = router;

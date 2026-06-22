@@ -22,7 +22,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, ActivityIndicator, SafeAreaView, StatusBar, Alert,
+  ScrollView, ActivityIndicator, SafeAreaView, StatusBar, Alert, Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../lib/api';
@@ -75,6 +75,11 @@ export default function RegisterScreen({ navigation }) {
   const [loading,  setLoading]  = useState(false);
   const [errors,   setErrors]   = useState({});
   const [serverErr,setServerErr]= useState('');
+  
+  // OTP States
+  const [showOtp,  setShowOtp]  = useState(false);
+  const [otpCode,  setOtpCode]  = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const emailRef = useRef(null);
   const pwRef    = useRef(null);
@@ -127,8 +132,8 @@ export default function RegisterScreen({ navigation }) {
         password,
       });
       
-      // Auto-login after successful registration.
-      await login(data.token, data.user);
+      // Show OTP modal for verification
+      setShowOtp(true);
     } catch (err) {
       const res = err.response?.data;
       
@@ -143,6 +148,29 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const clearErr = (k) => setErrors(e => ({ ...e, [k]: '' }));
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode || otpCode.length !== 6) return Alert.alert('Error', 'Enter a 6-digit OTP');
+    setOtpLoading(true);
+    try {
+      const { data } = await api.post('/auth/verify-email', { email: email.trim().toLowerCase(), otp: otpCode });
+      setShowOtp(false);
+      await login(data.token, data.user);
+    } catch (err) {
+      Alert.alert('Verification Failed', err.response?.data?.error || 'Invalid OTP');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      await api.post('/auth/resend-otp', { email: email.trim().toLowerCase() });
+      Alert.alert('Sent', 'A new OTP has been sent to your email.');
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.error || 'Failed to resend OTP');
+    }
+  };
 
   return (
     <SafeAreaView style={s.safe}>
@@ -268,6 +296,38 @@ export default function RegisterScreen({ navigation }) {
         </TouchableOpacity>
 
       </ScrollView>
+
+      {/* OTP Verification Modal */}
+      <Modal visible={showOtp} transparent animationType="fade">
+        <View style={s.modalOverlay}>
+          <View style={s.modalContent}>
+            <View style={s.modalHeader}>
+              <Ionicons name="mail-unread-outline" size={32} color={theme.primary} />
+              <Text style={s.modalTitle}>Verify Email</Text>
+              <Text style={s.modalSub}>We sent a 6-digit code to {email}</Text>
+            </View>
+            <TextInput
+              style={s.otpInput}
+              placeholder="000000"
+              placeholderTextColor={theme.icon}
+              keyboardType="number-pad"
+              maxLength={6}
+              value={otpCode}
+              onChangeText={setOtpCode}
+              autoFocus
+            />
+            <TouchableOpacity style={s.btn} onPress={handleVerifyOtp} disabled={otpLoading}>
+              {otpLoading ? <ActivityIndicator color={theme.primaryText} /> : <Text style={s.btnText}>Verify & Login</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={handleResendOtp}>
+              <Text style={{ color: theme.primary, fontWeight: '700' }}>Resend Code</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={() => setShowOtp(false)}>
+              <Text style={{ color: theme.textSecondary }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -317,4 +377,12 @@ const getStyles = (t) => StyleSheet.create({
   link:           { alignItems: 'center', marginTop: 32 },
   linkText:       { color: t.textSecondary, fontSize: 14 },
   linkBold:       { color: t.primary, fontWeight: '800' },
+  
+  /* Modal Styles */
+  modalOverlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 24 },
+  modalContent:   { backgroundColor: t.card, borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 10 },
+  modalHeader:    { alignItems: 'center', marginBottom: 24 },
+  modalTitle:     { fontSize: 24, fontWeight: '900', color: t.text, marginTop: 12 },
+  modalSub:       { fontSize: 14, color: t.textSecondary, textAlign: 'center', marginTop: 8 },
+  otpInput:       { backgroundColor: t.background, borderWidth: 1, borderColor: t.border, borderRadius: 14, fontSize: 32, fontWeight: '900', color: t.text, textAlign: 'center', letterSpacing: 10, paddingVertical: 16, marginBottom: 24 },
 });
