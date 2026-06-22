@@ -31,7 +31,13 @@ Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing s
 ### 💼 Powerful Admin Dashboard
 - **Cost Calculator**: Advanced tool for admins to calculate production costs (material, energy, machine time, labor) and generate optimized selling prices.
 - **Order Tracking**: Real-time management of shop and custom orders, status updates, and tracking number assignment.
+- **Analytics & Revenue**: View active print jobs, best-selling items, and recent monthly revenue directly from the dashboard.
 - **Content Management (CMS)**: Full CRUD capabilities for products, including image uploads and description editing.
+
+### 🌓 Dynamic Theming & UI
+- **Dark/Light Mode**: Fully responsive, system-aware dynamic theme engine across 16 screens, persisting user preference.
+- **Premium Aesthetics**: High-end glassmorphism, gradient overlays, and curated Slate/Indigo color tokens for both dark and light modes.
+- **Fluid Navigation**: Seamless stack and tab routing using React Navigation.
 
 ---
 
@@ -44,8 +50,9 @@ Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing s
 | **Database** | MongoDB + Mongoose 8 |
 | **File Storage** | Multer (Local Storage) |
 | **Authentication** | JWT (jsonwebtoken) + BcryptJS |
+| **State Management** | React Context API (Auth, Cart, Theme) |
 | **Networking** | Axios |
-| **UI Components** | Custom Premium Components (Dark Slate & Indigo) |
+| **UI Components** | Custom Premium Components |
 
 ---
 
@@ -62,8 +69,9 @@ LayerForge-3D_WMT/
 │
 ├── mobile/             ← React Native + Expo Application
 │   ├── app/screens/    (UI views: Admin, Auth, Shop, Upload)
-│   ├── app/context/    (State management: Auth, Cart)
+│   ├── app/context/    (State management: Auth, Cart, Theme)
 │   ├── app/lib/        (Axios configuration & utilities)
+│   ├── app/theme/      (Theme definitions and color tokens)
 │   └── app/data/       (Static data & constants)
 │
 └── assets/             ← Project branding & documentation assets
@@ -111,14 +119,7 @@ npx expo start
 | `GET/POST` | `/orders` | Authenticated |
 | `POST` | `/api/uploads/stl` | Authenticated |
 | `POST` | `/stl-orders/calculate` | Admin |
-
----
-
-## 🎨 Design Philosophy
-LayerForge 3D utilizes a **Premium Dark Aesthetic**. We prioritize visual excellence with:
-- **Color Palette**: Deep Slate backgrounds with Indigo accents.
-- **Typography**: Clean, modern sans-serif fonts for readability and professionalism.
-- **Interactivity**: Smooth transitions, micro-animations, and responsive layouts.
+| `GET` | `/orders/admin/analytics` | Admin |
 
 ---
 
@@ -132,7 +133,6 @@ The following features are planned for future development to further enhance the
 4. **Push Notifications**: Integrate Firebase Cloud Messaging (FCM) to automatically notify users when their 3D print quote is ready or their order has shipped.
 5. **Wishlist (Favorites) Feature**: Allow users to save favorite products or 3D models to purchase later.
 6. **Profile Editing & Address Management**: Allow users to update their default shipping address and reset passwords directly from the app.
-7. **Admin Analytics Dashboard**: Add visual charts to the Admin Dashboard showing monthly revenue, best-selling items, and order volume.
 
 ---
 
