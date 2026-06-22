@@ -24,7 +24,8 @@ Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing s
 - **Print Configuration**: Customize infill, layer height, and post-processing options to get an accurate quote.
 
 ### 🛡️ Security & Validation
-- **JWT-Based Security**: Robust authentication using JSON Web Tokens.
+- **Email Authentication**: Secure 6-digit OTP email verification during registration and a complete "Forgot Password" recovery flow powered by Nodemailer.
+- **JWT-Based Security**: Robust session management using JSON Web Tokens.
 - **Role-Based Access Control (RBAC)**: Distinct permissions and interfaces for **Customers** and **Administrators**.
 - **Data Validation**: Comprehensive frontend and backend validation, including strict pattern matching for Sri Lankan phone numbers.
 
@@ -114,6 +115,8 @@ npx expo start
 | :--- | :--- | :--- |
 | `POST` | `/auth/register` | Public |
 | `POST` | `/auth/login` | Public |
+| `POST` | `/auth/verify-email` | Public |
+| `POST` | `/auth/forgot-password` | Public |
 | `GET` | `/api/products` | Public |
 | `POST/PUT/DELETE` | `/api/products/:id` | Admin |
 | `GET/POST` | `/orders` | Authenticated |
@@ -132,7 +135,6 @@ The following features are planned for future development to further enhance the
 3. **Advanced Search & Filtering**: Add real-time product search, category filters, and sorting options to the `BrowseScreen`.
 4. **Push Notifications**: Integrate Firebase Cloud Messaging (FCM) to automatically notify users when their 3D print quote is ready or their order has shipped.
 5. **Wishlist (Favorites) Feature**: Allow users to save favorite products or 3D models to purchase later.
-6. **Profile Editing & Address Management**: Allow users to update their default shipping address and reset passwords directly from the app.
 
 ---
 
