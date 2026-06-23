@@ -132,8 +132,8 @@ export default function RegisterScreen({ navigation }) {
         password,
       });
       
-      // Show OTP modal for verification
-      setShowOtp(true);
+      // Auto-login since email verification is removed
+      await login(data.token, data.user);
     } catch (err) {
       const res = err.response?.data;
       
@@ -297,37 +297,6 @@ export default function RegisterScreen({ navigation }) {
 
       </ScrollView>
 
-      {/* OTP Verification Modal */}
-      <Modal visible={showOtp} transparent animationType="fade">
-        <View style={s.modalOverlay}>
-          <View style={s.modalContent}>
-            <View style={s.modalHeader}>
-              <Ionicons name="mail-unread-outline" size={32} color={theme.primary} />
-              <Text style={s.modalTitle}>Verify Email</Text>
-              <Text style={s.modalSub}>We sent a 6-digit code to {email}</Text>
-            </View>
-            <TextInput
-              style={s.otpInput}
-              placeholder="000000"
-              placeholderTextColor={theme.icon}
-              keyboardType="number-pad"
-              maxLength={6}
-              value={otpCode}
-              onChangeText={setOtpCode}
-              autoFocus
-            />
-            <TouchableOpacity style={s.btn} onPress={handleVerifyOtp} disabled={otpLoading}>
-              {otpLoading ? <ActivityIndicator color={theme.primaryText} /> : <Text style={s.btnText}>Verify & Login</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={handleResendOtp}>
-              <Text style={{ color: theme.primary, fontWeight: '700' }}>Resend Code</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={() => setShowOtp(false)}>
-              <Text style={{ color: theme.textSecondary }}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

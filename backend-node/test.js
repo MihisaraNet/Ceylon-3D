@@ -139,7 +139,7 @@ async function runTests() {
   const stlForm = new FormData();
   stlForm.append('name', testUser.fullName);
   stlForm.append('email', testUser.email);
-  stlForm.append('phone', '123-456-7890');
+  stlForm.append('phone', '0771234567');
   stlForm.append('address', '123 Test Street, Test City, 12345');
   stlForm.append('material', 'PLA');
   stlForm.append('quantity', '5');

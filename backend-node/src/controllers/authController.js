@@ -27,24 +27,18 @@ const register = async (req, res) => {
     if (!fullName || !email || !password) return res.status(400).json({ error: 'All fields required' });
     if (await User.findOne({ email: email.toLowerCase() })) return res.status(409).json({ error: 'Email already registered' });
 
-    const rawOTP = generateOTP();
-    const hashedOTP = await bcrypt.hash(rawOTP, 12);
-    
-    // OTP expires in 5 minutes
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
     const user = await User.create({ 
       fullName, 
-      email, 
+      email: email.toLowerCase(), 
       password: await bcrypt.hash(password, 12),
-      isVerified: false,
-      otp: hashedOTP,
-      otpExpiresAt
+      isVerified: true // Auto-verify since email auth is removed
     });
 
-    await sendOTP(user.email, rawOTP, 'verification');
-
-    res.status(201).json({ message: 'Registration successful. Please verify your email.', email: user.email });
+    res.status(201).json({ 
+      message: 'Registration successful', 
+      token: sign(user), 
+      user: fmt(user) 
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
 
@@ -57,10 +51,6 @@ const login = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials' });
-
-    if (!user.isVerified) {
-      return res.status(403).json({ error: 'Please verify your email to log in.', isVerified: false, email: user.email });
-    }
 
     res.json({ token: sign(user), user: fmt(user) });
   } catch (err) { res.status(500).json({ error: err.message }); }
