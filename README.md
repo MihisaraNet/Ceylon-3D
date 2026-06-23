@@ -24,7 +24,7 @@ Welcome to **LayerForge 3D**, a premium, end-to-end e-commerce and 3D printing s
 - **Print Configuration**: Customize infill, layer height, and post-processing options to get an accurate quote.
 
 ### 🛡️ Security & Validation
-- **Email Authentication**: Secure 6-digit OTP email verification during registration and a complete "Forgot Password" recovery flow powered by Nodemailer.
+- **Instant Authentication**: Secure, streamlined user registration and login flow without email bottlenecks.
 - **JWT-Based Security**: Robust session management using JSON Web Tokens.
 - **Role-Based Access Control (RBAC)**: Distinct permissions and interfaces for **Customers** and **Administrators**.
 - **Data Validation**: Comprehensive frontend and backend validation, including strict pattern matching for Sri Lankan phone numbers.
@@ -115,8 +115,6 @@ npx expo start
 | :--- | :--- | :--- |
 | `POST` | `/auth/register` | Public |
 | `POST` | `/auth/login` | Public |
-| `POST` | `/auth/verify-email` | Public |
-| `POST` | `/auth/forgot-password` | Public |
 | `GET` | `/api/products` | Public |
 | `POST/PUT/DELETE` | `/api/products/:id` | Admin |
 | `GET/POST` | `/orders` | Authenticated |
