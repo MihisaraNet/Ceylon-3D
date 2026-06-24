@@ -16,8 +16,9 @@
  * @module lib/config
  */
 // Local development backend
-// Override via EXPO_PUBLIC_API_URL env var for different servers
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
+// Override via EXPO_PUBLIC_API_URL env var for different servers.
+// Use your machine's LAN IP for Expo/phone testing so localhost points to the device, not the backend host.
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.8.174:8080';
 export const API_ROOT_URL = API_BASE_URL;
 
 export const getImageUri = (imagePath) => {
