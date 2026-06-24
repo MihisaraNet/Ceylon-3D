@@ -31,7 +31,7 @@ const seedAdmin = async () => {
     if (!exists) {
       // Hash the default password and create the admin account
       const hashed = await bcrypt.hash('admin123', 12);
-      await User.create({ email: 'admin@ceylon3d.com', password: hashed, fullName: 'Ceylon 3D Admin', roles: ['ROLE_ADMIN'] });
+      await User.create({ email: 'admin@ceylon3d.com', password: hashed, fullName: 'ADMIN', roles: ['ROLE_ADMIN'] });
       console.log('Default admin created: admin@ceylon3d.com / admin123');
     }
   } catch (err) { console.error('Admin seed error:', err.message); }
