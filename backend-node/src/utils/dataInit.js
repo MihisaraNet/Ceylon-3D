@@ -6,7 +6,7 @@
  * 'ROLE_ADMIN' role is found, one is created automatically.
  *
  * Default admin credentials:
- *   Email:    admin@ceylon3d.com
+ *   Email:    admin@lf3d.com
  *   Password: admin123 (hashed with bcrypt, 12 salt rounds)
  *   Role:     ROLE_ADMIN
  *
@@ -31,8 +31,8 @@ const seedAdmin = async () => {
     if (!exists) {
       // Hash the default password and create the admin account
       const hashed = await bcrypt.hash('admin123', 12);
-      await User.create({ email: 'admin@ceylon3d.com', password: hashed, fullName: 'ADMIN', roles: ['ROLE_ADMIN'] });
-      console.log('Default admin created: admin@ceylon3d.com / admin123');
+      await User.create({ email: 'admin@lf3d.com', password: hashed, fullName: 'ADMIN', roles: ['ROLE_ADMIN'] });
+      console.log('Default admin created: admin@lf3d.com / admin123');
     }
   } catch (err) { console.error('Admin seed error:', err.message); }
 };
